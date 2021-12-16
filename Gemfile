@@ -5,5 +5,6 @@ group :test do
 end
 
 group :test, :development do
+  gem 'rack'
   gem 'pry-byebug'
 end
