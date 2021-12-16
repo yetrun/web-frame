@@ -11,6 +11,9 @@ GEM
     pry-byebug (3.9.0)
       byebug (~> 11.0)
       pry (~> 0.13.0)
+    rack (2.2.3)
+    rack-test (1.1.0)
+      rack (>= 1.0, < 3)
 
 PLATFORMS
   ruby
@@ -18,6 +21,8 @@ PLATFORMS
 DEPENDENCIES
   minitest
   pry-byebug
+  rack
+  rack-test
 
 BUNDLED WITH
    2.1.4
