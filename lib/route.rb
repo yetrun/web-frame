@@ -1,3 +1,5 @@
+require_relative 'env'
+
 class Route
   def initialize
     @blocks = []
@@ -29,8 +31,8 @@ class Route
     @blocks.each do |b|
       env.instance_eval &b
     end
-  end
 
-  class Env
+    # 最后，返回这个 env
+    env
   end
 end

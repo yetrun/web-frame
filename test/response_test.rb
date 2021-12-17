@@ -11,15 +11,15 @@ class DoAnyTest < Minitest::Test
     app = App.new
 
     app.route('/users', :get)
-      .do_any { [200, { 'Content-Type' => 'text/plain' }, [ 'Hello, do any!' ]] }
+      .do_any { self.body = 'Hello, do anyway!' }
 
     app
   end
 
-  def test_do_any_return_response_entity
+  def test_set_response_entity
     get '/users'
 
     assert last_response.ok?
-    assert_equal last_response.body, 'Hello, do any!'
+    assert_equal last_response.body, 'Hello, do anyway!'
   end
 end
