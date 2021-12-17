@@ -1,4 +1,6 @@
-class Framework
+require_relative 'route'
+
+class App
   attr_reader :routes
 
   def initialize
@@ -15,15 +17,5 @@ class Framework
 
   def path(path)
     routes[path] = Route.new
-  end
-end
-
-class Route
-  def do_any(&block)
-    @block = block
-  end
-
-  def call
-    @block.call
   end
 end

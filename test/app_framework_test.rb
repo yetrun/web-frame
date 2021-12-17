@@ -2,16 +2,16 @@ require "minitest/autorun"
 require "rack/test"
 require "pry"
 
-require_relative 'framework'
+require_relative '../lib/app'
 
-class FrameworkTest < Minitest::Test
+class AppFrameworkTest < Minitest::Test
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = Framework.new
+    app = App.new
     app.path('/users')
       .do_any { holder[0] = 'users' }
     app.path('/posts')

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# 运行方式：ruby -Ilib <this-file>
+# 一个示例 Rack 应用，运行方式：`ruby -Ilib <this-file>`
 
 require 'zlib'
 
