@@ -9,4 +9,7 @@ class Execution
     @body = ''
     @params = {}
   end
+
+  class Abort < StandardError
+  end
 end

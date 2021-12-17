@@ -38,13 +38,30 @@ class Route
     return self
   end
 
+  def authorize(&block)
+    p = Proc.new {
+      permitted = instance_eval(&block)
+      unless permitted
+        self.body = 'Not permitted!'
+        raise Execution::Abort.new
+      end
+    }
+    @blocks << p
+
+    return self
+  end
+
   def call(rack_env)
     # 首先，要初始化一个执行环境
     execution = Execution.new(rack_env)
 
     # 然后，依次执行这个执行环境
-    @blocks.each do |b|
-      execution.instance_eval &b
+    begin
+      @blocks.each do |b|
+        execution.instance_eval &b
+      end
+    rescue Execution::Abort
+      execution
     end
 
     # 最后，返回这个 execution
