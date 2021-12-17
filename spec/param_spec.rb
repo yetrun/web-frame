@@ -1,18 +1,15 @@
-require "minitest/autorun"
 require "rack/test"
-require "pry"
-
 require 'json'
-require_relative '../lib/app'
+require_relative '../lib/framework'
 
-class ParamTest < Minitest::Test
+describe 'Framework#param' do
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = App.new
+    app = Framework.new
 
     app.route('/users', :post)
       .param(:name)
@@ -24,11 +21,11 @@ class ParamTest < Minitest::Test
     app
   end
 
-  def test_pass_params
+  it '传递参数' do
     post('/users', JSON.generate(name: 'Jim', age: 18, foo: 'bar'), { 'CONTENT_TYPE' => 'application/json' })
 
-    assert last_response.ok?
+    expect(last_response.ok?).to be true
 
-    assert_equal @holder[0], { name: 'Jim', age: 18 }
+    expect(@holder[0]).to eq(name: 'Jim', age: 18)
   end
 end

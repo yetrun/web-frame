@@ -1,17 +1,14 @@
-require "minitest/autorun"
 require "rack/test"
-require "pry"
+require_relative '../lib/framework'
 
-require_relative '../lib/app'
-
-class ResourceTest < Minitest::Test
+describe 'Framework#resource' do
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = App.new
+    app = Framework.new
 
     app.route('/users', :get)
       .resource { 'User resource' }
@@ -20,11 +17,11 @@ class ResourceTest < Minitest::Test
     app
   end
 
-  def test_do_any_return_response_entity
+  it '测试 resource 逻辑' do
     get '/users'
 
-    assert last_response.ok?
+    expect(last_response.ok?).to be true
 
-    assert_equal @holder[0], 'User resource'
+    expect(@holder[0]).to eq 'User resource'
   end
 end

@@ -1,6 +1,6 @@
 require_relative 'route'
 
-class App
+class Framework
   attr_reader :routes
 
   def initialize

@@ -1,18 +1,15 @@
-require "minitest/autorun"
 require "rack/test"
-require "pry"
-
 require 'json'
-require_relative '../lib/app'
+require_relative '../lib/framework'
 
-class AuthorizeTest < Minitest::Test
+describe 'Framework#authorize' do
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = App.new
+    app = Framework.new
 
     app.route('/permit', :get)
       .authorize { true }
@@ -25,17 +22,17 @@ class AuthorizeTest < Minitest::Test
     app
   end
 
-  def test_permit
+  it '调用允许接口' do
     get '/permit'
 
-    assert last_response.status, 200
-    assert_equal @holder[0], 'permitted'
+    expect(last_response.status).to eq 200
+    expect(@holder[0]).to eq 'permitted'
   end
 
-  def test_not_permit
+  it '调用不允许接口' do
     get '/not_permit'
 
-    assert_equal last_response.body, 'Not permitted!'
-    assert @holder.empty?
+    expect(last_response.body).to eq 'Not permitted!'
+    expect(@holder.empty?).to be true
   end
 end

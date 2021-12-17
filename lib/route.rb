@@ -14,7 +14,7 @@ class Route
   end
 
   def param(name)
-    p = Proc.new {
+    do_any {
       unless request_body
         request_io = rack_env['rack.input']
         self.request_body = JSON.parse(request_io.read)
@@ -22,33 +22,24 @@ class Route
 
       params[name.to_sym] = request_body[name.to_s]
     }
-    @blocks << p
-
-    return self
   end
 
   def resource(&block)
-    p = Proc.new {
+    do_any {
       resource = block.call
       # 为 execution 添加一个 resource 方法
       define_singleton_method(:resource) { resource }
     }
-    @blocks << p
-
-    return self
   end
 
   def authorize(&block)
-    p = Proc.new {
+    do_any {
       permitted = instance_eval(&block)
       unless permitted
         self.body = 'Not permitted!'
         raise Execution::Abort.new
       end
     }
-    @blocks << p
-
-    return self
   end
 
   def call(rack_env)
