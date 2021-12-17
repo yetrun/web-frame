@@ -14,7 +14,7 @@ class App
     route = routes[[path, method]]
     output = route.call
 
-    ['200', { 'Content-Type' => 'text/html' }, ['Hello, app!']] unless output && output.is_a?(Array)
+    ['200', { 'Content-Type' => 'text/html' }, ['Hello, app!']]
   end
 
   def route(path, method)
