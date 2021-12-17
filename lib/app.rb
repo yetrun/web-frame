@@ -12,9 +12,9 @@ class App
     method = env['REQUEST_METHOD']
 
     route = routes[[path, method]]
-    route.call
+    output = route.call
 
-    ['200', { 'Content-Type' => 'text/html' }, ['Hello, Framework!']]
+    ['200', { 'Content-Type' => 'text/html' }, ['Hello, app!']] unless output && output.is_a?(Array)
   end
 
   def route(path, method)

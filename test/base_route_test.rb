@@ -29,7 +29,7 @@ class BaseRouteTest < Minitest::Test
     get '/users'
 
     assert last_response.ok?
-    assert_equal last_response.body, 'Hello, Framework!'
+    assert_equal last_response.body, 'Hello, app!'
 
     assert_equal @holder[0], 'users'
     assert_equal @holder[1], :get
@@ -39,7 +39,7 @@ class BaseRouteTest < Minitest::Test
     post '/users'
 
     assert last_response.ok?
-    assert_equal last_response.body, 'Hello, Framework!'
+    assert_equal last_response.body, 'Hello, app!'
 
     assert_equal @holder[0], 'users'
     assert_equal @holder[1], :post
@@ -49,7 +49,7 @@ class BaseRouteTest < Minitest::Test
     get '/posts'
 
     assert last_response.ok?
-    assert_equal last_response.body, 'Hello, Framework!'
+    assert_equal last_response.body, 'Hello, app!'
 
     assert_equal @holder[0], 'posts'
     assert_equal @holder[1], :get
