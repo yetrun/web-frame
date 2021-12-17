@@ -1,4 +1,6 @@
-require_relative 'env'
+# 每个块都是在 execution 环境下执行的
+
+require_relative 'execution'
 
 class Route
   def initialize
@@ -11,11 +13,24 @@ class Route
     return self
   end
 
+  def param(name)
+    p = Proc.new {
+      unless request_body
+        request_io = rack_env['rack.input']
+        self.request_body = JSON.parse(request_io.read)
+      end
+
+      params[name.to_sym] = request_body[name.to_s]
+    }
+    @blocks << p
+
+    return self
+  end
+
   def resource(&block)
-    # 这个块是在 env 环境下执行的
     p = Proc.new {
       resource = block.call
-      # 为 env 添加一个 resource 方法
+      # 为 execution 添加一个 resource 方法
       define_singleton_method(:resource) { resource }
     }
     @blocks << p
@@ -23,16 +38,16 @@ class Route
     return self
   end
 
-  def call
+  def call(rack_env)
     # 首先，要初始化一个执行环境
-    env = Env.new
+    execution = Execution.new(rack_env)
 
     # 然后，依次执行这个执行环境
     @blocks.each do |b|
-      env.instance_eval &b
+      execution.instance_eval &b
     end
 
-    # 最后，返回这个 env
-    env
+    # 最后，返回这个 execution
+    execution
   end
 end

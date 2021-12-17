@@ -12,7 +12,7 @@ class App
     method = env['REQUEST_METHOD']
 
     route = routes[[path, method]]
-    env = route.call
+    env = route.call(env)
 
     ['200', { 'Content-Type' => 'text/html' }, [env.body]]
   end
