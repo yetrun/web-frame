@@ -15,12 +15,7 @@ class Route
 
   def param(name)
     do_any {
-      unless request_body
-        request_io = rack_env['rack.input']
-        self.request_body = JSON.parse(request_io.read)
-      end
-
-      params[name.to_sym] = request_body[name.to_s]
+      params[name.to_sym] = request.params[name.to_s]
     }
   end
 
@@ -42,9 +37,9 @@ class Route
     }
   end
 
-  def call(rack_env)
+  def call(env)
     # 首先，要初始化一个执行环境
-    execution = Execution.new(rack_env)
+    execution = Execution.new(env)
 
     # 然后，依次执行这个执行环境
     begin
