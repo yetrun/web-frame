@@ -1,11 +1,11 @@
 require "rack/test"
-require_relative '../lib/framework'
+require_relative '../lib/application'
 
-describe 'Framework#do_any' do
+describe Application, '.do_any' do
   include Rack::Test::Methods
 
   def app
-    app = Class.new(Framework)
+    app = Class.new(Application)
 
     app.route('/users', :get)
       .do_any { response.body = 'Hello, do anyway!' }

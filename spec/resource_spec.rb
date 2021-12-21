@@ -1,14 +1,14 @@
 require "rack/test"
-require_relative '../lib/framework'
+require_relative '../lib/application'
 
-describe 'Framework#resource' do
+describe Application, '.resource' do
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = Class.new(Framework)
+    app = Class.new(Application)
 
     app.route('/users', :get)
       .resource { 'User resource' }

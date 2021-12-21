@@ -1,6 +1,6 @@
 require_relative 'route'
 
-class Framework
+class Application
   def self.inherited(subclass)
     subclass.class_eval { @routes = {} }
   end

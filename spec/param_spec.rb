@@ -1,15 +1,15 @@
 require "rack/test"
 require 'json'
-require_relative '../lib/framework'
+require_relative '../lib/application'
 
-describe 'Framework#param' do
+describe Application, '.param' do
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = Class.new(Framework)
+    app = Class.new(Application)
 
     app.route('/users', :post)
       .param(:name)

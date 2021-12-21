@@ -1,15 +1,15 @@
 require "rack/test"
 require 'json'
-require_relative '../lib/framework'
+require_relative '../lib/application'
 
-describe 'Framework#authorize' do
+describe Application, '.authorize' do
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = Class.new(Framework)
+    app = Class.new(Application)
 
     app.route('/permit', :get)
       .authorize { true }

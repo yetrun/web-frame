@@ -1,16 +1,16 @@
 require 'json'
 require 'rack'
 require 'rack/test'
-require_relative '../lib/framework'
+require_relative '../lib/application'
 
-describe 'Framework#request' do
+describe Execution, '#request' do
   include Rack::Test::Methods
 
   def app
     @holder = []
     holder = @holder
 
-    app = Class.new(Framework)
+    app = Class.new(Application)
 
     app.route('/users', :get)
       .do_any { holder[0] = request; }
