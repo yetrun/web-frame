@@ -9,7 +9,7 @@ describe 'Framework#authorize' do
     @holder = []
     holder = @holder
 
-    app = Framework.new
+    app = Class.new(Framework)
 
     app.route('/permit', :get)
       .authorize { true }

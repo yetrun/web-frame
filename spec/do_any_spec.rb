@@ -5,7 +5,7 @@ describe 'Framework#do_any' do
   include Rack::Test::Methods
 
   def app
-    app = Framework.new
+    app = Class.new(Framework)
 
     app.route('/users', :get)
       .do_any { response.body = 'Hello, do anyway!' }

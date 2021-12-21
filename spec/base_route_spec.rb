@@ -8,7 +8,7 @@ describe 'Framework#route' do
     @holder = []
     holder = @holder
 
-    app = Framework.new
+    app = Class.new(Framework)
 
     app.route('/users', :get)
       .do_any { holder[0] = 'users'; holder[1] = :get }

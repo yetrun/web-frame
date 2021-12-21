@@ -8,7 +8,7 @@ describe 'Framework#resource' do
     @holder = []
     holder = @holder
 
-    app = Framework.new
+    app = Class.new(Framework)
 
     app.route('/users', :get)
       .resource { 'User resource' }

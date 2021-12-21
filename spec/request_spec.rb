@@ -10,7 +10,7 @@ describe 'Framework#request' do
     @holder = []
     holder = @holder
 
-    app = Framework.new
+    app = Class.new(Framework)
 
     app.route('/users', :get)
       .do_any { holder[0] = request; }

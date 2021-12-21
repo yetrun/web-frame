@@ -1,13 +1,15 @@
 require_relative 'route'
 
 class Framework
-  attr_reader :routes
-
-  def initialize
-    @routes = {}
+  def self.inherited(subclass)
+    subclass.class_eval { @routes = {} }
   end
 
-  def call(env)
+  def self.routes
+    @routes
+  end
+
+  def self.call(env)
     path = env['PATH_INFO']
     method = env['REQUEST_METHOD']
 
@@ -26,7 +28,7 @@ class Framework
     end
   end
 
-  def route(path, method)
+  def self.route(path, method)
     method = method.to_s.upcase
     routes[[path, method]] = Route.new
   end

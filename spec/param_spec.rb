@@ -9,7 +9,7 @@ describe 'Framework#param' do
     @holder = []
     holder = @holder
 
-    app = Framework.new
+    app = Class.new(Framework)
 
     app.route('/users', :post)
       .param(:name)
