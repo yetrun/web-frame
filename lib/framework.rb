@@ -13,8 +13,9 @@ class Framework
 
     route = routes[[path, method]]
     begin
-      env = route.call(env)
-      ['200', { 'Content-Type' => 'text/html' }, [env.body]]
+      execution = route.call(env)
+      response = execution.response
+      [response.status, response.headers, [response.body]]
     rescue => e
       if e.message =~ /^status: (\d+)$/
         status = $1

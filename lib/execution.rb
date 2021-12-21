@@ -2,14 +2,12 @@ require 'rack'
 
 class Execution
   attr_accessor :request
+  attr_accessor :response
   attr_accessor :env
   attr_accessor :params
 
-  attr_accessor :body
-
   def initialize(env)
     @env = env
-    @body = ''
     @params = {}
   end
 
@@ -30,6 +28,10 @@ class Execution
     end
 
     @request
+  end
+
+  def response
+    @response = @response || Rack::Response.new
   end
 
   class Abort < StandardError

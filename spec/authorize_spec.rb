@@ -32,7 +32,7 @@ describe 'Framework#authorize' do
   it '调用不允许接口' do
     get '/not_permit'
 
-    expect(last_response.body).to eq 'Not permitted!'
+    expect(last_response.status).to eq 403
     expect(@holder.empty?).to be true
   end
 end

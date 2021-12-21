@@ -8,7 +8,7 @@ describe 'Framework#do_any' do
     app = Framework.new
 
     app.route('/users', :get)
-      .do_any { self.body = 'Hello, do anyway!' }
+      .do_any { response.body = 'Hello, do anyway!' }
 
     app
   end

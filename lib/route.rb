@@ -31,7 +31,7 @@ class Route
     do_any {
       permitted = instance_eval(&block)
       unless permitted
-        self.body = 'Not permitted!'
+        response.status = 403
         raise Execution::Abort.new
       end
     }
