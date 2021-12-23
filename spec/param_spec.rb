@@ -101,8 +101,8 @@ describe Application, '.param' do
 
         app.route('/users', :post)
           .param(:user) do
-            param :name
-            param :age
+            param :name, type: String, required: true
+            param :age, type: Integer, default: 18
           end
             .do_any { holder[0] = params }
 
@@ -113,6 +113,24 @@ describe Application, '.param' do
         post('/users', JSON.generate(user: { name: 'Jim', age: 18, bar: 'bar' }, foo: 'foo'), { 'CONTENT_TYPE' => 'application/json' })
 
         expect(@holder[0]).to eq(user: { name: 'Jim', age: 18 })
+      end
+
+      it '支持 required' do
+        expect {
+          post('/users', JSON.generate(user: { age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
+      end
+
+      it '支持 default' do
+        post('/users', JSON.generate(user: { name: 'Jim' }), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(@holder[0]).to eq(user: { name: 'Jim', age: 18 })
+      end
+
+      it '支持 type check' do
+        expect {
+          post('/users', JSON.generate(user: { name: 'Jim', age: '18' }), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
       end
     end
 
