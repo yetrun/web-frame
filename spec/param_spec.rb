@@ -91,4 +91,27 @@ describe Application, '.param' do
       expect(@holder[0]).to eq(name: nil, age: 18)
     end
   end
+
+  describe '参数在嵌套' do
+    def app
+      holder = @holder
+
+      app = Class.new(Application)
+
+      app.route('/users', :post)
+        .param(:user) do
+          param :user
+          param :age
+        end
+        .do_any { holder[0] = params }
+
+      app
+    end
+
+    it '传递嵌套参数' do
+      post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+
+      expect(@holder[0]).to eq(user: { name: 'Jim', age: 18 })
+    end
+  end
 end

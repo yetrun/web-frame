@@ -1,6 +1,6 @@
 # 每个块都是在 execution 环境下执行的
 
-require_relative 'param_checker'
+require_relative 'param_scope'
 require_relative 'execution'
 
 class Route
@@ -14,16 +14,12 @@ class Route
     return self
   end
 
-  def param(name, options={})
+  def param(name, options={}, &block)
     name = name.to_sym
+    param_scope = ParamScope.new(name, options)
 
     do_any {
-      value = request.params[name.to_s]
-
-      ParamChecker.check_type(name, value, options[:type]) if options.key?(:type)
-      ParamChecker.check_required(name, value, options[:required]) if options.key?(:required)
-
-      params[name] = request.params[name.to_s] || options[:default]
+      params.merge!(param_scope.filter(request.params))
     }
   end
 
