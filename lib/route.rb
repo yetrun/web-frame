@@ -1,5 +1,6 @@
 # 每个块都是在 execution 环境下执行的
 
+require_relative 'param_checker'
 require_relative 'execution'
 
 class Route
@@ -13,9 +14,16 @@ class Route
     return self
   end
 
-  def param(name)
+  def param(name, options={})
+    name = name.to_sym
+
     do_any {
-      params[name.to_sym] = request.params[name.to_s]
+      value = request.params[name.to_s]
+
+      ParamChecker.check_type(name, value, options[:type]) if options.key?(:type)
+      ParamChecker.check_required(name, value, options[:required]) if options.key?(:required)
+
+      params[name] = request.params[name.to_s] || options[:default]
     }
   end
 

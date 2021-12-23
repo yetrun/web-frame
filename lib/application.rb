@@ -14,18 +14,9 @@ class Application
     method = env['REQUEST_METHOD']
 
     route = routes[[path, method]]
-    begin
-      execution = route.call(env)
-      response = execution.response
-      [response.status, response.headers, [response.body]]
-    rescue => e
-      if e.message =~ /^status: (\d+)$/
-        status = $1
-        [status, { 'Content-Type' => 'text/html' }, ['Error!']]
-      else
-        raise e
-      end
-    end
+    execution = route.call(env)
+    response = execution.response
+    [response.status, response.headers, [response.body]]
   end
 
   def self.route(path, method)
