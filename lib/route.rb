@@ -16,7 +16,7 @@ class Route
 
   def param(name, options={}, &block)
     name = name.to_sym
-    param_scope = ParamScope.new(name, options, &block)
+    param_scope = SingleParamScope.new(name, options, &block)
 
     do_any {
       params.merge!(param_scope.filter(request.params))

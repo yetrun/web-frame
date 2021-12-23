@@ -1,10 +1,13 @@
 require_relative 'param_checker'
 
-class ParamScope
+class SingleParamScope
   def initialize(name, options={}, &block)
     @name = name.to_sym
     @options = options
-    @inner_scope = HashParamScope.new(&block) if block_given?
+
+    if block_given?
+      @inner_scope = options[:type] == Array ? ArrayParamScope.new(&block) : HashParamScope.new(&block)
+    end
   end
 
   def filter(params)
@@ -31,7 +34,7 @@ class HashParamScope
   def param(name, options={}, &block)
     name = name.to_s
 
-    @scopes << ParamScope.new(name, options, &block)
+    @scopes << SingleParamScope.new(name, options, &block)
   end
 
   def filter(params)
@@ -42,5 +45,17 @@ class HashParamScope
     end
 
     value
+  end
+end
+
+class ArrayParamScope
+  def initialize(&block)
+    @inner_scope  = HashParamScope.new(&block) if block_given?
+  end
+
+  def filter(params)
+    params.map do |item|
+      @inner_scope.filter(item)
+    end
   end
 end

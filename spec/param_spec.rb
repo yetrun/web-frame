@@ -92,8 +92,8 @@ describe Application, '.param' do
     end
   end
 
-  describe '参数在嵌套' do
-    context '两层嵌套参数' do
+  describe '参数嵌套' do
+    context '两层嵌套' do
       def app
         holder = @holder
 
@@ -134,7 +134,7 @@ describe Application, '.param' do
       end
     end
 
-    context '三层嵌套参数' do
+    context '三层嵌套' do
       def app
         holder = @holder
 
@@ -158,6 +158,29 @@ describe Application, '.param' do
         post('/users', JSON.generate(user: { name: 'Jim', age: 18, address: { city: '上海', street: '南京西路', foo: 'foo' }}), { 'CONTENT_TYPE' => 'application/json' })
 
         expect(@holder[0]).to eq(user: { name: 'Jim', age: 18, address: { city: '上海', street: '南京西路' }})
+      end
+    end
+
+    context '数组嵌套' do
+      def app
+        holder = @holder
+
+        app = Class.new(Application)
+
+        app.route('/users', :post)
+          .param(:users, type: Array) do
+            param :name
+            param :age
+          end
+            .do_any { holder[0] = params }
+
+          app
+      end
+
+      it '传递嵌套数组参数' do
+        post('/users', JSON.generate(users: [{ name: 'Jim', age: 18 }, { name: 'James', age: 19 }]), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(@holder[0]).to eq(users: [{ name: 'Jim', age: 18 }, { name: 'James', age: 19 }])
       end
     end
   end
