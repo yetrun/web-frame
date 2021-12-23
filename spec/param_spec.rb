@@ -93,25 +93,54 @@ describe Application, '.param' do
   end
 
   describe '参数在嵌套' do
-    def app
-      holder = @holder
+    context '两层嵌套参数' do
+      def app
+        holder = @holder
 
-      app = Class.new(Application)
+        app = Class.new(Application)
 
-      app.route('/users', :post)
-        .param(:user) do
-          param :name
-          param :age
-        end
-        .do_any { holder[0] = params }
+        app.route('/users', :post)
+          .param(:user) do
+            param :name
+            param :age
+          end
+            .do_any { holder[0] = params }
 
-      app
+          app
+      end
+
+      it '传递两层嵌套参数' do
+        post('/users', JSON.generate(user: { name: 'Jim', age: 18, bar: 'bar' }, foo: 'foo'), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(@holder[0]).to eq(user: { name: 'Jim', age: 18 })
+      end
     end
 
-    it '传递嵌套参数' do
-      post('/users', JSON.generate(user: { name: 'Jim', age: 18, bar: 'bar' }, foo: 'foo'), { 'CONTENT_TYPE' => 'application/json' })
+    context '三层嵌套参数' do
+      def app
+        holder = @holder
 
-      expect(@holder[0]).to eq(user: { name: 'Jim', age: 18 })
+        app = Class.new(Application)
+
+        app.route('/users', :post)
+          .param(:user) do
+            param :name
+            param :age
+            param :address do
+              param :city
+              param :street
+            end
+          end
+            .do_any { holder[0] = params }
+
+          app
+      end
+
+      it '传递三层嵌套参数' do
+        post('/users', JSON.generate(user: { name: 'Jim', age: 18, address: { city: '上海', street: '南京西路', foo: 'foo' }}), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(@holder[0]).to eq(user: { name: 'Jim', age: 18, address: { city: '上海', street: '南京西路' }})
+      end
     end
   end
 end
