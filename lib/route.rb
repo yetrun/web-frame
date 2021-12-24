@@ -47,9 +47,12 @@ class Route
     }
   end
 
-  def call(env)
+  def call(env, params={})
     # 首先，要初始化一个执行环境
     execution = Execution.new(env)
+
+    # 设置参数
+    params.each { |name, value| execution.request.update_param(name, value) }
 
     # 然后，依次执行这个执行环境
     begin
