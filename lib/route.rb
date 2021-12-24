@@ -41,6 +41,12 @@ class Route
     }
   end
 
+  def to_json
+    do_any {
+      response.body = resource.to_json
+    }
+  end
+
   def call(env)
     # 首先，要初始化一个执行环境
     execution = Execution.new(env)
