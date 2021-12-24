@@ -183,5 +183,76 @@ describe Application, '.param' do
         expect(@holder[0]).to eq(users: [{ name: 'Jim', age: 18 }, { name: 'James', age: 19 }])
       end
     end
+
+    describe '处理 null' do
+      context '为嵌套的参数整体传递 null' do
+        def app
+          holder = @holder
+
+          app = Class.new(Application)
+
+          app.route('/users', :post)
+            .param(:users) do
+              param :name
+              param :age
+            end
+              .do_any { holder[0] = params }
+
+            app
+        end
+
+        it '为嵌套的参数整体传递 null' do
+          post('/users', JSON.generate(users: nil), { 'CONTENT_TYPE' => 'application/json' })
+
+          expect(@holder[0]).to eq(users: nil)
+        end
+      end
+
+      context '为嵌套数组参数传递 null' do
+        def app
+          holder = @holder
+
+          app = Class.new(Application)
+
+          app.route('/users', :post)
+            .param(:users, type: Array) do
+              param :name
+              param :age
+            end
+              .do_any { holder[0] = params }
+
+            app
+        end
+
+        it '为嵌套数组参数传递 null' do
+          post('/users', JSON.generate(users: nil), { 'CONTENT_TYPE' => 'application/json' })
+
+          expect(@holder[0]).to eq(users: nil)
+        end
+      end
+
+      context '为嵌套数组参数传递对象' do
+        def app
+          holder = @holder
+
+          app = Class.new(Application)
+
+          app.route('/users', :post)
+            .param(:users, type: Array) do
+              param :name
+              param :age
+            end
+              .do_any { holder[0] = params }
+
+            app
+        end
+
+        it '为嵌套数组参数传递对象' do
+          expect {
+            post('/users', JSON.generate(users: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+          }.to raise_error(Errors::ParameterInvalid)
+        end
+      end
+    end
   end
 end
