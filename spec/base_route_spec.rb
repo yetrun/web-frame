@@ -48,4 +48,9 @@ describe Application, '.route' do
     expect(@holder[0]).to eq 'posts'
     expect(@holder[1]).to eq :get
   end
+
+  it '调用不匹配的接口' do
+    expect { post '/posts' }.to raise_error(Errors::NoMatchingRouteError)
+    expect { get '/unknown' }.to raise_error(Errors::NoMatchingRouteError)
+  end
 end
