@@ -24,4 +24,8 @@ class Application
     method = method.to_s.upcase
     routes[[path, method]] = Route.new
   end
+
+  def self.apply(mod)
+    @routes.merge!(mod.routes)
+  end
 end
