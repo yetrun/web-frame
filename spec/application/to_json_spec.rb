@@ -1,6 +1,4 @@
-require "rack/test"
-require 'json'
-require_relative '../lib/application'
+require_relative '../test_helper'
 
 describe Application, '.to_json' do
   include Rack::Test::Methods
@@ -20,7 +18,7 @@ describe Application, '.to_json' do
     app
   end
 
-  it 'to_json 调用 resource.to_json' do
+  it 'invokes `resource.to_json`' do
     get '/resource'
 
     expect(last_response.status).to eq 200

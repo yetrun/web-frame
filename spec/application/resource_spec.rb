@@ -1,27 +1,26 @@
-require "rack/test"
-require_relative '../lib/application'
+require_relative '../test_helper'
 
 describe Application, '.resource' do
   include Rack::Test::Methods
 
+  before { @holder = {} }
+
   def app
-    @holder = []
     holder = @holder
 
     app = Class.new(Application)
 
     app.route('/users', :get)
       .resource { 'User resource' }
-      .do_any { holder[0] = resource }
+      .do_any { holder[:resource] = resource }
 
     app
   end
 
-  it '测试 resource 逻辑' do
+  it 'sets and gets resource' do
     get '/users'
 
-    expect(last_response.ok?).to be true
-
-    expect(@holder[0]).to eq 'User resource'
+    expect(last_response).to be_ok
+    expect(@holder[:resource]).to eq 'User resource'
   end
 end

@@ -14,9 +14,8 @@ class Route
     return self
   end
 
-  def param(name, options={}, &block)
-    name = name.to_sym
-    param_scope = SingleParamScope.new(name, options, &block)
+  def params(&block)
+    param_scope = HashParamScope.new(&block)
 
     do_any {
       params.merge!(param_scope.filter(request.params))
