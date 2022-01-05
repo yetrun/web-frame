@@ -4,8 +4,19 @@ require_relative 'param_scope'
 require_relative 'execution'
 
 class Route
-  def initialize
+  def initialize(path, method)
+    @path = path
+    @method = method.to_s.upcase
     @blocks = []
+  end
+
+  def match?(request)
+    path = request.path
+    method = request.request_method
+
+    path_regex = @path.gsub(/:(\w+)/) { "(?<#{$1}>[^/]+)" }
+    path_regex = Regexp.new('^' + path_regex + '$')
+    path_regex.match?(path) && @method == method
   end
 
   def do_any(&block)
@@ -18,7 +29,15 @@ class Route
     param_scope = HashParamScope.new(&block)
 
     do_any {
-      params.merge!(param_scope.filter(request.params))
+      # 参数仅来源于 request.body 和路由路径
+      request_body = request.body.read
+      json = JSON.parse(request_body)
+
+      params = param_scope.filter(json)
+
+      request.body.rewind
+
+      define_singleton_method(:params) { params }
     }
   end
 
@@ -46,14 +65,17 @@ class Route
     }
   end
 
-  def call(env, params={})
-    # 首先，要初始化一个执行环境
-    execution = Execution.new(env)
+  def call(request)
+    # 将 path params 合并到 request 中
+    path_regex = @path.gsub(/:(\w+)/) { "(?<#{$1}>[^/]+)" }
+    path_regex = Regexp.new('^' + path_regex + '$')
+    path_params = path_regex.match(request.path).named_captures
+    path_params.each { |name, value| request.update_param(name, value) }
 
-    # 设置参数
-    params.each { |name, value| execution.request.update_param(name, value) }
+    #初始化一个执行环境
+    execution = Execution.new(request)
 
-    # 然后，依次执行这个执行环境
+    # 依次执行这个环境
     begin
       @blocks.each do |b|
         execution.instance_eval &b
@@ -62,7 +84,8 @@ class Route
       execution
     end
 
-    # 最后，返回这个 execution
-    execution
+    # 最后，返回 response.body 中的内容
+    response = execution.response
+    [response.status, response.headers, [response.body]]
   end
 end

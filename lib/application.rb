@@ -1,8 +1,8 @@
 require_relative 'route'
 
 class Application
-  def self.inherited(subclass)
-    subclass.class_eval { @routes = {} }
+  def self.inherited(mod)
+    mod.class_eval { @routes = [] }
   end
 
   def self.routes
@@ -10,40 +10,27 @@ class Application
   end
 
   def self.call(env)
-    path = env['PATH_INFO']
-    method = env['REQUEST_METHOD']
+    request = Rack::Request.new(env)
 
-    route_key, route = match_route(path, method)
-    raise Errors::NoMatchingRouteError.new("未能发现匹配的路由：#{method} #{path}") unless route
+    route = matched_route(request)
+    raise Errors::NoMatchingRouteError.new("未能发现匹配的路由：#{request.request_method} #{request.path}") unless route
 
-    path_params = route_key[0].match(path).named_captures
-    execution = route.call(env, path_params)
-
-    response = execution.response
-    [response.status, response.headers, [response.body]]
+    route.call(request)
   end
 
   def self.route(path, method)
-    path_regex = path.gsub(/:(\w+)/) { "(?<#{$1}>[^/]+)" }
-    path_regex = Regexp.new('^' + path_regex + '$')
-
-    method = method.to_s.upcase
-    routes[[path_regex, method]] = Route.new
+    route = Route.new(path, method)
+    routes << route
+    route
   end
 
   def self.apply(mod)
-    @routes.merge!(mod.routes)
+    @routes = @routes.concat(mod.routes)
   end
 
   private
 
-  def self.match_route(path, method)
-    route_key, route = routes.find { |route_key, value| 
-      route_path, route_method = route_key
-
-      route_path.match(path) && route_method == method
-    }
-
-    return [route_key, route]
+  def self.matched_route(request)
+    routes.find { |route| route.match?(request) }
   end
 end
