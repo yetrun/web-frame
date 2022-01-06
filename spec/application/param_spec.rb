@@ -343,4 +343,26 @@ describe Application, '.param' do
       end
     end
   end
+
+  describe 'path params' do
+    def app
+      holder = @holder
+
+      app = Class.new(Application)
+
+      app.route('/users/:id', :get)
+        .params {
+          param :id, type: String
+        }
+        .do_any { holder[:params] = params }
+
+        app
+    end
+
+    it 'gets params from request path' do
+      get '/users/1'
+
+      expect(@holder[:params]).to eq(id: '1')
+    end
+  end
 end

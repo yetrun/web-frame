@@ -29,9 +29,9 @@ class Route
     param_scope = HashParamScope.new(&block)
 
     do_any {
-      # 参数仅来源于 request.body 和路由路径
       request_body = request.body.read
-      json = JSON.parse(request_body)
+      json = request_body.empty? ? {} : JSON.parse(request_body)
+      json.merge!(request.params)
 
       params = param_scope.filter(json)
 
