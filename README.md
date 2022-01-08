@@ -11,10 +11,4 @@
 
 ### 运行单元测试
 
-首先安装 `rspec`：
-
-    $ gem install rspec rspec-core
-
-然后执行命令 `rspec`：
-
-    $ rspec
+    $ bundle exec rspec
