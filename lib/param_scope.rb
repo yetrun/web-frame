@@ -12,7 +12,7 @@ class SingleParamScope
 
   def filter(params)
     value = params[@name.to_s] || @options[:default]
-    ParamChecker.check_type(@name, value, @options[:type]) if @options.key?(:type) && !value.nil?
+    value = ParamChecker.convert_type(@name, value, @options[:type]) if @options.key?(:type) && !value.nil?
 
     # 经过 @inner_scope 的洗礼
     value = @inner_scope.filter(value) if @inner_scope && !value.nil?

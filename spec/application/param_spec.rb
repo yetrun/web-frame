@@ -56,9 +56,16 @@ describe Application, '.param' do
       expect(@holder[:params]).to eq(name: 'Jim', age: 18)
     end
 
-    it 'raises error when not matching some types' do
+    it 'converts type when it is compatible' do
+      post('/users', JSON.generate(name: 'Jim', age: '18'), { 'CONTENT_TYPE' => 'application/json' })
+
+      expect(last_response).to be_ok
+      expect(@holder[:params]).to eq(name: 'Jim', age: 18)
+    end
+
+    it 'raises error when it is not compatible' do
       expect { 
-        post('/users', JSON.generate(name: 'Jim', age: '18'), { 'CONTENT_TYPE' => 'application/json' })
+        post('/users', JSON.generate(name: 'Jim', age: 'a18'), { 'CONTENT_TYPE' => 'application/json' })
       }.to raise_error(Errors::ParameterInvalid)
     end
   end
@@ -160,9 +167,9 @@ describe Application, '.param' do
       end
 
       it 'supports passing `type` option' do
-        expect {
-          post('/users', JSON.generate(user: { name: 'Jim', age: '18' }), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        post('/users', JSON.generate(user: { name: 'Jim', age: '18' }), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
       end
 
       it 'supports passing `default` option' do
@@ -356,7 +363,7 @@ describe Application, '.param' do
         }
         .do_any { holder[:params] = params }
 
-        app
+      app
     end
 
     it 'gets params from request path' do
