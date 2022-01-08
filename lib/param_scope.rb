@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'param_checker'
 
 class SingleParamScope

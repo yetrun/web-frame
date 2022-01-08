@@ -1,36 +1,40 @@
+# frozen_string_literal: true
+
 require_relative 'route'
 
 class Application
-  def self.inherited(mod)
-    mod.class_eval { @routes = [] }
-  end
+  class << self
+    attr_reader :routes
 
-  def self.routes
-    @routes
-  end
+    def inherited(mod)
+      super
 
-  def self.call(env)
-    request = Rack::Request.new(env)
+      mod.class_eval { @routes = [] }
+    end
 
-    route = matched_route(request)
-    raise Errors::NoMatchingRouteError.new("未能发现匹配的路由：#{request.request_method} #{request.path}") unless route
+    def call(env)
+      request = Rack::Request.new(env)
 
-    route.call(request)
-  end
+      route = matched_route(request)
+      raise Errors::NoMatchingRouteError, "未能发现匹配的路由：#{request.request_method} #{request.path}" unless route
 
-  def self.route(path, method)
-    route = Route.new(path, method)
-    routes << route
-    route
-  end
+      route.call(request)
+    end
 
-  def self.apply(mod)
-    @routes = @routes.concat(mod.routes)
-  end
+    def route(path, method)
+      route = Route.new(path, method)
+      routes << route
+      route
+    end
 
-  private
+    def apply(mod)
+      @routes.concat(mod.routes)
+    end
 
-  def self.matched_route(request)
-    routes.find { |route| route.match?(request) }
+    private
+
+    def matched_route(request)
+      routes.find { |route| route.match?(request) }
+    end
   end
 end

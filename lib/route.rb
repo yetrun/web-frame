@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # 每个块都是在 execution 环境下执行的
 
 require_relative 'param_scope'
@@ -14,15 +16,15 @@ class Route
     path = request.path
     method = request.request_method
 
-    path_regex = @path.gsub(/:(\w+)/) { "(?<#{$1}>[^/]+)" }
-    path_regex = Regexp.new('^' + path_regex + '$')
+    path_raw_regex = @path.gsub(/:(\w+)/, '(?<\1>[^/]+)')
+    path_regex = Regexp.new("^#{path_raw_regex}$")
     path_regex.match?(path) && @method == method
   end
 
   def do_any(&block)
     @blocks << block
 
-    return self
+    self
   end
 
   def params(&block)
@@ -54,12 +56,12 @@ class Route
       permitted = instance_eval(&block)
       unless permitted
         response.status = 403
-        raise Execution::Abort.new
+        raise Execution::Abort
       end
     }
   end
 
-  def to_json
+  def to_json # rubocop:disable Lint/ToJSON
     do_any {
       response.body = resource.to_json
     }
@@ -67,18 +69,18 @@ class Route
 
   def call(request)
     # 将 path params 合并到 request 中
-    path_regex = @path.gsub(/:(\w+)/) { "(?<#{$1}>[^/]+)" }
-    path_regex = Regexp.new('^' + path_regex + '$')
+    path_raw_regex = @path.gsub(/:(\w+)/, '(?<\1>[^/]+)')
+    path_regex = Regexp.new("^#{path_raw_regex}$")
     path_params = path_regex.match(request.path).named_captures
     path_params.each { |name, value| request.update_param(name, value) }
 
-    #初始化一个执行环境
+    # 初始化一个执行环境
     execution = Execution.new(request)
 
     # 依次执行这个环境
     begin
       @blocks.each do |b|
-        execution.instance_eval &b
+        execution.instance_eval(&b)
       end
     rescue Execution::Abort
       execution

@@ -1,0 +1,14 @@
+# https://docs.rubocop.org/rubocop/1.24/cops_style.html
+
+AllCops:
+  NewCops: enable
+
+Style/BlockDelimiters:
+  IgnoredMethods: ['do_any']
+Style/Documentation:
+  Enabled: false
+Style/GuardClause:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 20
