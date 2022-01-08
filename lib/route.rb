@@ -67,15 +67,12 @@ class Route
     }
   end
 
-  def call(request)
+  def execute(execution)
     # 将 path params 合并到 request 中
     path_raw_regex = @path.gsub(/:(\w+)/, '(?<\1>[^/]+)')
     path_regex = Regexp.new("^#{path_raw_regex}$")
-    path_params = path_regex.match(request.path).named_captures
-    path_params.each { |name, value| request.update_param(name, value) }
-
-    # 初始化一个执行环境
-    execution = Execution.new(request)
+    path_params = path_regex.match(execution.request.path).named_captures
+    path_params.each { |name, value| execution.request.update_param(name, value) }
 
     # 依次执行这个环境
     begin
@@ -85,9 +82,5 @@ class Route
     rescue Execution::Abort
       execution
     end
-
-    # 最后，返回 response.body 中的内容
-    response = execution.response
-    [response.status, response.headers, [response.body]]
   end
 end

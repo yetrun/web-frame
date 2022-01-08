@@ -12,3 +12,6 @@ Style/GuardClause:
 
 Metrics/MethodLength:
   Max: 20
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented_relative_to_receiver

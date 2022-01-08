@@ -1,40 +1,69 @@
 # frozen_string_literal: true
 
-require_relative 'route'
+require_relative 'routes'
 
 class Application
   class << self
-    attr_reader :routes
+    attr_reader :applications, :routes, :before_callbacks, :after_callbacks
 
     def inherited(mod)
       super
 
-      mod.class_eval { @routes = [] }
+      mod.class_eval {
+        @applications = []
+        @routes = Routes.new
+        @before_callbacks = []
+        @after_callbacks = []
+      }
     end
 
     def call(env)
+      # 初始化一个执行环境
       request = Rack::Request.new(env)
+      execution = Execution.new(request)
 
-      route = matched_route(request)
-      raise Errors::NoMatchingRouteError, "未能发现匹配的路由：#{request.request_method} #{request.path}" unless route
+      if match?(execution)
+        execute(execution)
 
-      route.call(request)
+        execution.response.to_a
+      else
+        raise Errors::NoMatchingRouteError, "未能发现匹配的路由：#{request.request_method} #{request.path}"
+      end
+    end
+
+    def execute(execution)
+      before_callbacks.each { |b| execution.instance_eval(&b) }
+
+      if routes.match?(execution)
+        routes.execute(execution)
+      else
+        application = applications.find { |app| app.match?(execution) }
+        application.execute(execution)
+      end
+
+      after_callbacks.each { |b| execution.instance_eval(&b) }
+    end
+
+    def match?(execution)
+      return true if routes.match?(execution)
+
+      applications.any? { |app| app.match?(execution) }
     end
 
     def route(path, method)
-      route = Route.new(path, method)
-      routes << route
-      route
+      routes.route(path, method)
+    end
+
+    def before(&block)
+      before_callbacks << block
+    end
+
+    def after(&block)
+      after_callbacks << block
     end
 
     def apply(mod)
-      @routes.concat(mod.routes)
-    end
-
-    private
-
-    def matched_route(request)
-      routes.find { |route| route.match?(request) }
+      applications << mod
     end
   end
 end
