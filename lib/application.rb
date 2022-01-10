@@ -14,6 +14,7 @@ class Application
         @routes = Routes.new
         @before_callbacks = []
         @after_callbacks = []
+        @error_guards = []
       }
     end
 
@@ -24,11 +25,11 @@ class Application
 
       if match?(execution)
         execute(execution)
-
-        execution.response.to_a
       else
         raise Errors::NoMatchingRouteError, "未能发现匹配的路由：#{request.request_method} #{request.path}"
       end
+
+      execution.response.to_a
     end
 
     def execute(execution)
@@ -42,6 +43,10 @@ class Application
       end
 
       after_callbacks.each { |b| execution.instance_eval(&b) }
+    rescue => error
+      raise unless guard = @error_guards.find { |guard| error.is_a?(guard[:error_class]) }
+
+      execution.instance_eval(&guard[:caller])
     end
 
     def match?(execution)
@@ -60,6 +65,10 @@ class Application
 
     def after(&block)
       after_callbacks << block
+    end
+    
+    def rescue_error(error_class, &block)
+      @error_guards << { error_class: error_class, caller: block }
     end
 
     def apply(mod)
