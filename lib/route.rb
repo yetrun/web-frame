@@ -7,6 +7,8 @@ require_relative 'execution'
 require 'json'
 
 class Route
+  attr_reader :path, :method
+
   def initialize(path, method)
     @path = path
     @method = method.to_s.upcase
