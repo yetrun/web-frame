@@ -3,6 +3,8 @@
 require_relative 'param_checker'
 
 class SingleParamScope
+  attr_reader :name
+
   def initialize(name, options={}, &block)
     @name = name.to_sym
     @options = options
@@ -47,6 +49,17 @@ class HashParamScope
     end
 
     value
+  end
+
+  def to_schema
+    properties = @scopes.map do |scope|
+      [scope.name, {}]
+    end.to_h
+
+    {
+      type: 'object',
+      properties: properties
+    }
   end
 end
 

@@ -30,6 +30,7 @@ class Route
 
   def params(&block)
     param_scope = HashParamScope.new(&block)
+    self.define_singleton_method(:param_scope) { param_scope }
 
     do_any {
       request_body = request.body.read
