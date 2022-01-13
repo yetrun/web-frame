@@ -27,7 +27,16 @@ describe 'SwaggerDocUtil.generate' do
     end
 
     it 'generates documentation of routes' do
-      expect(subject[:routes]).to eq ["GET /users", "POST /users", "GET /posts", "POST /posts"]
+      expect(subject[:paths]).to eq(
+        "/users" => {
+          get: {},
+          post: {}
+        },
+        "/posts" => {
+          get: {},
+          post: {}
+        }
+      ) 
     end
   end
 end
