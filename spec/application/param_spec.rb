@@ -372,4 +372,45 @@ describe Application, '.param' do
       expect(@holder[:params]).to eq(id: '1')
     end
   end
+
+  describe 'do not repeat yourself' do
+    def app
+      holder = @holder
+
+      app = Class.new(Application)
+
+      block = proc {
+        param :name
+        param :age
+      }
+
+      app.route('/users', :post)
+        .params {
+          param(:user, type: Hash, &block)
+        }
+        .do_any { holder[:params] = params }
+
+      app.route('/users/:id', :put)
+        .params {
+          param :user, type: Hash do
+            instance_eval(&block)
+          end
+        }
+        .do_any { holder[:params] = params }
+
+      app
+    end
+
+    it 'retrieves right params when requesting POST /users' do
+      post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+
+      expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+    end
+
+    it 'retrieves right params when requesting PUT /users/:id' do
+      put('/users/1', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+
+      expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18})
+    end
+  end
 end
