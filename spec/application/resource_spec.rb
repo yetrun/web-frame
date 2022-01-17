@@ -11,7 +11,7 @@ describe Application, '.resource' do
     app = Class.new(Application)
 
     app.route('/users', :get)
-      .resource { 'User resource' }
+      .resource { "Self is a execution: #{self.is_a?(Execution)}" }
       .do_any { holder[:resource] = resource }
 
     app
@@ -21,6 +21,6 @@ describe Application, '.resource' do
     get '/users'
 
     expect(last_response).to be_ok
-    expect(@holder[:resource]).to eq 'User resource'
+    expect(@holder[:resource]).to eq 'Self is a execution: true'
   end
 end

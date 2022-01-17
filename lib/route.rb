@@ -45,7 +45,8 @@ class Route
 
   def resource(&block)
     do_any {
-      resource = block.call
+      resource = instance_exec(&block)
+
       # 为 execution 添加一个 resource 方法
       define_singleton_method(:resource) { resource }
     }
