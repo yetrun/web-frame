@@ -4,6 +4,7 @@
 
 require_relative 'param_scope'
 require_relative 'execution'
+require 'json'
 
 class Route
   def initialize(path, method)
@@ -62,10 +63,35 @@ class Route
     }
   end
 
-  def to_json # rubocop:disable Lint/ToJSON
+  def expose(key = nil, &block)
     do_any {
-      response.body = resource.to_json
+      entity = instance_exec(&block)
+
+      if key.nil?
+        # 直接将 entity 渲染为 response body
+        entity_json = entity.respond_to?(:as_json) ? entity.as_json : entity
+        response.body = [JSON.generate(entity_json)]
+      else
+        # 首先获取字符串格式的 response.body
+        response_body = response.body
+        response_body = response_body[0] if response_body.is_a?(Array)
+
+        # 接着将字符串格式的 body 解释为 Hash
+        if response_body.nil? || response_body == ''
+          response_hash = {}
+        else
+          response_hash = JSON.parse(response_body)
+        end
+
+        # 最后合并 entity 到 response.body
+        response_hash[key.to_s] = entity.respond_to?(:as_json) ? entity.as_json : entity
+        response.body = [JSON.generate(response_hash)]
+      end
     }
+  end
+
+  def expose_resource(key = nil)
+    expose(key) { resource }
   end
 
   def execute(execution)
