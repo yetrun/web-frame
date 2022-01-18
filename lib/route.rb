@@ -60,6 +60,12 @@ class Route
     }
   end
 
+  def status(code)
+    do_any {
+      response.status = code
+    }
+  end
+
   def expose(key = nil, &block)
     do_any {
       entity = instance_exec(&block)
