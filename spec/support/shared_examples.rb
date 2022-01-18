@@ -10,6 +10,6 @@ shared_examples 'missing matching route' do |method, path|
   it "raises error when request #{method} #{path}" do
     expect {
       send method, path
-    }.to raise_error(Errors::NoMatchingRouteError)
+    }.to raise_error(Errors::NoMatchingRoute)
   end
 end

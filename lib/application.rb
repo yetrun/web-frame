@@ -26,7 +26,7 @@ class Application
       if match?(execution)
         execute(execution)
       else
-        raise Errors::NoMatchingRouteError, "未能发现匹配的路由：#{request.request_method} #{request.path}"
+        raise Errors::NoMatchingRoute, "未能发现匹配的路由：#{request.request_method} #{request.path}"
       end
 
       execution.response.to_a

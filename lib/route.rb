@@ -17,9 +17,7 @@ class Route
     path = request.path
     method = request.request_method
 
-    path_raw_regex = @path.gsub(/:(\w+)/, '(?<\1>[^/]+)')
-    path_regex = Regexp.new("^#{path_raw_regex}$")
-    path_regex.match?(path) && @method == method
+    path_matching_regex.match?(path) && @method == method
   end
 
   def do_any(&block)
@@ -99,9 +97,7 @@ class Route
 
   def execute(execution)
     # 将 path params 合并到 request 中
-    path_raw_regex = @path.gsub(/:(\w+)/, '(?<\1>[^/]+)')
-    path_regex = Regexp.new("^#{path_raw_regex}$")
-    path_params = path_regex.match(execution.request.path).named_captures
+    path_params = path_matching_regex.match(execution.request.path).named_captures
     path_params.each { |name, value| execution.request.update_param(name, value) }
 
     # 依次执行这个环境
@@ -112,5 +108,14 @@ class Route
     rescue Execution::Abort
       execution
     end
+  end
+
+  private
+
+  def path_matching_regex
+    path_raw_regex = @path
+      .gsub(/:(\w+)/, '(?<\1>[^/]+)').gsub(/\*(\w+)/, '(?<\1>.+)')
+      .gsub(/:/, '[^/]+').gsub('*', '.+')
+    path_regex = Regexp.new("^#{path_raw_regex}$")
   end
 end
