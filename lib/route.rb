@@ -56,10 +56,7 @@ class Route
   def authorize(&block)
     do_any {
       permitted = instance_eval(&block)
-      unless permitted
-        response.status = 403
-        raise Execution::Abort
-      end
+      raise Errors::NotAuthorized unless permitted
     }
   end
 

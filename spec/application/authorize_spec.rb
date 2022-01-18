@@ -27,9 +27,8 @@ describe Application, '.authorize' do
   end
 
   it 'forbids when authorize false' do
-    get '/forbid'
-
-    expect(last_response.status).to eq 403
-    expect(@holder).to be_empty
+    expect {
+      get '/forbid'
+    }.to raise_error(Errors::NotAuthorized)
   end
 end
