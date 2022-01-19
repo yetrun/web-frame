@@ -20,37 +20,21 @@ module SwaggerDocUtil
       operation_object[:requestBody] = {
         content: {
           'application/json' => {
-            schema: generate_parameters_schema(route)
+            schema: route.param_scope.to_schema
           }
         }
-      }
+      } if route.respond_to?(:param_scope)
       operation_object[:responses] = {
         '200' => {
           content: {
             'application/json' => {
-              schema: {
-                type: 'object',
-                properties: route.exposures.map do |key, entity|
-                  [key, generate_entity_schema(entity)]
-                end.to_h
-              }
+              schema: route.exposure_scope.to_schema
             }
           }
         }
-      } if route.respond_to?(:exposures)
+      } if route.respond_to?(:exposure_scope)
 
       operation_object
-    end
-
-    def generate_parameters_schema(route)
-      return route.respond_to?(:param_scope) ? route.param_scope.to_schema : {}
-    end
-
-    def generate_entity_schema(entity)
-      {
-        type: 'object',
-        properties: entity.root_exposures.map { |exposure| [exposure.key, {}] }.to_h
-      }
     end
   end
 end

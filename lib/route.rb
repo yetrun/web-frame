@@ -3,6 +3,7 @@
 # 每个块都是在 execution 环境下执行的
 
 require_relative 'param_scope'
+require_relative 'exposure_scope'
 require_relative 'execution'
 require 'json'
 
@@ -67,53 +68,13 @@ class Route
     }
   end
 
-  def expose(*params, &block)
-    key = nil
-    entity_class = nil
-
-    if params.length == 1
-      if params[0].is_a?(Symbol)
-        key = params[0]
-      else
-        entity_class = params[0]
-      end
-    else
-      key, entity_class = params
-    end
-
-    @exposures = @exposures || {}
-    @exposures[key] = entity_class
-    self.define_singleton_method(:exposures) { @exposures } # TODO: 重复定义
+  def exposures(&block)
+    exposure_scope = ExposureScope.new(&block)
+    self.define_singleton_method(:exposure_scope) { exposure_scope }
 
     do_any {
-      entity = instance_exec(&block)
-      entity = entity_class.represent(entity) if entity_class
-      entity = entity.as_json if entity.respond_to?(:as_json)
-
-      if key.nil?
-        # 直接将 entity 渲染为 response body
-        response.body = [JSON.generate(entity)]
-      else
-        # 首先获取字符串格式的 response.body
-        response_body = response.body
-        response_body = response_body[0] if response_body.is_a?(Array)
-
-        # 接着将字符串格式的 body 解释为 Hash
-        if response_body.nil? || response_body == ''
-          response_hash = {}
-        else
-          response_hash = JSON.parse(response_body)
-        end
-
-        # 最后合并 entity 到 response.body
-        response_hash[key.to_s] = entity
-        response.body = [JSON.generate(response_hash)]
-      end
+      response.body = [exposure_scope.generate_json(self)]
     }
-  end
-
-  def expose_resource(*params)
-    expose(*params) { resource }
   end
 
   def execute(execution)

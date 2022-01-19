@@ -75,7 +75,9 @@ describe 'SwaggerDocUtil.generate' do
       end
 
       app.route('/user', :get)
-        .expose(:user, entity_class) {}
+        .exposures {
+          expose(:user, entity_class) {}
+        }
 
       app
     end
