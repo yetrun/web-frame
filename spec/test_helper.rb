@@ -1,3 +1,4 @@
+require 'bundler/setup'
 require "rack/test"
 require_relative '../lib/application'
 

@@ -1,6 +1,7 @@
 require_relative '../test_helper'
 require_relative '../../lib/swagger_doc'
 require 'json'
+require 'grape-entity'
 
 describe 'SwaggerDocUtil.generate' do
   subject { SwaggerDocUtil.generate(app) }
@@ -61,6 +62,37 @@ describe 'SwaggerDocUtil.generate' do
           age: {}
         }
       ) 
+    end
+  end
+
+  describe 'generating responses documentation' do
+    let(:app) do
+      app = Class.new(Application)
+
+      entity_class = Class.new(Grape::Entity) do
+        expose :name
+        expose :age
+      end
+
+      app.route('/user', :get)
+        .expose(:user, entity_class) {}
+
+      app
+    end
+
+    it 'generates documentation of responses' do
+      expect(subject[:paths]['/user'][:get][:responses]['200'][:content]['application/json'][:schema]).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            type: 'object',
+            properties: {
+              name: {},
+              age: {}
+            }
+          }
+        }
+      )
     end
   end
 end

@@ -67,14 +67,32 @@ class Route
     }
   end
 
-  def expose(key = nil, &block)
+  def expose(*params, &block)
+    key = nil
+    entity_class = nil
+
+    if params.length == 1
+      if params[0].is_a?(Symbol)
+        key = params[0]
+      else
+        entity_class = params[0]
+      end
+    else
+      key, entity_class = params
+    end
+
+    @exposures = @exposures || {}
+    @exposures[key] = entity_class
+    self.define_singleton_method(:exposures) { @exposures } # TODO: 重复定义
+
     do_any {
       entity = instance_exec(&block)
+      entity = entity_class.represent(entity) if entity_class
+      entity = entity.as_json if entity.respond_to?(:as_json)
 
       if key.nil?
         # 直接将 entity 渲染为 response body
-        entity_json = entity.respond_to?(:as_json) ? entity.as_json : entity
-        response.body = [JSON.generate(entity_json)]
+        response.body = [JSON.generate(entity)]
       else
         # 首先获取字符串格式的 response.body
         response_body = response.body
@@ -88,14 +106,14 @@ class Route
         end
 
         # 最后合并 entity 到 response.body
-        response_hash[key.to_s] = entity.respond_to?(:as_json) ? entity.as_json : entity
+        response_hash[key.to_s] = entity
         response.body = [JSON.generate(response_hash)]
       end
     }
   end
 
-  def expose_resource(key = nil)
-    expose(key) { resource }
+  def expose_resource(*params)
+    expose(*params) { resource }
   end
 
   def execute(execution)
