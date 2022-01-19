@@ -1,5 +1,5 @@
+require 'spec_helper'
 require "rack/test"
-require_relative '../test_helper'
 
 describe Application, '.do_any' do
   include Rack::Test::Methods

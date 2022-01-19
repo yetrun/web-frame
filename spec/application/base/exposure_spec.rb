@@ -1,4 +1,4 @@
-require_relative '../test_helper'
+require 'spec_helper'
 
 describe Application, '.exposures' do
   before { @holder = {} }

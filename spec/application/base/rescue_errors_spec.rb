@@ -1,4 +1,4 @@
-require_relative '../test_helper'
+require 'spec_helper'
 
 describe Application, '.rescue_error' do
   include Rack::Test::Methods

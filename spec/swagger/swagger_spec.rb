@@ -1,4 +1,4 @@
-require_relative '../test_helper'
+require 'spec_helper'
 require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'

@@ -1,4 +1,4 @@
-require_relative '../test_helper'
+require 'spec_helper'
 require 'json'
 
 describe Application, '.param' do

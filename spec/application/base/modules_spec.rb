@@ -1,5 +1,5 @@
-require_relative '../test_helper'
-require_relative '../support/shared_examples'
+require 'spec_helper'
+require 'support/shared_examples'
 
 describe Application, '.apply' do
   include Rack::Test::Methods
