@@ -28,7 +28,8 @@ describe ExposureScope do
 
   let(:user_entity_class) do
     Class.new(Grape::Entity) do
-      expose :name, :age
+      expose :name
+      expose :age, unless: :forbidden
     end
   end
 
@@ -67,5 +68,23 @@ describe ExposureScope do
         'name' => user_object.name, 'age' => user_object.age,
       )
     }
+  end
+
+  describe 'exposing with options' do
+    context 'with key' do
+      before do
+        the_user_object = user_object
+
+        subject.expose(:user, user_entity_class, forbidden: true) { the_user_object }
+        subject.expose(user_entity_class, forbidden: true) { the_user_object }
+      end
+
+      it {
+        expect(generated_json).to eq(
+          'user' => { 'name' => user_object.name },
+          'name' => user_object.name
+        )
+      }
+    end
   end
 end

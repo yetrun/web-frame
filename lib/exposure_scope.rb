@@ -6,17 +6,27 @@ class ExposureScope
     instance_eval &block if block_given?
   end
 
-  def expose(key = nil, entity_class = nil, &block)
+  # expose
+  # expose(UserEntity)
+  # expose(UserEntity, full: true)
+  #
+  # expose(:user)
+  # expose(:user, UserEntity)
+  # expose(:user, UserEntity, full: true)
+  def expose(key = nil, entity_class = nil, options = nil, &block)
     if key.is_a?(Symbol)
       @exposures[key] = {
         block: block,
-        entity_class: entity_class
+        entity_class: entity_class,
+        options: options || {}
       }
     else
-      entity_class = key
+      entity_class, options = [key, entity_class]
+
       @root_exposure = {
         block: block,
-        entity_class: entity_class
+        entity_class: entity_class,
+        options: options || {}
       }
     end
   end
@@ -48,7 +58,7 @@ class ExposureScope
 
   def generate_with_exposure(execution, exposure)
     value = execution.instance_exec(&exposure[:block])
-    value = exposure[:entity_class].represent(value) if exposure[:entity_class]
+    value = exposure[:entity_class].represent(value, exposure[:options]) if exposure[:entity_class]
     value = value.as_json if value.respond_to?(:as_json)
 
     value
