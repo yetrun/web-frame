@@ -4,7 +4,6 @@ require 'json'
 require 'grape-entity'
 
 describe 'SwaggerDocUtil.generate' do
-
   subject do
     doc = SwaggerDocUtil.generate(app) 
     doc[:paths]['/user'][:get][:responses]['200'][:content]['application/json'][:schema]
@@ -111,6 +110,62 @@ describe 'SwaggerDocUtil.generate' do
           properties: {}
         )
       }
+    end
+
+    describe 'array type entity class' do
+      context 'ExposureScope.expose with `is_array` is true' do
+        let(:arguments) { [:user, entity_class, is_array: true] }
+
+        it {
+          is_expected.to eq(
+            type: 'object',
+            properties: {
+              user: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    name: {},
+                    age: {}
+                  }
+                }
+              }
+            }
+          )
+        }
+      end
+
+      context 'Grape::Entity.expose with `is_array` is true' do
+        let(:arguments) { [entity_class] }
+
+        let(:entity_class) do
+          inner_entity_class = Class.new(Grape::Entity) do
+            expose :name, :age
+          end
+
+          Class.new(Grape::Entity) do
+            expose :user, using: inner_entity_class, documentation: { is_array: true }
+          end
+        end
+
+        it {
+          is_expected.to eq(
+            type: 'object',
+            properties: {
+              user: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    name: {},
+                    age: {}
+                  }
+                }
+              }
+            }
+          )
+        }
+      end
     end
   end
 end

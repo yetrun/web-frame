@@ -23,11 +23,13 @@ class ExposureScope
       }
     else
       entity_class, options = [key, entity_class]
+      options = options || {}
+      raise '不支持根 Exposure 的类型为数组' if options[:is_array]
 
       @root_exposure = {
         block: block,
         entity_class: entity_class,
-        options: options || {}
+        options: options
       }
     end
   end
@@ -53,11 +55,12 @@ class ExposureScope
     }
 
     if @root_exposure && @root_exposure[:entity_class]
-      schema = generate_entity_schema(@root_exposure[:entity_class])
+      schema = generate_entity_schema(@root_exposure[:entity_class], @root_exposure[:options][:is_array])
     end
 
     properties = @exposures.transform_values do |exposure|
-      exposure[:entity_class] ? generate_entity_schema(exposure[:entity_class]) : {}
+      exposure[:entity_class] ? 
+        generate_entity_schema(exposure[:entity_class], exposure[:options][:is_array]) : {}
     end
     schema[:properties].merge!(properties)
 
@@ -74,17 +77,22 @@ class ExposureScope
     value
   end
 
-  def generate_entity_schema(entity_class)
+  def generate_entity_schema(entity_class, is_array)
     properties = entity_class.root_exposures.map { |exposure| 
-      schema = exposure.respond_to?(:using_class_name) ? 
-        generate_entity_schema(exposure.using_class_name) : {}
+      schema = {}
+      if exposure.respond_to?(:using_class_name)
+        schema = generate_entity_schema(
+          exposure.using_class_name, 
+          exposure.documentation && exposure.documentation[:is_array]
+        )
+      end
 
       [exposure.key, schema] 
     }.to_h
 
-    {
-      type: 'object',
-      properties: properties
-    }
+    schema = { type: 'object', properties: properties }
+    schema = { type: 'array', items: schema } if is_array
+
+    return schema
   end
 end
