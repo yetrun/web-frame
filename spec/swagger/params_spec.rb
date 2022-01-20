@@ -14,8 +14,11 @@ describe 'SwaggerDocUtil.generate' do
 
         app.route('/users', :post)
           .params {
-            param :name
-            param :age
+            param :str, type: String
+            param :int, type: Integer
+            param :hash, type: Hash
+            param :array, type: Array
+            param :any
           } 
 
         app
@@ -25,8 +28,19 @@ describe 'SwaggerDocUtil.generate' do
         expect(subject[:paths]['/users'][:post][:requestBody][:content]['application/json'][:schema]).to eq(
           type: 'object',
           properties: {
-            name: {},
-            age: {}
+            str: {
+              type: 'string'
+            },
+            int: {
+              type: 'integer'
+            },
+            hash: {
+              type: 'object'
+            },
+            array: {
+              type: 'array'
+            },
+            any: {}
           }
         ) 
       end

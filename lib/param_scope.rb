@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'param_checker'
+require_relative 'param_doc'
 
 class SingleParamScope
   attr_reader :name
@@ -28,7 +29,12 @@ class SingleParamScope
   end
 
   def to_schema
-    @inner_scope ? @inner_scope.to_schema : {}
+    return @inner_scope.to_schema if @inner_scope
+
+    schema = {}
+    schema[:type] = ParamDoc.readable_type(@options[:type]) if @options[:type]
+
+    schema
   end
 end
 
