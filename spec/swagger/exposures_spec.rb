@@ -167,5 +167,66 @@ describe 'SwaggerDocUtil.generate' do
         }
       end
     end
+
+    describe 'types' do
+      context 'declaring in Grape::Entity' do
+        let(:arguments) { [:user, entity_class] }
+
+        let(:entity_class) do
+          Class.new(Grape::Entity) do
+            expose :name, documentation: { type: 'string' }
+            expose :age, documentation: { type: 'integer' }
+          end
+        end
+
+        it {
+          is_expected.to eq(
+            type: 'object',
+            properties: {
+              user: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  age: { type: 'integer' }
+                }
+              }
+            }
+          )
+        }
+      end
+
+      context 'declaring in ExposureScope' do
+        let(:arguments) { [:count, type: 'integer'] }
+
+        it {
+          is_expected.to eq(
+            type: 'object',
+            properties: {
+              count: {
+                type: 'integer'
+              }
+            }
+          )
+        }
+
+        context 'is array' do
+          let(:arguments) { [:count, type: 'integer', is_array: true] }
+
+          it {
+            is_expected.to eq(
+              type: 'object',
+              properties: {
+                count: {
+                  type: 'array',
+                  items: {
+                    type: 'integer'
+                  }
+                }
+              }
+            )
+          }
+        end
+      end
+    end
   end
 end

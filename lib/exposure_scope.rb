@@ -8,14 +8,18 @@ class ExposureScope
 
   # 调用方式：
   # - expose
+  #
   # - expose(UserEntity)
   # - expose(UserEntity, full: true)
   #
   # - expose(:user)
   # - expose(:user, UserEntity)
   # - expose(:user, UserEntity, full: true)
+  # - expose(:user, type: 'object')
   def expose(key = nil, entity_class = nil, options = nil, &block)
     if key.is_a?(Symbol)
+      entity_class, options = [nil, entity_class] if entity_class.is_a?(Hash)
+
       @exposures[key] = {
         block: block,
         entity_class: entity_class,
@@ -23,6 +27,8 @@ class ExposureScope
       }
     else
       entity_class, options = [key, entity_class]
+      entity_class, options = [nil, entity_class] if entity_class.is_a?(Hash)
+
       options = options || {}
       raise '不支持根 Exposure 的类型为数组' if options[:is_array]
 
@@ -59,8 +65,17 @@ class ExposureScope
     end
 
     properties = @exposures.transform_values do |exposure|
-      exposure[:entity_class] ? 
-        generate_entity_schema(exposure[:entity_class], exposure[:options][:is_array]) : {}
+      if exposure[:entity_class]
+        generate_entity_schema(exposure[:entity_class], exposure[:options][:is_array]) 
+      else
+        exposure_schema = {}
+        exposure_schema[:type] = exposure[:options][:type] if exposure[:options][:type]
+        exposure_schema = {
+          type: 'array',
+          items: exposure_schema
+        } if exposure[:options][:is_array]
+        exposure_schema
+      end
     end
     schema[:properties].merge!(properties)
 
@@ -79,12 +94,16 @@ class ExposureScope
 
   def generate_entity_schema(entity_class, is_array)
     properties = entity_class.root_exposures.map { |exposure| 
-      schema = {}
       if exposure.respond_to?(:using_class_name)
         schema = generate_entity_schema(
           exposure.using_class_name, 
           exposure.documentation && exposure.documentation[:is_array]
         )
+      else
+        schema = {}
+
+        documentation = exposure.documentation || {}
+        schema[:type] = documentation[:type] if documentation[:type]
       end
 
       [exposure.key, schema] 
