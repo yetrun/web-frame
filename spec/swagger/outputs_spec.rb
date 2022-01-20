@@ -14,8 +14,8 @@ describe 'SwaggerDocUtil.generate' do
 
     the_arguments = arguments
     app.route('/user', :get)
-      .exposures {
-        expose(*the_arguments)
+      .outputs {
+        output(*the_arguments)
       }
 
     app
@@ -28,7 +28,7 @@ describe 'SwaggerDocUtil.generate' do
   end
 
   describe 'generating responses schema documentation' do
-    context '.expose(:key, entity_class)' do
+    context '.output(:key, entity_class)' do
       let(:arguments) { [:user, entity_class] }
 
       it {
@@ -47,7 +47,7 @@ describe 'SwaggerDocUtil.generate' do
       }
     end
 
-    context '.expose(:key)' do
+    context '.output(:key)' do
       let(:arguments) { [:user] }
 
       it {
@@ -60,7 +60,7 @@ describe 'SwaggerDocUtil.generate' do
       }
     end
 
-    context '.expose(entity_class)' do
+    context '.output(entity_class)' do
       let(:arguments) { [entity_class] }
 
       it {
@@ -101,7 +101,7 @@ describe 'SwaggerDocUtil.generate' do
       end
     end
 
-    context '.expose()' do
+    context '.output()' do
       let(:arguments) { [] }
 
       it {
@@ -113,7 +113,7 @@ describe 'SwaggerDocUtil.generate' do
     end
 
     describe 'array type entity class' do
-      context 'ExposureScope.expose with `is_array` is true' do
+      context 'ExposureScope.output with `is_array` is true' do
         let(:arguments) { [:user, entity_class, is_array: true] }
 
         it {

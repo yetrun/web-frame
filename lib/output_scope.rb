@@ -1,4 +1,4 @@
-class ExposureScope
+class OutputScope
   def initialize(&block)
     @root_exposure = nil
     @exposures = {}
@@ -7,16 +7,16 @@ class ExposureScope
   end
 
   # 调用方式：
-  # - expose
+  # - output
   #
-  # - expose(UserEntity)
-  # - expose(UserEntity, full: true)
+  # - output(UserEntity)
+  # - output(UserEntity, full: true)
   #
-  # - expose(:user)
-  # - expose(:user, UserEntity)
-  # - expose(:user, UserEntity, full: true)
-  # - expose(:user, type: 'object')
-  def expose(key = nil, entity_class = nil, options = nil, &block)
+  # - output(:user)
+  # - output(:user, UserEntity)
+  # - output(:user, UserEntity, full: true)
+  # - output(:user, type: 'object')
+  def output(key = nil, entity_class = nil, options = nil, &block)
     if key.is_a?(Symbol)
       entity_class, options = [nil, entity_class] if entity_class.is_a?(Hash)
 

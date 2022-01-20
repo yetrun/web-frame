@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Application, '.exposures' do
+describe Application, '.outputs' do
   before { @holder = {} }
 
   def app
@@ -9,9 +9,9 @@ describe Application, '.exposures' do
     app = Class.new(Application)
 
     app.route('/resource', :get)
-      .exposures do
-        expose(:foo) { { a: 1, b: 2 } }
-        expose(:bar) { { c: 3, d: 4 } }
+      .outputs do
+        output(:foo) { { a: 1, b: 2 } }
+        output(:bar) { { c: 3, d: 4 } }
       end
 
     app

@@ -3,7 +3,7 @@
 # 每个块都是在 execution 环境下执行的
 
 require_relative 'param_scope'
-require_relative 'exposure_scope'
+require_relative 'output_scope'
 require_relative 'execution'
 require 'json'
 
@@ -68,8 +68,8 @@ class Route
     }
   end
 
-  def exposures(&block)
-    exposure_scope = ExposureScope.new(&block)
+  def outputs(&block)
+    exposure_scope = OutputScope.new(&block)
     self.define_singleton_method(:exposure_scope) { exposure_scope }
 
     do_any {
