@@ -53,7 +53,7 @@ class ExposureScope
     }
 
     if @root_exposure && @root_exposure[:entity_class]
-      schema  = generate_entity_schema(@root_exposure[:entity_class])
+      schema = generate_entity_schema(@root_exposure[:entity_class])
     end
 
     properties = @exposures.transform_values do |exposure|
@@ -75,9 +75,16 @@ class ExposureScope
   end
 
   def generate_entity_schema(entity_class)
+    properties = entity_class.root_exposures.map { |exposure| 
+      schema = exposure.respond_to?(:using_class_name) ? 
+        generate_entity_schema(exposure.using_class_name) : {}
+
+      [exposure.key, schema] 
+    }.to_h
+
     {
       type: 'object',
-      properties: entity_class.root_exposures.map { |exposure| [exposure.key, {}] }.to_h
+      properties: properties
     }
   end
 end

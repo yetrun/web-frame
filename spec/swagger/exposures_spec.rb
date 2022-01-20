@@ -73,6 +73,33 @@ describe 'SwaggerDocUtil.generate' do
           }
         )
       }
+
+      context 'with inner nesting entity class' do
+        let(:entity_class) do
+          inner_entity_class = Class.new(Grape::Entity) do
+            expose :name, :age
+          end
+
+          Class.new(Grape::Entity) do
+            expose :user, using: inner_entity_class
+          end
+        end
+
+        it {
+          is_expected.to eq(
+            type: 'object',
+            properties: {
+              user: {
+                type: 'object',
+                properties: {
+                  name: {},
+                  age: {}
+                }
+              }
+            }
+          )
+        }
+      end
     end
 
     context '.expose()' do
