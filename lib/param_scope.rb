@@ -26,6 +26,10 @@ class SingleParamScope
 
     { @name => value }
   end
+
+  def to_schema
+    @inner_scope ? @inner_scope.to_schema : {}
+  end
 end
 
 class HashParamScope
@@ -53,7 +57,7 @@ class HashParamScope
 
   def to_schema
     properties = @scopes.map do |scope|
-      [scope.name, {}]
+      [scope.name, scope.to_schema]
     end.to_h
 
     {
@@ -72,5 +76,12 @@ class ArrayParamScope
     params.map do |item|
       @inner_scope.filter(item)
     end
+  end
+
+  def to_schema
+    {
+      type: 'array',
+      items: @inner_scope ? @inner_scope.to_schema : {}
+    }
   end
 end
