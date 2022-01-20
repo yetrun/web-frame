@@ -6,13 +6,14 @@ class ExposureScope
     instance_eval &block if block_given?
   end
 
-  # expose
-  # expose(UserEntity)
-  # expose(UserEntity, full: true)
+  # 调用方式：
+  # - expose
+  # - expose(UserEntity)
+  # - expose(UserEntity, full: true)
   #
-  # expose(:user)
-  # expose(:user, UserEntity)
-  # expose(:user, UserEntity, full: true)
+  # - expose(:user)
+  # - expose(:user, UserEntity)
+  # - expose(:user, UserEntity, full: true)
   def expose(key = nil, entity_class = nil, options = nil, &block)
     if key.is_a?(Symbol)
       @exposures[key] = {
@@ -46,12 +47,21 @@ class ExposureScope
   end
 
   def to_schema
-    {
+    schema = {
       type: 'object',
-      properties: @exposures.transform_values do |exposure|
-        generate_entity_schema(exposure[:entity_class])
-      end
+      properties: {}
     }
+
+    if @root_exposure && @root_exposure[:entity_class]
+      schema  = generate_entity_schema(@root_exposure[:entity_class])
+    end
+
+    properties = @exposures.transform_values do |exposure|
+      exposure[:entity_class] ? generate_entity_schema(exposure[:entity_class]) : {}
+    end
+    schema[:properties].merge!(properties)
+
+    schema
   end
 
   private
