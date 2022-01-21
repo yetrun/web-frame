@@ -2,6 +2,8 @@ module SwaggerDocUtil
   class << self
     def generate(application)
       routes = application.routes.routes
+      routes += application.applications.map { |app| app.routes.routes }.flatten
+
       paths = routes.group_by { |route| route.path }.map do |path, routes|
         operations = routes.map do |route|
           [route.method.downcase.to_sym, generate_operation_object(route)]
