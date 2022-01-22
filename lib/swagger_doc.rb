@@ -21,6 +21,7 @@ module SwaggerDocUtil
 
     def generate_operation_object(route)
       operation_object = {}
+      operation_object[:tags] = route.route_tags if route.respond_to?(:route_tags)
       operation_object[:requestBody] = {
         content: {
           'application/json' => {

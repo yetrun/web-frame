@@ -31,7 +31,7 @@ class Route
 
   def params(&block)
     param_scope = HashParamScope.new(&block)
-    self.define_singleton_method(:param_scope) { param_scope }
+    define_singleton_method(:param_scope) { param_scope }
 
     do_any {
       request_body = request.body.read
@@ -70,7 +70,7 @@ class Route
 
   def outputs(&block)
     exposure_scope = OutputScope.new(&block)
-    self.define_singleton_method(:exposure_scope) { exposure_scope }
+    define_singleton_method(:exposure_scope) { exposure_scope }
 
     do_any {
       response.body = [exposure_scope.generate_json(self)]
@@ -90,6 +90,12 @@ class Route
     rescue Execution::Abort
       execution
     end
+  end
+
+  def tags(names)
+    define_singleton_method(:route_tags) { names }
+
+    self
   end
 
   private
