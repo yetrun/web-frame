@@ -12,9 +12,15 @@ Style/GuardClause:
 
 Metrics/MethodLength:
   Max: 20
-
 Metrics/BlockLength:
   IgnoredMethods: ['describe', 'context']
+Metrics/AbcSize:
+  CountRepeatedAttributes: false
+  Max: 30
+Metrics/PerceivedComplexity:
+  Max: 10
+Metrics/CyclomaticComplexity:
+  Max: 10
 
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented_relative_to_receiver

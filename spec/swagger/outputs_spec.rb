@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require_relative '../../lib/swagger_doc'
 require 'json'
@@ -5,10 +7,10 @@ require 'grape-entity'
 
 describe 'SwaggerDocUtil.generate' do
   subject do
-    doc = SwaggerDocUtil.generate(app) 
+    doc = SwaggerDocUtil.generate(app)
     doc[:paths]['/user'][:get][:responses]['200'][:content]['application/json'][:schema]
   end
-  
+
   let(:app) do
     app = Class.new(Application)
 
@@ -114,7 +116,7 @@ describe 'SwaggerDocUtil.generate' do
 
     describe 'array type entity class' do
       context 'ExposureScope.output with `is_array` is true' do
-        let(:arguments) { [:user, entity_class, is_array: true] }
+        let(:arguments) { [:user, entity_class, { is_array: true }] }
 
         it {
           is_expected.to eq(
@@ -168,14 +170,14 @@ describe 'SwaggerDocUtil.generate' do
       end
     end
 
-    describe 'types' do
-      context 'declaring in Grape::Entity' do
+    describe 'type and description' do
+      context 'declaring type and description in Grape::Entity' do
         let(:arguments) { [:user, entity_class] }
 
         let(:entity_class) do
           Class.new(Grape::Entity) do
-            expose :name, documentation: { type: 'string' }
-            expose :age, documentation: { type: 'integer' }
+            expose :name, documentation: { type: 'string', description: '姓名' }
+            expose :age, documentation: { type: 'integer', description: '年龄' }
           end
         end
 
@@ -186,31 +188,104 @@ describe 'SwaggerDocUtil.generate' do
               user: {
                 type: 'object',
                 properties: {
-                  name: { type: 'string' },
-                  age: { type: 'integer' }
+                  name: { type: 'string', description: '姓名' },
+                  age: { type: 'integer', description: '年龄' }
                 }
               }
             }
           )
         }
+
+        context 'exposing a hash' do
+          let(:arguments) { [entity_class] }
+
+          # HACK: 命名为 user_entity_class
+          let(:inner_entity_class) do
+            Class.new(Grape::Entity) do
+              expose :name
+              expose :age
+            end
+          end
+
+          let(:entity_class) do
+            the_inner_entity_class = inner_entity_class
+            Class.new(Grape::Entity) do
+              expose :user, using: the_inner_entity_class, documentation: { description: '用户' }
+            end
+          end
+
+          it {
+            is_expected.to eq(
+              type: 'object',
+              properties: {
+                user: {
+                  type: 'object',
+                  description: '用户',
+                  properties: {
+                    name: {},
+                    age: {}
+                  }
+                }
+              }
+            )
+          }
+        end
+
+        context 'exposing a array' do
+          let(:arguments) { [entity_class] }
+
+          let(:inner_entity_class) do
+            Class.new(Grape::Entity) do
+              expose :name
+              expose :age
+            end
+          end
+
+          let(:entity_class) do
+            the_inner_entity_class = inner_entity_class
+            Class.new(Grape::Entity) do
+              expose :user, using: the_inner_entity_class, documentation: { is_array: true, description: '用户' }
+            end
+          end
+
+          it {
+            is_expected.to eq(
+              type: 'object',
+              properties: {
+                user: {
+                  type: 'array',
+                  description: '用户',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: {},
+                      age: {}
+                    }
+                  }
+                }
+              }
+            )
+          }
+        end
       end
 
-      context 'declaring in ExposureScope' do
-        let(:arguments) { [:count, type: 'integer'] }
+      context 'declaring type and description in OutputScope' do
+        let(:arguments) { [:count, { type: 'integer', description: '数量' }] }
 
         it {
           is_expected.to eq(
             type: 'object',
             properties: {
               count: {
-                type: 'integer'
+                type: 'integer',
+                description: '数量'
               }
             }
           )
         }
 
         context 'is array' do
-          let(:arguments) { [:count, type: 'integer', is_array: true] }
+          let(:arguments) { [:count, { type: 'integer', is_array: true, description: '数量' }] }
 
           it {
             is_expected.to eq(
@@ -218,8 +293,52 @@ describe 'SwaggerDocUtil.generate' do
               properties: {
                 count: {
                   type: 'array',
+                  description: '数量',
                   items: {
                     type: 'integer'
+                  }
+                }
+              }
+            )
+          }
+        end
+
+        context 'outputing an entity class' do
+          let(:arguments) { [:user, entity_class, { description: '用户' }] }
+
+          it {
+            is_expected.to eq(
+              type: 'object',
+              properties: {
+                user: {
+                  type: 'object',
+                  description: '用户',
+                  properties: {
+                    name: {},
+                    age: {}
+                  }
+                }
+              }
+            )
+          }
+        end
+
+        context 'outputing an entity class array' do
+          let(:arguments) { [:user, entity_class, { is_array: true, description: '用户数组' }] }
+
+          it {
+            is_expected.to eq(
+              type: 'object',
+              properties: {
+                user: {
+                  type: 'array',
+                  description: '用户数组',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: {},
+                      age: {}
+                    }
                   }
                 }
               }
