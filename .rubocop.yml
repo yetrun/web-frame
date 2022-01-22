@@ -4,7 +4,7 @@ AllCops:
   NewCops: enable
 
 Style/BlockDelimiters:
-  IgnoredMethods: ['do_any']
+  Enabled: false
 Style/Documentation:
   Enabled: false
 Style/GuardClause:
@@ -12,6 +12,9 @@ Style/GuardClause:
 
 Metrics/MethodLength:
   Max: 20
+
+Metrics/BlockLength:
+  IgnoredMethods: ['describe', 'context']
 
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented_relative_to_receiver

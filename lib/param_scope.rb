@@ -6,7 +6,7 @@ require_relative 'param_doc'
 class SingleParamScope
   attr_reader :name
 
-  def initialize(name, options={}, &block)
+  def initialize(name, options = {}, &block)
     @name = name.to_sym
     @options = options
 
@@ -29,10 +29,14 @@ class SingleParamScope
   end
 
   def to_schema
-    return @inner_scope.to_schema if @inner_scope
+    if @inner_scope
+      schema = @inner_scope.to_schema
+    else
+      schema = {}
+      schema[:type] = ParamDoc.readable_type(@options[:type]) if @options[:type]
+    end
 
-    schema = {}
-    schema[:type] = ParamDoc.readable_type(@options[:type]) if @options[:type]
+    schema[:description] = @options[:description] if @options[:description]
 
     schema
   end
@@ -42,10 +46,10 @@ class HashParamScope
   def initialize(&block)
     @scopes = []
 
-    self.instance_eval &block
+    instance_eval(&block)
   end
 
-  def param(name, options={}, &block)
+  def param(name, options = {}, &block)
     name = name.to_s
 
     @scopes << SingleParamScope.new(name, options, &block)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SwaggerDocUtil
   class << self
     def generate(application)
@@ -11,7 +13,7 @@ module SwaggerDocUtil
         [path, operations]
       end.to_h
 
-      { 
+      {
         openapi: '3.0.0',
         paths: paths
       }

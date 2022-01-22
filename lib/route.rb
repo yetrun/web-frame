@@ -98,6 +98,6 @@ class Route
     path_raw_regex = @path
       .gsub(/:(\w+)/, '(?<\1>[^/]+)').gsub(/\*(\w+)/, '(?<\1>.+)')
       .gsub(/:/, '[^/]+').gsub('*', '.+')
-    path_regex = Regexp.new("^#{path_raw_regex}$")
+    Regexp.new("^#{path_raw_regex}$")
   end
 end
