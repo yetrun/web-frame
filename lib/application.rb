@@ -29,7 +29,9 @@ class Application
         raise Errors::NoMatchingRoute, "未能发现匹配的路由：#{request.request_method} #{request.path}"
       end
 
-      execution.response.to_a
+      response = execution.response
+      response.content_type = 'application/json' unless response.no_content?
+      response.to_a
     end
 
     def execute(execution)
