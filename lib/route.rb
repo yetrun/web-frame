@@ -98,6 +98,18 @@ class Route
     self
   end
 
+  def title(title)
+    define_singleton_method(:route_title) { title }
+
+    self
+  end
+
+  def description(description)
+    define_singleton_method(:route_description) { description }
+
+    self
+  end
+
   private
 
   def path_matching_regex

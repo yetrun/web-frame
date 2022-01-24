@@ -26,6 +26,8 @@ module SwaggerDocUtil
       operation_object = {}
 
       operation_object[:tags] = route.route_tags if route.respond_to?(:route_tags)
+      operation_object[:summary] = route.route_title if route.respond_to?(:route_title)
+      operation_object[:description] = route.route_description if route.respond_to?(:route_description)
 
       if route.respond_to?(:param_scope)
         parameters = route.param_scope.generate_parameters_doc

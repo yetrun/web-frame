@@ -6,7 +6,7 @@ require 'grape-entity'
 describe 'SwaggerDocUtil.generate' do
   subject { SwaggerDocUtil.generate(app) }
 
-  describe 'generating routes documentation' do
+  describe 'generating route paths part' do
     context 'singular module' do
       let(:app) do
         app = Class.new(Application)
@@ -86,6 +86,25 @@ describe 'SwaggerDocUtil.generate' do
           }
         ) 
       end
+    end
+  end
+
+  describe 'generating route description part' do
+    let(:app) do
+      app = Class.new(Application)
+
+      app.route('/users', :get)
+        .title('查看用户列表')
+        .description('此接口返回用户的列表')
+
+      app
+    end
+
+    it 'generates title and description' do
+      expect(subject[:paths]['/users'][:get]).to match(
+        summary: '查看用户列表',
+        description: '此接口返回用户的列表'
+      ) 
     end
   end
 end
