@@ -23,35 +23,40 @@ module SwaggerDocUtil
     end
 
     def generate_operation_object(route)
+      meta = route.meta
       operation_object = {}
 
-      operation_object[:tags] = route.route_tags if route.respond_to?(:route_tags)
-      operation_object[:summary] = route.route_title if route.respond_to?(:route_title)
-      operation_object[:description] = route.route_description if route.respond_to?(:route_description)
+      operation_object[:tags] = meta[:tags] if meta.key?(:tags)
+      operation_object[:summary] = meta[:title] if meta.key?(:title)
+      operation_object[:description] = meta[:description] if meta.key?(:description)
 
-      if route.respond_to?(:param_scope)
-        parameters = route.param_scope.generate_parameters_doc
+      if meta.key?(:param_scope)
+        parameters = meta[:param_scope].generate_parameters_doc
         operation_object[:parameters] = parameters unless parameters.empty?
 
-        schema = route.param_scope.to_schema
-        operation_object[:requestBody] = {
-          content: {
-            'application/json' => {
-              schema: route.param_scope.to_schema
+        schema = meta[:param_scope].to_schema
+        if schema
+          operation_object[:requestBody] = {
+            content: {
+              'application/json' => {
+                schema: schema
+              }
             }
           }
-        } if schema
+        end
       end
 
-      operation_object[:responses] = {
-        '200' => {
-          content: {
-            'application/json' => {
-              schema: route.exposure_scope.to_schema
+      if meta.key?(:output_scope)
+        operation_object[:responses] = {
+          '200' => {
+            content: {
+              'application/json' => {
+                schema: meta[:output_scope].to_schema
+              }
             }
           }
         }
-      } if route.respond_to?(:exposure_scope)
+      end
 
       operation_object
     end

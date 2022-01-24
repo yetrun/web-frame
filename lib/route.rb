@@ -8,11 +8,12 @@ require_relative 'execution'
 require 'json'
 
 class Route
-  attr_reader :path, :method
+  attr_reader :path, :method, :meta
 
   def initialize(path, method)
     @path = path
     @method = method.to_s.upcase
+    @meta = {}
     @blocks = []
   end
 
@@ -31,7 +32,7 @@ class Route
 
   def params(&block)
     param_scope = HashParamScope.new(&block)
-    define_singleton_method(:param_scope) { param_scope }
+    meta[:param_scope] = param_scope
 
     do_any {
       request_body = request.body.read
@@ -69,11 +70,11 @@ class Route
   end
 
   def outputs(&block)
-    exposure_scope = OutputScope.new(&block)
-    define_singleton_method(:exposure_scope) { exposure_scope }
+    output_scope = OutputScope.new(&block)
+    meta[:output_scope] = output_scope
 
     do_any {
-      response.body = [exposure_scope.generate_json(self)]
+      response.body = [output_scope.generate_json(self)]
     }
   end
 
@@ -93,19 +94,19 @@ class Route
   end
 
   def tags(names)
-    define_singleton_method(:route_tags) { names }
+    meta[:tags] = names
 
     self
   end
 
   def title(title)
-    define_singleton_method(:route_title) { title }
+    meta[:title] = title
 
     self
   end
 
   def description(description)
-    define_singleton_method(:route_description) { description }
+    meta[:description] = description
 
     self
   end
@@ -113,9 +114,9 @@ class Route
   private
 
   def path_matching_regex
-    path_raw_regex = @path
+    raw_regex = @path
       .gsub(/:(\w+)/, '(?<\1>[^/]+)').gsub(/\*(\w+)/, '(?<\1>.+)')
       .gsub(/:/, '[^/]+').gsub('*', '.+')
-    Regexp.new("^#{path_raw_regex}$")
+    Regexp.new("^#{raw_regex}$")
   end
 end
