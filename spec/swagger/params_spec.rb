@@ -9,9 +9,7 @@ describe 'SwaggerDocUtil.generate' do
 
   describe 'generating parameters documentation' do
     describe 'path params' do
-      subject do 
-        SwaggerDocUtil.generate(app)[:paths]['/users/:id'][:get][:parameters]
-      end
+      subject { SwaggerDocUtil.generate(app) }
 
       let(:app) do
         app = Class.new(Application)
@@ -27,7 +25,7 @@ describe 'SwaggerDocUtil.generate' do
       end
 
       it 'generates path and query params' do
-        expect(subject).to eq [
+        expect(subject[:paths]['/users/{id}'][:get][:parameters]).to eq [
           {
             name: :id,
             in: 'path',

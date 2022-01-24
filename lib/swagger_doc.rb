@@ -7,6 +7,9 @@ module SwaggerDocUtil
       routes += application.applications.map { |app| app.routes.routes }.flatten
 
       paths = routes.group_by { |route| route.path }.map do |path, routes|
+        # path 需要规范化
+        path = path.gsub(/[:*](\w+)/, '{\1}')
+
         operations = routes.map do |route|
           [route.method.downcase.to_sym, generate_operation_object(route)]
         end.to_h
