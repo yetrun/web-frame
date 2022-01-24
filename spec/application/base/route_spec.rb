@@ -22,7 +22,7 @@ describe Application, '.route' do
     context 'with parameters' do
       let(:holder) { {} }
 
-      def app
+      let(:base_app) do
         the_holder = holder
 
         app = Class.new(Application)
@@ -32,6 +32,8 @@ describe Application, '.route' do
 
         app
       end
+
+      let(:app) { base_app }
 
       before do
         get real_path
@@ -60,9 +62,7 @@ describe Application, '.route' do
       end
 
       describe 'glob parts param' do
-        shared_examples 'defining glob params' do |options = {}|
-          prefix = options[:prefix] || ''
-
+        shared_examples 'defining glob params' do
           context 'with name' do
             let(:path) { "#{prefix}/*name" }
 
@@ -100,12 +100,36 @@ describe Application, '.route' do
           end
         end
 
-        context 'defining in remaining path parts' do
+        context 'defining in full path' do
+          let(:prefix) { '' } # It generates `/*` and `/*name`
+
           include_examples 'defining glob params'
         end
 
-        context 'defining in full path' do
-          include_examples 'defining glob params', prefix: '/users'
+        context 'defining in remaining path parts' do
+          let(:prefix) { '/prefix' } # It generates '/prefix/*` and `/prefix/*name`
+
+          include_examples 'defining glob params'
+        end
+
+        context 'defining in modules' do
+          def app
+            app = Class.new(Application)
+            app.apply base_app
+            app
+          end
+
+          context 'defining in full path' do
+            let(:prefix) { '' } # It generates `/*` and `/*name`
+
+            include_examples 'defining glob params'
+          end
+
+          context 'defining in remaining path parts' do
+            let(:prefix) { '/prefix' } # It generates '/prefix/*` and `/prefix/*name`
+
+            include_examples 'defining glob params'
+          end
         end
       end
     end
