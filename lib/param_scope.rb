@@ -4,7 +4,7 @@ require_relative 'param_checker'
 require_relative 'param_doc'
 
 class SingleParamScope
-  attr_reader :name
+  attr_reader :name, :options
 
   def initialize(name, options = {}, &block)
     @name = name.to_sym
@@ -40,11 +40,21 @@ class SingleParamScope
 
     schema
   end
+
+  def generate_parameter_doc
+    {
+      name: name,
+      in: options[:in],
+      type: ParamDoc.readable_type(options[:type]),
+      required: options[:required] || false,
+      description: options[:description] || ''
+    }
+  end
 end
 
 class HashParamScope
   def initialize(&block)
-    @scopes = []
+    @single_param_scopes = []
 
     instance_eval(&block)
   end
@@ -52,28 +62,56 @@ class HashParamScope
   def param(name, options = {}, &block)
     name = name.to_s
 
-    @scopes << SingleParamScope.new(name, options, &block)
+    @single_param_scopes << SingleParamScope.new(name, options, &block)
   end
 
   def filter(params)
     value = {}
 
-    @scopes.each do |scope|
+    @single_param_scopes.each do |scope|
       value.merge!(scope.filter(params))
     end
 
     value
   end
 
+  # 生成 Swagger 文档的 schema 格式，所谓 schema 格式，是指形如
+  #
+  #     {
+  #       type: 'object',
+  #       properties: {
+  #         ...
+  #       }
+  #     }
+  #
+  # 的格式。
   def to_schema
-    properties = @scopes.map do |scope|
+    # 提取根路径的所有 `:in` 选项为 `body` 的元素（默认值为 `body`）
+    scopes = @single_param_scopes.filter { |scope| scope.options[:in].nil? || scope.options[:in] == 'body' }
+    
+    properties = scopes.map do |scope|
       [scope.name, scope.to_schema]
     end.to_h
 
-    {
-      type: 'object',
-      properties: properties
-    }
+    if properties.empty?
+      nil
+    else
+      {
+        type: 'object',
+        properties: properties
+      }
+    end
+  end
+
+  # 生成 Swagger 文档的 parameters 部分，这里是指生成路径位于 `path`、`query`
+  # 的参数
+  def generate_parameters_doc
+    # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
+    scopes = @single_param_scopes.filter { |scope| scope.options[:in] && scope.options[:in] != 'body' }
+
+    scopes.map do |scope|
+      scope.generate_parameter_doc
+    end
   end
 end
 

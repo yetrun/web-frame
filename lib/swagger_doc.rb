@@ -21,14 +21,23 @@ module SwaggerDocUtil
 
     def generate_operation_object(route)
       operation_object = {}
+
       operation_object[:tags] = route.route_tags if route.respond_to?(:route_tags)
-      operation_object[:requestBody] = {
-        content: {
-          'application/json' => {
-            schema: route.param_scope.to_schema
+
+      if route.respond_to?(:param_scope)
+        parameters = route.param_scope.generate_parameters_doc
+        operation_object[:parameters] = parameters unless parameters.empty?
+
+        schema = route.param_scope.to_schema
+        operation_object[:requestBody] = {
+          content: {
+            'application/json' => {
+              schema: route.param_scope.to_schema
+            }
           }
-        }
-      } if route.respond_to?(:param_scope)
+        } if schema
+      end
+
       operation_object[:responses] = {
         '200' => {
           content: {
