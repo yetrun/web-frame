@@ -63,34 +63,21 @@ class Route
     }
   end
 
-  def status(code)
-    do_any {
-      response.status = code
-    }
-  end
-
-  def outputs(&block)
+  def if_status(code, &block)
     output_scope = OutputScope.new(&block)
-    meta[:output_scope] = output_scope
+
+    meta[:responses] = meta[:responses] || {}
+    meta[:responses][code] = output_scope
 
     do_any {
-      response.body = [output_scope.generate_json(self)]
+      response.body = [output_scope.generate_json(self)] if response.status == code
     }
   end
 
-  def execute(execution)
-    # 将 path params 合并到 request 中
-    path_params = path_matching_regex.match(execution.request.path).named_captures
-    path_params.each { |name, value| execution.request.update_param(name, value) }
-
-    # 依次执行这个环境
-    begin
-      @blocks.each do |b|
-        execution.instance_eval(&b)
-      end
-    rescue Execution::Abort
-      execution
-    end
+  def set_status(&block)
+    do_any {
+      response.status = instance_exec(&block)
+    }
   end
 
   def tags(names)
@@ -109,6 +96,21 @@ class Route
     meta[:description] = description
 
     self
+  end
+
+  def execute(execution)
+    # 将 path params 合并到 request 中
+    path_params = path_matching_regex.match(execution.request.path).named_captures
+    path_params.each { |name, value| execution.request.update_param(name, value) }
+
+    # 依次执行这个环境
+    begin
+      @blocks.each do |b|
+        execution.instance_eval(&b)
+      end
+    rescue Execution::Abort
+      execution
+    end
   end
 
   private

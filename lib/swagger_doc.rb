@@ -46,16 +46,16 @@ module SwaggerDocUtil
         end
       end
 
-      if meta.key?(:output_scope)
-        operation_object[:responses] = {
-          '200' => {
+      if meta.key?(:responses)
+        operation_object[:responses] = meta[:responses].transform_values do |output_scope|
+          {
             content: {
               'application/json' => {
-                schema: meta[:output_scope].to_schema
+                schema: output_scope.to_schema
               }
             }
           }
-        }
+        end
       end
 
       operation_object

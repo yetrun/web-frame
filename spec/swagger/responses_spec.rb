@@ -8,7 +8,7 @@ require 'grape-entity'
 describe 'SwaggerDocUtil.generate' do
   subject do
     doc = SwaggerDocUtil.generate(app)
-    doc[:paths]['/user'][:get][:responses]['200'][:content]['application/json'][:schema]
+    doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
   end
 
   let(:app) do
@@ -16,7 +16,7 @@ describe 'SwaggerDocUtil.generate' do
 
     the_arguments = arguments
     app.route('/user', :get)
-      .outputs {
+      .if_status(200) {
         output(*the_arguments)
       }
 
