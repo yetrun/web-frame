@@ -34,13 +34,13 @@ describe Application do
           response.status = 201
         }
         .if_status(200) {
-          output(:status) { 'ok' }
+          entity(:status) { 'ok' }
         }
         .if_status(201) {
-          output(:status) { 'created' }
+          entity(:status) { 'created' }
         }
         .if_status(202) {
-          output(:status) { 'accepted' }
+          entity(:status) { 'accepted' }
         }
 
       app

@@ -3,7 +3,7 @@
 # 每个块都是在 execution 环境下执行的
 
 require_relative 'param_scope'
-require_relative 'output_scope'
+require_relative 'entity_scope'
 require_relative 'execution'
 require 'json'
 
@@ -64,13 +64,13 @@ class Route
   end
 
   def if_status(code, &block)
-    output_scope = OutputScope.new(&block)
+    entity_scope = EntityScope.new(&block)
 
     meta[:responses] = meta[:responses] || {}
-    meta[:responses][code] = output_scope
+    meta[:responses][code] = entity_scope
 
     do_any {
-      response.body = [output_scope.generate_json(self)] if response.status == code
+      response.body = [entity_scope.generate_json(self)] if response.status == code
     }
   end
 

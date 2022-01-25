@@ -47,11 +47,11 @@ module SwaggerDocUtil
       end
 
       if meta.key?(:responses)
-        operation_object[:responses] = meta[:responses].transform_values do |output_scope|
+        operation_object[:responses] = meta[:responses].transform_values do |entity_scope|
           {
             content: {
               'application/json' => {
-                schema: output_scope.to_schema
+                schema: entity_scope.to_schema
               }
             }
           }

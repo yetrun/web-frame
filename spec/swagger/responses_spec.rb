@@ -17,7 +17,7 @@ describe 'SwaggerDocUtil.generate' do
     the_arguments = arguments
     app.route('/user', :get)
       .if_status(200) {
-        output(*the_arguments)
+        entity(*the_arguments)
       }
 
     app
@@ -30,7 +30,7 @@ describe 'SwaggerDocUtil.generate' do
   end
 
   describe 'generating responses schema documentation' do
-    context '.output(:key, entity_class)' do
+    context '.entity(:key, entity_class)' do
       let(:arguments) { [:user, entity_class] }
 
       it {
@@ -49,7 +49,7 @@ describe 'SwaggerDocUtil.generate' do
       }
     end
 
-    context '.output(:key)' do
+    context '.entity(:key)' do
       let(:arguments) { [:user] }
 
       it {
@@ -62,7 +62,7 @@ describe 'SwaggerDocUtil.generate' do
       }
     end
 
-    context '.output(entity_class)' do
+    context '.entity(entity_class)' do
       let(:arguments) { [entity_class] }
 
       it {
@@ -103,7 +103,7 @@ describe 'SwaggerDocUtil.generate' do
       end
     end
 
-    context '.output()' do
+    context '.entity()' do
       let(:arguments) { [] }
 
       it {
@@ -115,7 +115,7 @@ describe 'SwaggerDocUtil.generate' do
     end
 
     describe 'array type entity class' do
-      context 'ExposureScope.output with `is_array` is true' do
+      context 'ExposureScope.entity with `is_array` is true' do
         let(:arguments) { [:user, entity_class, { is_array: true }] }
 
         it {
@@ -269,7 +269,7 @@ describe 'SwaggerDocUtil.generate' do
         end
       end
 
-      context 'declaring type and description in OutputScope' do
+      context 'declaring type and description in EntityScope' do
         let(:arguments) { [:count, { type: 'integer', description: '数量' }] }
 
         it {
@@ -303,7 +303,7 @@ describe 'SwaggerDocUtil.generate' do
           }
         end
 
-        context 'outputing an entity class' do
+        context 'entitying an entity class' do
           let(:arguments) { [:user, entity_class, { description: '用户' }] }
 
           it {
@@ -323,7 +323,7 @@ describe 'SwaggerDocUtil.generate' do
           }
         end
 
-        context 'outputing an entity class array' do
+        context 'entitying an entity class array' do
           let(:arguments) { [:user, entity_class, { is_array: true, description: '用户数组' }] }
 
           it {

@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'grape-entity'
 
-describe OutputScope do
+describe EntityScope do
   include Rack::Test::Methods
 
-  subject { OutputScope.new }
+  subject { EntityScope.new }
 
   let(:generated_json) do
     json = subject.generate_json(Object.new)
@@ -38,10 +38,10 @@ describe OutputScope do
       the_object_invoking_as_json = invoking_as_json
       the_user_object = user_object
 
-      subject.output(:hash) { { a: 1, b: 2 } }                          # a hash
-      subject.output(:primitive) { 'a value' }                          # primitive value
-      subject.output(:invoking_as_json) { the_object_invoking_as_json } # a object invoking `as_json` method
-      subject.output { { c: 3, d: 4 } }                                 # merged into above exposes
+      subject.entity(:hash) { { a: 1, b: 2 } }                          # a hash
+      subject.entity(:primitive) { 'a value' }                          # primitive value
+      subject.entity(:invoking_as_json) { the_object_invoking_as_json } # a object invoking `as_json` method
+      subject.entity { { c: 3, d: 4 } }                                 # merged into above exposes
     end
 
     it {
@@ -58,8 +58,8 @@ describe OutputScope do
     before do
       the_user_object = user_object
 
-      subject.output(:user, user_entity_class) { the_user_object }    # generate using entity class
-      subject.output(user_entity_class) { the_user_object }           # merged into above expose
+      subject.entity(:user, user_entity_class) { the_user_object }    # generate using entity class
+      subject.entity(user_entity_class) { the_user_object }           # merged into above expose
     end
 
     it {
@@ -75,8 +75,8 @@ describe OutputScope do
       before do
         the_user_object = user_object
 
-        subject.output(:user, user_entity_class, forbidden: true) { the_user_object }
-        subject.output(user_entity_class, forbidden: true) { the_user_object }
+        subject.entity(:user, user_entity_class, forbidden: true) { the_user_object }
+        subject.entity(user_entity_class, forbidden: true) { the_user_object }
       end
 
       it {
