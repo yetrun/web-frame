@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'param_checker'
-require_relative 'param_doc'
 
 class SingleParamScope
   attr_reader :name, :options
@@ -11,7 +10,7 @@ class SingleParamScope
     @options = options
 
     if block_given?
-      @inner_scope = options[:type] == Array ? ArrayParamScope.new(&block) : HashParamScope.new(&block)
+      @inner_scope = options[:type] == 'array' ? ArrayParamScope.new(&block) : HashParamScope.new(&block)
     end
   end
 
@@ -33,7 +32,7 @@ class SingleParamScope
       schema = @inner_scope.to_schema
     else
       schema = {}
-      schema[:type] = ParamDoc.readable_type(@options[:type]) if @options[:type]
+      schema[:type] = @options[:type] if @options[:type]
     end
 
     schema[:description] = @options[:description] if @options[:description]
@@ -45,7 +44,7 @@ class SingleParamScope
     {
       name: name,
       in: options[:in],
-      type: ParamDoc.readable_type(options[:type]),
+      type: options[:type],
       required: options[:required] || false,
       description: options[:description] || ''
     }

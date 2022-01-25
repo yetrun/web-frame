@@ -16,9 +16,9 @@ describe 'SwaggerDocUtil.generate' do
 
         app.route('/users/:id', :get)
           .params {
-            param :id, type: String, in: 'path', required: true, description: 'the id'
-            param :name, type: String, in: 'query', description: 'the name'
-            param :age, type: Integer, in: 'query', description: 'the age'
+            param :id, type: 'string', in: 'path', required: true, description: 'the id'
+            param :name, type: 'string', in: 'query', description: 'the name'
+            param :age, type: 'integer', in: 'query', description: 'the age'
           }
 
         app
@@ -62,10 +62,10 @@ describe 'SwaggerDocUtil.generate' do
 
           app.route('/users', :post)
             .params {
-              param :str, type: String, description: '字符串参数' # TODO: 关键字参数的拼写检查
-              param :int, type: Integer, description: '整型参数'
-              param :hash, type: Hash, description: '对象参数'
-              param :array, type: Array, description: '数组参数'
+              param :str, type: 'string', description: '字符串参数' # TODO: 关键字参数的拼写检查
+              param :int, type: 'integer', description: '整型参数'
+              param :hash, type: 'object', description: '对象参数'
+              param :array, type: 'array', description: '数组参数'
               param :any
             }
 
@@ -137,7 +137,7 @@ describe 'SwaggerDocUtil.generate' do
 
             app.route('/users', :post)
               .params {
-                param :users, type: Array, description: '用户数组' do
+                param :users, type: 'array', description: '用户数组' do
                   param :name
                   param :age
                 end

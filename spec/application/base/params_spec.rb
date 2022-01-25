@@ -41,8 +41,8 @@ describe Application, '.param' do
 
       app.route('/users', :post)
         .params {
-          param :name, type: String 
-          param :age, type: Integer 
+          param :name, type: 'string' 
+          param :age, type: 'integer' 
         }
         .do_any { holder[:params] = params }
 
@@ -145,8 +145,8 @@ describe Application, '.param' do
         app.route('/users', :post)
           .params {
             param :user do
-              param :name, type: String, required: true
-              param :age, type: Integer, default: 18
+              param :name, type: 'string', required: true
+              param :age, type: 'integer', default: 18
             end
           }
           .do_any { holder[:params] = params }
@@ -216,7 +216,7 @@ describe Application, '.param' do
 
         app.route('/users', :post)
           .params {
-            param :users, type: Array do
+            param :users, type: 'array' do
               param :name
               param :age
             end
@@ -271,7 +271,7 @@ describe Application, '.param' do
 
           app.route('/users', :post)
             .params {
-              param :user, type: Hash do
+              param :user, type: 'object' do
                 param :name
                 param :age
               end
@@ -313,7 +313,7 @@ describe Application, '.param' do
 
             app.route('/users', :post)
               .params {
-                param :users, type: Array do
+                param :users, type: 'array' do
                   param :name
                   param :age
                 end
@@ -359,7 +359,7 @@ describe Application, '.param' do
 
       app.route('/users/:id', :get)
         .params {
-          param :id, type: String
+          param :id, type: 'string'
         }
         .do_any { holder[:params] = params }
 
@@ -386,13 +386,13 @@ describe Application, '.param' do
 
       app.route('/users', :post)
         .params {
-          param(:user, type: Hash, &block)
+          param(:user, type: 'object', &block)
         }
         .do_any { holder[:params] = params }
 
       app.route('/users/:id', :put)
         .params {
-          param :user, type: Hash do
+          param :user, type: 'object' do
             instance_eval(&block)
           end
         }
