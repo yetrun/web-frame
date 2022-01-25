@@ -17,7 +17,25 @@ class Route
     @blocks = []
   end
 
-  def match?(request)
+  def execute(execution)
+    # 将 path params 合并到 request 中
+    path_params = path_matching_regex.match(execution.request.path).named_captures
+    path_params.each { |name, value| execution.request.update_param(name, value) }
+
+    # 依次执行这个环境
+    begin
+      @blocks.each do |b|
+        execution.instance_eval(&b)
+      end
+    rescue Execution::Abort
+      execution
+    end
+  end
+
+  def match?(execution)
+    # request = execution.is_a?(Rack::Request) ? execution : execution.request
+
+    request = execution.request
     path = request.path
     method = request.request_method
 
@@ -96,21 +114,6 @@ class Route
     meta[:description] = description
 
     self
-  end
-
-  def execute(execution)
-    # 将 path params 合并到 request 中
-    path_params = path_matching_regex.match(execution.request.path).named_captures
-    path_params.each { |name, value| execution.request.update_param(name, value) }
-
-    # 依次执行这个环境
-    begin
-      @blocks.each do |b|
-        execution.instance_eval(&b)
-      end
-    rescue Execution::Abort
-      execution
-    end
   end
 
   private

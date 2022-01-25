@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
-require_relative 'application_class'
-require_relative 'routes'
+require_relative 'application/class_methods'
+require_relative 'route'
 
 class Application
-  attr_reader :applications, :routes, :before_callbacks, :after_callbacks
+  attr_reader :chain, :before_callbacks, :after_callbacks, :error_guards
 
   def initialize
-    @applications = []
-    @routes = Routes.new
+    @chain = []
     @before_callbacks = []
     @after_callbacks = []
     @error_guards = []
@@ -17,29 +16,25 @@ class Application
   def execute(execution)
     before_callbacks.each { |b| execution.instance_eval(&b) }
 
-    if routes.match?(execution)
-      routes.execute(execution)
-    else
-      application = applications.find { |app| app.match?(execution) }
-      application.execute(execution)
-    end
+    mod = chain.find { |mod| mod.match?(execution) }
+    mod.execute(execution)
 
     after_callbacks.each { |b| execution.instance_eval(&b) }
   rescue StandardError => e
-    guard = @error_guards.find { |g| e.is_a?(g[:error_class]) }
+    guard = error_guards.find { |g| e.is_a?(g[:error_class]) }
     raise unless guard
 
     execution.instance_eval(&guard[:caller])
   end
 
   def match?(execution)
-    return true if routes.match?(execution)
-
-    applications.any? { |app| app.match?(execution) }
+    chain.any? { |mod| mod.match?(execution) }
   end
 
   def route(path, method)
-    routes.route(path, method)
+    route = Route.new(path, method)
+    chain << route
+    route
   end
 
   def before(&block)
@@ -51,10 +46,18 @@ class Application
   end
 
   def rescue_error(error_class, &block)
-    @error_guards << { error_class: error_class, caller: block }
+    error_guards << { error_class: error_class, caller: block }
   end
 
   def apply(mod)
-    applications << mod
+    chain << mod
+  end
+
+  def applications
+    chain.filter { |r| r.is_a?(Application) }
+  end
+
+  def routes
+    chain.filter { |r| r.is_a?(Route) }
   end
 end

@@ -3,8 +3,8 @@
 module SwaggerDocUtil
   class << self
     def generate(application)
-      routes = application.routes.routes
-      routes += application.applications.map { |app| app.routes.routes }.flatten
+      routes = application.routes
+      routes += application.applications.map { |app| app.routes }.flatten
 
       paths = routes.group_by { |route| route.path }.map do |path, routes|
         # path 需要规范化
