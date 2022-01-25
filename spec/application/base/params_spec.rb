@@ -68,6 +68,84 @@ describe Application, '.param' do
         post('/users', JSON.generate(name: 'Jim', age: 'a18'), { 'CONTENT_TYPE' => 'application/json' })
       }.to raise_error(Errors::ParameterInvalid)
     end
+
+    describe 'no providing `type` option' do
+      let(:holder) { {} }
+
+      def app
+        the_holder = holder
+        the_extract_params = method(:extract_params)
+
+        app = Class.new(Application)
+
+        route = app.route('/users', :post)
+        define_params(route)
+        route.do_any { the_holder[:any_type_params] = the_extract_params.call(params) }
+
+        app
+      end
+
+      shared_examples 'accepting any values' do
+        it 'accepts primitive value' do
+          post('/users', JSON.generate(provide_params('any value')), { 'CONTENT_TYPE' => 'application/json' })
+
+          expect(last_response).to be_ok
+          expect(holder[:any_type_params]).to eq 'any value'
+        end
+
+        it 'accepts array value' do
+          post('/users', JSON.generate(provide_params(['value one', 'value two'])), { 'CONTENT_TYPE' => 'application/json' })
+
+          expect(last_response).to be_ok
+          expect(holder[:any_type_params]).to eq ['value one', 'value two']
+        end
+
+        it 'accepts hash value' do
+          post('/users', JSON.generate(provide_params('a' => 1, 'b' => 2)), { 'CONTENT_TYPE' => 'application/json' })
+
+          expect(last_response).to be_ok
+          expect(holder[:any_type_params]).to eq('a' => 1, 'b' => 2)
+        end
+      end
+
+      context '定义在最外层' do
+        def define_params(route)
+          route.params {
+            param :any
+          }
+        end
+
+        def provide_params(value)
+          { any: value }
+        end
+
+        def extract_params(params)
+          params[:any]
+        end
+
+        include_examples 'accepting any values'
+      end
+
+      context '定义在内层' do
+        def define_params(route)
+          route.params {
+            param :nesting, type: 'object' do
+              param :any
+            end
+          }
+        end
+
+        def provide_params(value)
+          { nesting: { any: value } }
+        end
+
+        def extract_params(params)
+          params[:nesting][:any]
+        end
+
+        include_examples 'accepting any values'
+      end
+    end
   end
 
   describe 'required' do
