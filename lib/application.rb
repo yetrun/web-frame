@@ -17,7 +17,12 @@ class Application
     before_callbacks.each { |b| execution.instance_eval(&b) }
 
     mod = chain.find { |mod| mod.match?(execution) }
-    mod.execute(execution)
+    if mod
+      mod.execute(execution)
+    else
+      request = execution.request
+      raise Errors::NoMatchingRoute, "未能发现匹配的路由：#{request.request_method} #{request.path}"
+    end
 
     after_callbacks.each { |b| execution.instance_eval(&b) }
   rescue StandardError => e

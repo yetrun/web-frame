@@ -3,22 +3,24 @@ require 'spec_helper'
 describe Application, '.rescue_error' do
   include Rack::Test::Methods
 
-  class CuaghtError < StandardError; end
-  class EscapedErros < StandardError; end
+  let(:caught_error) { Class.new(StandardError) }
+  let(:escaped_error) { Class.new(StandardError) }
 
   def app
     app = Class.new(Application)
 
-    app.rescue_error(CuaghtError) {
+    app.rescue_error(caught_error) {
       response.status = 500
       response.body = ['Customized error!']
     }
 
-    app.route('/caught', :get)
-      .do_any { raise CuaghtError }
+    the_caught_error = caught_error
+    the_escaped_error = escaped_error
 
+    app.route('/caught', :get)
+      .do_any { raise the_caught_error }
     app.route('/escaped', :get)
-      .do_any { raise EscapedError }
+      .do_any { raise the_escaped_error }
 
     app
   end
@@ -31,30 +33,35 @@ describe Application, '.rescue_error' do
   end
 
   it 'raises not rescued error' do
-    expect { get '/escaped' }.to raise_error(EscapedError)
+    expect { get '/escaped' }.to raise_error(escaped_error)
   end
 
   context 'raising error in inner module' do
-    class CaughtByInnerError < StandardError; end
-    class CaughtByOuterError < StandardError; end
-    class EscapedError < StandardError; end
+    let(:caught_by_inner_error) { Class.new(StandardError) }
+    let(:caught_by_outer_error) { Class.new(StandardError) }
+    let(:escaped_error) { Class.new(StandardError) }
 
     def app
       inner_app = Class.new(Application)
 
-      inner_app.rescue_error(CaughtByInnerError) {
+      inner_app.rescue_error(caught_by_inner_error) {
         response.status = 500
         response.body = ['Caught by inner module!']
       }
+
+      the_caught_by_inner_error = caught_by_inner_error
+      the_caught_by_outer_error = caught_by_outer_error
+      the_escaped_error = escaped_error
+
       inner_app.route('/caught/by_inner', :get)
-        .do_any { raise CaughtByInnerError }
+        .do_any { raise the_caught_by_inner_error }
       inner_app.route('/caught/by_outer', :get)
-        .do_any { raise CaughtByOuterError }
+        .do_any { raise the_caught_by_outer_error }
       inner_app.route('/escaped', :get)
-        .do_any { raise EscapedError }
+        .do_any { raise the_escaped_error }
 
       app = Class.new(Application)
-      app.rescue_error(CaughtByOuterError) {
+      app.rescue_error(caught_by_outer_error) {
         response.status = 500
         response.body = ['Caught by outer module!']
       }
@@ -83,26 +90,28 @@ describe Application, '.rescue_error' do
 
     context 'missing defining' do
       it 'raises error' do
-        expect { get '/escaped' }.to raise_error(EscapedError)
+        expect { get '/escaped' }.to raise_error(escaped_error)
       end
     end
   end
 
   context 'raising error again in inner module' do
-    class CaughtByInnerError < StandardError; end
-    class CaughtByOuterError < StandardError; end
+    let(:caught_by_inner_error) { Class.new(StandardError) }
+    let(:caught_by_outer_error) { Class.new(StandardError) }
 
     def app
-      inner_app = Class.new(Application)
+      the_caught_by_inner_error = caught_by_inner_error
+      the_caught_by_outer_error = caught_by_outer_error
 
-      inner_app.rescue_error(CaughtByInnerError) {
-        raise CaughtByOuterError
+      inner_app = Class.new(Application)
+      inner_app.rescue_error(caught_by_inner_error) {
+        raise the_caught_by_outer_error
       }
       inner_app.route('/caught', :get)
-        .do_any { raise CaughtByInnerError }
+        .do_any { raise the_caught_by_inner_error }
 
       app = Class.new(Application)
-      app.rescue_error(CaughtByOuterError) {
+      app.rescue_error(caught_by_outer_error) {
         response.status = 500
         response.body = ['Caught by outer module!']
       }
@@ -111,12 +120,104 @@ describe Application, '.rescue_error' do
       app
     end
 
-    context 'defining `resuce_from` in outer module' do
+    context 'defining `resuce_error` in outer module' do
       it 'rescues' do
         get '/caught'
 
         expect(last_response.status).to eq 500
         expect(last_response.body).to eq 'Caught by outer module!'
+      end
+    end
+  end
+
+  describe 'Errors::NoMatchingRoute' do
+    let(:holder) { {} }
+
+    def rescue_error(app)
+      the_holder = holder
+
+      app.rescue_error(Errors::NoMatchingRoute) {
+        the_holder[:rescued] = true
+      }
+    end
+
+    shared_examples 'raises `Errors::NoMatchingRoute`' do
+      it 'raises `Errors::NoMatchingRoute`' do
+        expect {
+          get '/unknown'
+        }.to raise_error Errors::NoMatchingRoute
+      end
+    end
+
+    shared_examples 'rescues' do
+      it 'rescues' do
+        get '/unknown'
+
+        expect(holder[:rescued]).to be true
+      end
+    end
+
+    context 'not applying modules' do
+      context 'not defining `rescue_error`' do
+        def app
+          Class.new(Application)
+        end
+
+        it_behaves_like 'raises `Errors::NoMatchingRoute`'
+      end
+
+      context 'defining `rescue_error`' do
+        let(:holder) { {} }
+
+        def app
+          app = Class.new(Application)
+
+          rescue_error(app)
+          app
+        end
+
+        it_behaves_like 'rescues'
+      end
+    end
+
+    context 'applying modules' do
+      context 'not defining `rescue_error`' do
+        def app
+          app = Class.new(Application)
+
+          app.apply Class.new(Application)
+          app
+        end
+
+        it_behaves_like 'raises `Errors::NoMatchingRoute`'
+      end
+
+      context 'defining `rescue_error` in outer module' do
+        let(:holder) { {} }
+
+        def app
+          app = Class.new(Application)
+          app.apply Class.new(Application)
+
+          rescue_error(app)
+          app
+        end
+
+        it_behaves_like 'rescues'
+      end
+
+      context 'defining `rescue_error` in inner module' do
+        def app
+          app = Class.new(Application)
+
+          inner_app = Class.new(Application)
+          rescue_error(inner_app)
+
+          app.apply inner_app
+          app
+        end
+
+        it_behaves_like 'raises `Errors::NoMatchingRoute`'
       end
     end
   end

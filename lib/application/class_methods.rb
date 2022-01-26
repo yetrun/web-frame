@@ -19,11 +19,7 @@ class Application
       request = Rack::Request.new(env)
       execution = Execution.new(request)
 
-      if app.match?(execution)
-        app.execute(execution)
-      else
-        raise Errors::NoMatchingRoute, "未能发现匹配的路由：#{request.request_method} #{request.path}"
-      end
+      app.execute(execution)
 
       response = execution.response
       response.content_type = 'application/json' unless response.no_content?
