@@ -1,134 +1,150 @@
 # frozen_string_literal: true
 
+# 定义三个类型的 ParamScope：
+#
+#   - ObjectScope
+#   - ArrayScope
+#   - PrimitiveScope
+
 require_relative 'param_checker'
 
-class SingleParamScope
-  attr_reader :name, :options
+module ParamScope
+  class PrimitiveScope
+    attr_reader :options
 
-  def initialize(name, options = {}, &block)
-    @name = name.to_sym
-    @options = options
-
-    if block_given?
-      @inner_scope = options[:type] == 'array' ? ArrayParamScope.new(&block) : HashParamScope.new(&block)
-    end
-  end
-
-  def filter(params)
-    value = params[@name.to_s] || @options[:default]
-    value = ParamChecker.convert_type(@name, value, @options[:type]) if @options.key?(:type) && !value.nil?
-
-    # 经过 @inner_scope 的洗礼
-    value = @inner_scope.filter(value) if @inner_scope && !value.nil?
-
-    # 在经过一系列的检查
-    ParamChecker.check_required(@name, value, @options[:required]) if @options.key?(:required)
-
-    { @name => value }
-  end
-
-  def to_schema
-    if @inner_scope
-      schema = @inner_scope.to_schema
-    else
-      schema = {}
-      schema[:type] = @options[:type] if @options[:type]
+    def initialize(options = {})
+      @options = options
     end
 
-    schema[:description] = @options[:description] if @options[:description]
+    def filter(value)
+      value = value || @options[:default]
+      value = ParamChecker.convert_type('some param', value, @options[:type]) if @options.key?(:type) && !value.nil?
 
-    schema
-  end
+      # 经过 @inner_scope 的洗礼
+      value = @inner_scope.filter(value) if @inner_scope && !value.nil?
 
-  def generate_parameter_doc
-    {
-      name: name,
-      in: options[:in],
-      type: options[:type],
-      required: options[:required] || false,
-      description: options[:description] || ''
-    }
-  end
-end
+      # 在经过一系列的检查
+      ParamChecker.check_required(@name, value, @options[:required]) if @options.key?(:required)
 
-class HashParamScope
-  def initialize(&block)
-    @single_param_scopes = []
-
-    instance_eval(&block)
-  end
-
-  def param(name, options = {}, &block)
-    name = name.to_s
-
-    @single_param_scopes << SingleParamScope.new(name, options, &block)
-  end
-
-  def filter(params)
-    value = {}
-
-    @single_param_scopes.each do |scope|
-      value.merge!(scope.filter(params))
+      value
     end
 
-    value
-  end
+    def to_schema
+      if @inner_scope
+        schema = @inner_scope.to_schema
+      else
+        schema = {}
+        schema[:type] = @options[:type] if @options[:type]
+      end
 
-  # 生成 Swagger 文档的 schema 格式，所谓 schema 格式，是指形如
-  #
-  #     {
-  #       type: 'object',
-  #       properties: {
-  #         ...
-  #       }
-  #     }
-  #
-  # 的格式。
-  def to_schema
-    # 提取根路径的所有 `:in` 选项为 `body` 的元素（默认值为 `body`）
-    scopes = @single_param_scopes.filter { |scope| scope.options[:in].nil? || scope.options[:in] == 'body' }
-    
-    properties = scopes.map do |scope|
-      [scope.name, scope.to_schema]
-    end.to_h
+      schema[:description] = @options[:description] if @options[:description]
 
-    if properties.empty?
-      nil
-    else
+      schema
+    end
+
+    def generate_parameter_doc
       {
-        type: 'object',
-        properties: properties
+        name: name,
+        in: options[:in],
+        type: options[:type],
+        required: options[:required] || false,
+        description: options[:description] || ''
       }
     end
   end
 
-  # 生成 Swagger 文档的 parameters 部分，这里是指生成路径位于 `path`、`query`
-  # 的参数
-  def generate_parameters_doc
-    # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
-    scopes = @single_param_scopes.filter { |scope| scope.options[:in] && scope.options[:in] != 'body' }
+  class ObjectScope
+    def initialize(&block)
+      @properties = {}
 
-    scopes.map do |scope|
-      scope.generate_parameter_doc
+      instance_eval(&block)
+    end
+
+    # 当且仅当 ObjectScope 提供了 `param` 方法
+    def param(name, options = {}, &block)
+      name = name.to_sym
+
+      if options[:is_array]
+        @properties[name] = ArrayScope.new(options, &block)
+      elsif block_given?
+        @properties[name] = ObjectScope.new(&block) # TODO: options 怎么办？
+      else
+        @properties[name] = PrimitiveScope.new(options)
+      end
+    end
+
+    def filter(hash)
+      return nil if hash.nil?
+      raise Errors::ParameterInvalid, '参数应该传递一个对象' unless hash.is_a?(Hash)
+
+      @properties.map do |name, scope|
+        [name, scope.filter(hash[name.to_s])]
+      end.to_h
+    end
+
+    # 生成 Swagger 文档的 schema 格式，所谓 schema 格式，是指形如
+    #
+    #     {
+    #       type: 'object',
+    #       properties: {
+    #         ...
+    #       }
+    #     }
+    #
+    # 的格式。
+    def to_schema
+      # 提取根路径的所有 `:in` 选项为 `body` 的元素（默认值为 `body`）
+      scopes = @properties.values.filter { |scope| scope.options[:in].nil? || scope.options[:in] == 'body' }
+
+      properties = scopes.map do |scope|
+        [scope.name, scope.to_schema]
+      end.to_h
+
+      if properties.empty?
+        nil
+      else
+        {
+          type: 'object',
+          properties: properties
+        }
+      end
+    end
+
+    # 生成 Swagger 文档的 parameters 部分，这里是指生成路径位于 `path`、`query`
+    # 的参数
+    def generate_parameters_doc
+      # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
+      scopes = @properties.values.filter { |scope| scope.options[:in] && scope.options[:in] != 'body' }
+
+      scopes.map do |scope|
+        scope.generate_parameter_doc
+      end
     end
   end
-end
 
-class ArrayParamScope
-  def initialize(&block)
-    @inner_scope  = HashParamScope.new(&block) if block_given?
-  end
-
-  def filter(params)
-    params.map do |item|
-      @inner_scope.filter(item)
+  class ArrayScope
+    def initialize(options, &block)
+      if block_given?
+        @items  = ObjectScope.new(&block) # TODO: options 怎么办？
+      else
+        @items = PrimitiveScope.new(options)
+      end
     end
-  end
 
-  def to_schema
-    {
-      type: 'array',
-      items: @inner_scope ? @inner_scope.to_schema : {}
-    }
+    def filter(array)
+      return nil if array.nil?
+      raise Errors::ParameterInvalid, '参数应该传递一个数组' unless array.is_a?(Array)
+
+      array.map do |item|
+        @items.filter(item)
+      end
+    end
+
+    def to_schema
+      {
+        type: 'array',
+        items: @items ? @items.to_schema : {}
+      }
+    end
   end
 end

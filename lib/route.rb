@@ -49,7 +49,7 @@ class Route
   end
 
   def params(&block)
-    param_scope = HashParamScope.new(&block)
+    param_scope = ParamScope::ObjectScope.new(&block)
     meta[:param_scope] = param_scope
 
     do_any {

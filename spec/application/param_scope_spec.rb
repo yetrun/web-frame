@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe HashParamScope do
+describe ParamScope::ObjectScope do
   describe 'to_schema' do
     subject do
-      HashParamScope.new do
+      ParamScope::ObjectScope.new do
         param :name
         param :age
       end

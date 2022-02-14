@@ -4,6 +4,8 @@ require 'json'
 describe Application, '.param' do
   include Rack::Test::Methods
 
+  let(:holder) { {} }
+
   before do
     @holder = {}
   end
@@ -216,10 +218,9 @@ describe Application, '.param' do
   describe 'nesting' do
     context 'in the inner block' do
       def app
-        holder = @holder
-
         app = Class.new(Application)
 
+        the_holder = holder
         app.route('/users', :post)
           .params {
             param :user do
@@ -227,15 +228,15 @@ describe Application, '.param' do
               param :age, type: 'integer', default: 18
             end
           }
-          .do_any { holder[:params] = params }
+          .do_any { the_holder[:params] = params }
 
-          app
+        app
       end
 
       it 'supports passing nesting params' do
         post('/users', JSON.generate(user: { name: 'Jim', age: 18, bar: 'bar' }, foo: 'foo'), { 'CONTENT_TYPE' => 'application/json' })
 
-        expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        expect(holder[:params]).to eq(user: { name: 'Jim', age: 18 })
       end
 
       it 'supports passing `required` option' do
@@ -247,13 +248,13 @@ describe Application, '.param' do
       it 'supports passing `type` option' do
         post('/users', JSON.generate(user: { name: 'Jim', age: '18' }), { 'CONTENT_TYPE' => 'application/json' })
 
-        expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        expect(holder[:params]).to eq(user: { name: 'Jim', age: 18 })
       end
 
       it 'supports passing `default` option' do
         post('/users', JSON.generate(user: { name: 'Jim' }), { 'CONTENT_TYPE' => 'application/json' })
 
-        expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        expect(holder[:params]).to eq(user: { name: 'Jim', age: 18 })
       end
     end
 
@@ -286,37 +287,6 @@ describe Application, '.param' do
       end
     end
 
-    context 'the outer param is an Array' do
-      def app
-        holder = @holder
-
-        app = Class.new(Application)
-
-        app.route('/users', :post)
-          .params {
-            param :users, type: 'array' do
-              param :name
-              param :age
-            end
-          }
-          .do_any { holder[:params] = params }
-
-          app
-      end
-
-      it 'supports nesting array params' do
-        post('/users', JSON.generate(users: [{ name: 'Jim', age: 18 }, { name: 'James', age: 19 }]), { 'CONTENT_TYPE' => 'application/json' })
-
-        expect(@holder[:params]).to eq(users: [{ name: 'Jim', age: 18 }, { name: 'James', age: 19 }])
-      end
-
-      it 'raises error when passing a hash' do
-        expect {
-          post('/users', JSON.generate(users: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
-      end
-    end
-
     describe 'passing nothing' do
       context 'no nesting' do
         def app
@@ -343,10 +313,9 @@ describe Application, '.param' do
 
       context 'nesting' do
         def app
-          holder = @holder
-
           app = Class.new(Application)
 
+          the_holder = holder
           app.route('/users', :post)
             .params {
               param :user, type: 'object' do
@@ -354,27 +323,29 @@ describe Application, '.param' do
                 param :age
               end
             }
-              .do_any { holder[:params] = params }
+            .do_any { the_holder[:params] = params }
 
-            app
+          app
         end
+
+        # TODO: 传递空值给对象参数
 
         it 'supports passing empty hash to outer params' do
           post('/users', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
 
-          expect(@holder[:params]).to eq(user: nil)
+          expect(holder[:params]).to eq(user: nil)
         end
 
         it 'supports passing empty hash to inner params' do
           post('/users', JSON.generate(user: {}), { 'CONTENT_TYPE' => 'application/json' })
 
-          expect(@holder[:params]).to eq(user: { name: nil, age: nil })
+          expect(holder[:params]).to eq(user: { name: nil, age: nil })
         end
 
         it 'supports passing nil to inner params' do
           post('/users', JSON.generate(user: nil), { 'CONTENT_TYPE' => 'application/json' })
 
-          expect(@holder[:params]).to eq(user: nil)
+          expect(holder[:params]).to eq(user: nil)
         end
 
         it 'raises error when passing not hash value to inner params' do
@@ -391,12 +362,12 @@ describe Application, '.param' do
 
             app.route('/users', :post)
               .params {
-                param :users, type: 'array' do
+                param :users, type: 'object', is_array: true do
                   param :name
                   param :age
                 end
               }
-                .do_any { holder[:params] = params }
+              .do_any { holder[:params] = params }
 
               app
           end
@@ -490,5 +461,109 @@ describe Application, '.param' do
 
       expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18})
     end
+  end
+
+  describe 'is_array' do
+    context 'providing type' do
+      def app
+        app = Class.new(Application)
+
+        the_holder = holder
+        app.route('/request', :post)
+          .params {
+            param(:an_array, type: 'integer', is_array: true)
+          }
+          .do_any { the_holder[:params] = params }
+
+        app
+      end
+
+      # TODO: 传递空值给数组参数
+      # TODO: 嵌套的咋说？
+
+      it 'raises error if it does not pass array params' do
+        expect {
+          post('/request', JSON.generate(an_array: 1), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
+      end
+
+      it 'passes and converts type if it passes array params' do
+        post('/request', JSON.generate(an_array: [1, '2']), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(holder[:params]).to eq(an_array: [1, 2])
+      end
+
+      it 'raises error if type is not compatible' do
+        expect {
+          post('/request', JSON.generate(an_array: [1, 'x2']), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
+      end
+    end
+
+    context 'not providing type' do
+      def app
+        app = Class.new(Application)
+
+        the_holder = holder
+        app.route('/request', :post)
+          .params {
+            param(:an_array, is_array: true)
+          }
+          .do_any { the_holder[:params] = params }
+
+          app
+      end
+
+      it 'raises error if it does not pass array params' do
+        expect {
+          post('/request', JSON.generate(an_array: 1), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
+      end
+
+      it 'passes if it passes array params' do
+        post('/request', JSON.generate(an_array: [1, '2', 'x3']), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(holder[:params]).to eq(an_array: [1, '2', 'x3'])
+      end
+    end
+
+    describe 'nesting' do
+      def app
+        the_holder = holder
+
+        app = Class.new(Application)
+
+        app.route('/users', :post)
+          .params {
+            param :users, type: 'object', is_array: true do
+              param :name
+              param :age
+            end
+          }
+          .do_any { the_holder[:params] = params }
+
+        app
+      end
+
+      it 'supports nesting array params' do
+        post('/users', JSON.generate(users: [{ name: 'Jim', age: 18 }, { name: 'James', age: 19 }]), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(holder[:params]).to eq(users: [{ name: 'Jim', age: 18 }, { name: 'James', age: 19 }])
+      end
+
+      it 'raises error when passing a hash' do
+        expect {
+          post('/users', JSON.generate(users: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
+      end
+    end
+  end
+
+  # 值不能是 nil 或空字符串
+  describe 'presence' do
+  end
+
+  # 为字符串类型的参数提供正则表达式约束
+  describe 'format' do
   end
 end
