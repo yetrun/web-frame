@@ -24,7 +24,7 @@ module ParamScope
       value = @inner_scope.filter(value) if @inner_scope && !value.nil?
 
       # 在经过一系列的检查
-      ParamChecker.check_required(@name, value, @options[:required]) if @options.key?(:required)
+      # ParamChecker.check_required(@name, value, @options[:required]) if @options.key?(:required)
 
       value
     end
@@ -56,6 +56,7 @@ module ParamScope
   class ObjectScope
     def initialize(&block)
       @properties = {}
+      @required = []
 
       instance_eval(&block)
     end
@@ -73,12 +74,22 @@ module ParamScope
       end
     end
 
-    def filter(hash)
-      return nil if hash.nil?
-      raise Errors::ParameterInvalid, '参数应该传递一个对象' unless hash.is_a?(Hash)
+    # 声明哪些属性是 required 的
+    def required(*names)
+      @required = names
+    end
+
+    def filter(params)
+      return nil if params.nil?
+      raise Errors::ParameterInvalid, '参数应该传递一个对象' unless params.is_a?(Hash)
+      
+      missing_any = @required.any? do |name|
+        params[name.to_s].nil? # 键不存在或值为 nil
+      end
+      raise Errors::ParameterInvalid, '有些必传参数没有传递' if missing_any
 
       @properties.map do |name, scope|
-        [name, scope.filter(hash[name.to_s])]
+        [name, scope.filter(params[name.to_s])]
       end.to_h
     end
 
@@ -131,11 +142,11 @@ module ParamScope
       end
     end
 
-    def filter(array)
-      return nil if array.nil?
-      raise Errors::ParameterInvalid, '参数应该传递一个数组' unless array.is_a?(Array)
+    def filter(array_params)
+      return nil if array_params.nil?
+      raise Errors::ParameterInvalid, '参数应该传递一个数组' unless array_params.is_a?(Array)
 
-      array.map do |item|
+      array_params.map do |item|
         @items.filter(item)
       end
     end

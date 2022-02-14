@@ -152,16 +152,18 @@ describe Application, '.param' do
 
   describe 'required' do
     def app
-      holder = @holder
+      the_holder = holder
 
       app = Class.new(Application)
 
       app.route('/users', :post)
         .params {
-          param :name, required: true 
-          param :age  # required 选项的默认值是 `false`
+          param :name
+          param :age
+
+          required :name
         }
-        .do_any { holder[:params] = params }
+        .do_any { the_holder[:params] = params }
 
       app
     end
@@ -170,7 +172,7 @@ describe Application, '.param' do
       post('/users', JSON.generate(name: 'Jim'), { 'CONTENT_TYPE' => 'application/json' })
 
       expect(last_response).to be_ok
-      expect(@holder[:params]).to eq(name: 'Jim', age: nil)
+      expect(holder[:params]).to eq(name: 'Jim', age: nil)
     end
 
     it 'raises error when missing required params' do
@@ -179,7 +181,7 @@ describe Application, '.param' do
       }.to raise_error(Errors::ParameterInvalid)
     end
 
-    it 'raises error when passing nil to required params' do
+    it 'raises error when missing required params' do
       expect { 
         post('/users', JSON.generate(age: 18), { 'CONTENT_TYPE' => 'application/json' })
       }.to raise_error(Errors::ParameterInvalid)
@@ -224,8 +226,10 @@ describe Application, '.param' do
         app.route('/users', :post)
           .params {
             param :user do
-              param :name, type: 'string', required: true
+              param :name, type: 'string'
               param :age, type: 'integer', default: 18
+
+              required :name
             end
           }
           .do_any { the_holder[:params] = params }
