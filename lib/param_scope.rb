@@ -24,7 +24,7 @@ module ParamScope
       value = @inner_scope.filter(value) if @inner_scope && !value.nil?
 
       # 在经过一系列的检查
-      # ParamChecker.check_required(@name, value, @options[:required]) if @options.key?(:required)
+      ParamChecker.check_format(value, @options[:format]) if @options.key?(:format)
 
       value
     end

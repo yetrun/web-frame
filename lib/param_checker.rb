@@ -55,6 +55,10 @@ module ParamChecker
       raise Errors::ParameterInvalid, "参数 `#{name}` 为必选项" if required && value.nil?
     end
 
+    def check_format(value, format)
+      raise Errors::ParameterInvalid, '参数格式不正确' unless value =~ format
+    end
+
     private
 
     def convert_string_value_to_specific_type(name, value, type)

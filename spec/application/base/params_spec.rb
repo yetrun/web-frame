@@ -563,11 +563,32 @@ describe Application, '.param' do
     end
   end
 
-  # 值不能是 nil 或空字符串
-  describe 'presence' do
-  end
-
   # 为字符串类型的参数提供正则表达式约束
   describe 'format' do
+    def app
+      the_holder = holder
+
+      app = Class.new(Application)
+
+      app.route('/request', :post)
+        .params {
+          param :str, type: 'string', format: /^x\d\d$/
+        }
+        .do_any { the_holder[:params] = params }
+
+        app
+    end
+
+    it 'passes when param is fit for format' do
+      post('/request', JSON.generate(str: 'x01'), { 'CONTENT_TYPE' => 'application/json' })
+
+      expect(holder[:params]).to eq(str: 'x01')
+    end
+
+    it 'raises error when param is not for format' do
+      expect {
+        post('/request', JSON.generate(str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
+      }.to raise_error(Errors::ParameterInvalid)
+    end
   end
 end
