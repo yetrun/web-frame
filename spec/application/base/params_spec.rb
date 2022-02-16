@@ -6,6 +6,18 @@ describe Application, '.param' do
 
   let(:holder) { {} }
 
+  def app
+    app = Class.new(Application)
+
+    route = app.route('/request', :post)
+    define_route(route)
+
+    the_holder = holder
+    route.do_any { the_holder[:params] = params }
+
+    app
+  end
+
   before do
     @holder = {}
   end
@@ -147,44 +159,6 @@ describe Application, '.param' do
 
         include_examples 'accepting any values'
       end
-    end
-  end
-
-  describe 'required' do
-    def app
-      the_holder = holder
-
-      app = Class.new(Application)
-
-      app.route('/users', :post)
-        .params {
-          param :name
-          param :age
-
-          required :name
-        }
-        .do_any { the_holder[:params] = params }
-
-      app
-    end
-
-    it 'passes when passing required params' do
-      post('/users', JSON.generate(name: 'Jim'), { 'CONTENT_TYPE' => 'application/json' })
-
-      expect(last_response).to be_ok
-      expect(holder[:params]).to eq(name: 'Jim', age: nil)
-    end
-
-    it 'raises error when missing required params' do
-      expect { 
-        post('/users', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Errors::ParameterInvalid)
-    end
-
-    it 'raises error when missing required params' do
-      expect { 
-        post('/users', JSON.generate(age: 18), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Errors::ParameterInvalid)
     end
   end
 
@@ -563,32 +537,174 @@ describe Application, '.param' do
     end
   end
 
-  # 为字符串类型的参数提供正则表达式约束
-  describe 'format' do
-    def app
-      the_holder = holder
+  describe 'validations' do
+    # 为字符串类型的参数提供正则表达式约束
+    describe 'format' do
+      def app
+        the_holder = holder
 
-      app = Class.new(Application)
+        app = Class.new(Application)
 
-      app.route('/request', :post)
-        .params {
-          param :str, type: 'string', format: /^x\d\d$/
-        }
-        .do_any { the_holder[:params] = params }
+        app.route('/request', :post)
+          .params {
+            param :a_str, type: 'string', format: /^x\d\d$/
+          }
+          .do_any { the_holder[:params] = params }
 
-        app
+          app
+      end
+
+      it 'passes when param is fit for format' do
+        post('/request', JSON.generate(a_str: 'x01'), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(holder[:params]).to eq(a_str: 'x01')
+      end
+
+      it 'raises error when param is not for format' do
+        expect {
+          post('/request', JSON.generate(a_str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid, /a_str/)
+      end
     end
 
-    it 'passes when param is fit for format' do
-      post('/request', JSON.generate(str: 'x01'), { 'CONTENT_TYPE' => 'application/json' })
+    describe 'required' do
+      def app
+        the_holder = holder
 
-      expect(holder[:params]).to eq(str: 'x01')
+        app = Class.new(Application)
+
+        app.route('/users', :post)
+          .params {
+            param :name
+            param :age
+
+            required :name
+          }
+            .do_any { the_holder[:params] = params }
+
+          app
+      end
+
+      it 'passes when passing required params' do
+        post('/users', JSON.generate(name: 'Jim'), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(last_response).to be_ok
+        expect(holder[:params]).to eq(name: 'Jim', age: nil)
+      end
+
+      it 'raises error when missing required params' do
+        expect { 
+          post('/users', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
+      end
+
+      it 'raises error when missing required params' do
+        expect { 
+          post('/users', JSON.generate(age: 18), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
+      end
     end
 
-    it 'raises error when param is not for format' do
-      expect {
-        post('/request', JSON.generate(str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Errors::ParameterInvalid)
+    describe '报错时的参数路径如何显示' do
+      describe 'PrimitiveScope::Validators' do
+        context '最外层参数异常' do
+          def define_route(route)
+            route.params {
+              param :a_str, type: 'string', format: /^x\d\d$/
+            }
+          end
+
+          it 'raises error' do
+            expect {
+              post('/request', JSON.generate(a_str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
+            }.to raise_error(Errors::ParameterInvalid) { |error|
+              expect(error.message).to include('`a_str`')
+            }
+          end
+        end
+
+        context '包裹一层对象嵌套' do
+          def define_route(route)
+            route.params {
+              param :a_object, type: 'object' do
+                param :a_str, type: 'string', format: /^x\d\d$/
+              end
+            }
+          end
+
+          it 'raises error' do
+            expect {
+              post('/request', JSON.generate(a_object: { a_str: 'x001' }), { 'CONTENT_TYPE' => 'application/json' })
+            }.to raise_error(Errors::ParameterInvalid) { |error|
+              expect(error.message).to include('`a_object.a_str`')
+            }
+          end
+        end
+
+        context '包裹一层数组嵌套' do
+          def define_route(route)
+            route.params {
+              param :a_object, type: 'object', is_array: true do
+                param :a_str, type: 'string', format: /^x\d\d$/
+              end
+            }
+          end
+
+          it 'raises error' do
+            expect {
+              post('/request', JSON.generate(a_object: [{ a_str: 'x01' }, { a_str: 'x001' }]), { 'CONTENT_TYPE' => 'application/json' })
+            }.to raise_error(Errors::ParameterInvalid) { |error| 
+              expect(error.message).to include('`a_object[1].a_str`')
+            }
+          end
+        end
+      end
+
+      describe 'ObjectScope::Validators' do
+        context '最外层参数异常' do
+          def define_route(route)
+            route.params {
+              param :a_str
+
+              required :a_str
+            }
+          end
+
+          it 'raises error' do
+            expect {
+              post('/request', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
+            }.to raise_error(Errors::ParameterInvalid) { |error| 
+              expect(error.message).to include('`a_str`')
+            }
+          end
+        end
+
+        context '内层参数异常' do
+          def define_route(route)
+            route.params {
+              param :a_object, type: 'object' do
+                param :a_str
+
+                required :a_str
+              end
+            }
+          end
+
+          it '通过测试当外层对象值是 nil' do
+            expect {
+              post('/request', JSON.generate({ a_object: nil }), { 'CONTENT_TYPE' => 'application/json' })
+            }.not_to raise_error
+          end
+
+          it 'raises error' do
+            expect {
+              post('/request', JSON.generate(a_object: {}), { 'CONTENT_TYPE' => 'application/json' })
+            }.to raise_error(Errors::ParameterInvalid) { |error| 
+              expect(error.message).to include('`a_object.a_str`')
+            }
+          end
+        end
+      end
     end
   end
 end

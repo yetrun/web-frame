@@ -36,19 +36,20 @@ module Params
       @validations[type] = names
     end
 
-    def filter(params)
+    def filter(params, path = '')
       return nil if params.nil?
       raise Errors::ParameterInvalid, '参数应该传递一个对象' unless params.is_a?(Hash)
 
       # 在解析参数前先对整体参数进行验证
       @validations.each do |type, names|
         validator = Params::ObjectScope::Validators[type]
-        validator.call(params, names)
+        validator.call(params, names, path)
       end
 
       # 递归解析参数
       @properties.map do |name, scope|
-        [name, scope.filter(params[name.to_s])]
+        p = path.empty? ? name : "#{path}.#{name}"
+        [name, scope.filter(params[name.to_s], p)]
       end.to_h
     end
 
@@ -101,12 +102,13 @@ module Params
       end
     end
 
-    def filter(array_params)
+    def filter(array_params, path)
       return nil if array_params.nil?
       raise Errors::ParameterInvalid, '参数应该传递一个数组' unless array_params.is_a?(Array)
 
-      array_params.map do |item|
-        @items.filter(item)
+      array_params.each_with_index.map do |item, index|
+        p = "#{path}[#{index}]"
+        @items.filter(item, p)
       end
     end
 
@@ -125,12 +127,12 @@ module Params
       @options = options
     end
 
-    def filter(value)
+    def filter(value, path)
       value = value || @options[:default]
       value = ParamChecker.convert_type('some param', value, @options[:type]) if @options.key?(:type) && !value.nil?
 
       # 验证参数
-      validate(value, options)
+      validate(value, options, path)
 
       value
     end
@@ -160,11 +162,11 @@ module Params
 
     private
 
-    def validate(value, options)
+    def validate(value, options, path)
       # options 的每一个键都有可能是一个参数验证
       options.each do |key, option|
         validator = Validators[key]
-        validator.call(value, option) if validator
+        validator.call(value, option, path) if validator
       end
     end
   end
