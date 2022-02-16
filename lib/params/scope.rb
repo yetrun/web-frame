@@ -6,53 +6,10 @@
 #   - ArrayScope
 #   - PrimitiveScope
 
-require_relative 'param_checker'
+require_relative 'checker'
+require_relative 'validators'
 
-module ParamScope
-  class PrimitiveScope
-    attr_reader :options
-
-    def initialize(options = {})
-      @options = options
-    end
-
-    def filter(value)
-      value = value || @options[:default]
-      value = ParamChecker.convert_type('some param', value, @options[:type]) if @options.key?(:type) && !value.nil?
-
-      # 经过 @inner_scope 的洗礼
-      value = @inner_scope.filter(value) if @inner_scope && !value.nil?
-
-      # 在经过一系列的检查
-      ParamChecker.check_format(value, @options[:format]) if @options.key?(:format)
-
-      value
-    end
-
-    def to_schema
-      if @inner_scope
-        schema = @inner_scope.to_schema
-      else
-        schema = {}
-        schema[:type] = @options[:type] if @options[:type]
-      end
-
-      schema[:description] = @options[:description] if @options[:description]
-
-      schema
-    end
-
-    def generate_parameter_doc
-      {
-        name: name,
-        in: options[:in],
-        type: options[:type],
-        required: options[:required] || false,
-        description: options[:description] || ''
-      }
-    end
-  end
-
+module Params
   class ObjectScope
     def initialize(&block)
       @properties = {}
@@ -156,6 +113,60 @@ module ParamScope
         type: 'array',
         items: @items ? @items.to_schema : {}
       }
+    end
+  end
+
+  class PrimitiveScope
+    attr_reader :options
+
+    def initialize(options = {})
+      @options = options
+    end
+
+    def filter(value)
+      value = value || @options[:default]
+      value = ParamChecker.convert_type('some param', value, @options[:type]) if @options.key?(:type) && !value.nil?
+
+      # 经过 @inner_scope 的洗礼
+      value = @inner_scope.filter(value) if @inner_scope && !value.nil?
+
+      # 验证参数
+      validate(value, options)
+
+      value
+    end
+
+    def to_schema
+      if @inner_scope
+        schema = @inner_scope.to_schema
+      else
+        schema = {}
+        schema[:type] = @options[:type] if @options[:type]
+      end
+
+      schema[:description] = @options[:description] if @options[:description]
+
+      schema
+    end
+
+    def generate_parameter_doc
+      {
+        name: name,
+        in: options[:in],
+        type: options[:type],
+        required: options[:required] || false,
+        description: options[:description] || ''
+      }
+    end
+
+    private
+
+    def validate(value, options)
+      # options 的每一个键都有可能是一个参数验证
+      options.each do |key, option|
+        validator = Params::Validators[key]
+        validator.call(value, option) if validator
+      end
     end
   end
 end

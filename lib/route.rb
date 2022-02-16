@@ -2,7 +2,7 @@
 
 # 每个块都是在 execution 环境下执行的
 
-require_relative 'param_scope'
+require_relative 'params/scope'
 require_relative 'entity_scope'
 require_relative 'execution'
 require 'json'
@@ -33,8 +33,6 @@ class Route
   end
 
   def match?(execution)
-    # request = execution.is_a?(Rack::Request) ? execution : execution.request
-
     request = execution.request
     path = request.path
     method = request.request_method
@@ -49,7 +47,7 @@ class Route
   end
 
   def params(&block)
-    param_scope = ParamScope::ObjectScope.new(&block)
+    param_scope = Params::ObjectScope.new(&block)
     meta[:param_scope] = param_scope
 
     do_any {
