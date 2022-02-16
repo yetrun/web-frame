@@ -14,6 +14,7 @@ module Params
     def initialize(&block)
       @properties = {}
       @required = []
+      @validations = {}
 
       instance_eval(&block)
     end
@@ -31,20 +32,21 @@ module Params
       end
     end
 
-    # 声明哪些属性是 required 的
-    def required(*names)
-      @required = names
+    def validates(type, names)
+      @validations[type] = names
     end
 
     def filter(params)
       return nil if params.nil?
       raise Errors::ParameterInvalid, '参数应该传递一个对象' unless params.is_a?(Hash)
-      
-      missing_any = @required.any? do |name|
-        params[name.to_s].nil? # 键不存在或值为 nil
-      end
-      raise Errors::ParameterInvalid, '有些必传参数没有传递' if missing_any
 
+      # 在解析参数前先对整体参数进行验证
+      @validations.each do |type, names|
+        validator = Params::ObjectScope::Validators[type]
+        validator.call(params, names)
+      end
+
+      # 递归解析参数
       @properties.map do |name, scope|
         [name, scope.filter(params[name.to_s])]
       end.to_h
@@ -127,9 +129,6 @@ module Params
       value = value || @options[:default]
       value = ParamChecker.convert_type('some param', value, @options[:type]) if @options.key?(:type) && !value.nil?
 
-      # 经过 @inner_scope 的洗礼
-      value = @inner_scope.filter(value) if @inner_scope && !value.nil?
-
       # 验证参数
       validate(value, options)
 
@@ -164,7 +163,7 @@ module Params
     def validate(value, options)
       # options 的每一个键都有可能是一个参数验证
       options.each do |key, option|
-        validator = Params::Validators[key]
+        validator = Validators[key]
         validator.call(value, option) if validator
       end
     end
