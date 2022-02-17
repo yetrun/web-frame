@@ -13,10 +13,13 @@ module Params
   class ObjectScope
     def initialize(&block)
       @properties = {}
-      @required = []
       @validations = {}
 
+      @required = []
+
       instance_eval(&block)
+
+      validates :required, @required unless @required.empty?
     end
 
     # 当且仅当 ObjectScope 提供了 `param` 方法
@@ -32,6 +35,8 @@ module Params
         options[:is_array] = true
       end
 
+      @required << name if options.delete(:required)
+
       if options[:is_array]
         @properties[name] = ArrayScope.new(options, &block)
       elsif block_given?
@@ -43,6 +48,10 @@ module Params
 
     def validates(type, names)
       @validations[type] = names
+    end
+
+    def required(*names)
+      @required += names
     end
 
     def filter(params, path = '')

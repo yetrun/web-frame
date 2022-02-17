@@ -635,25 +635,17 @@ describe Application, '.param' do
     end
 
     describe 'required' do
-      def app
-        the_holder = holder
+      def define_route(route)
+        route.params {
+          param :name
+          param :age
 
-        app = Class.new(Application)
-
-        app.route('/users', :post)
-          .params {
-            param :name
-            param :age
-
-            required :name
-          }
-            .do_any { the_holder[:params] = params }
-
-          app
+          required :name
+        }
       end
 
       it 'passes when passing required params' do
-        post('/users', JSON.generate(name: 'Jim'), { 'CONTENT_TYPE' => 'application/json' })
+        post('/request', JSON.generate(name: 'Jim'), { 'CONTENT_TYPE' => 'application/json' })
 
         expect(last_response).to be_ok
         expect(holder[:params]).to eq(name: 'Jim', age: nil)
@@ -661,14 +653,29 @@ describe Application, '.param' do
 
       it 'raises error when missing required params' do
         expect { 
-          post('/users', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
+          post('/request', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
         }.to raise_error(Errors::ParameterInvalid)
       end
 
       it 'raises error when missing required params' do
         expect { 
-          post('/users', JSON.generate(age: 18), { 'CONTENT_TYPE' => 'application/json' })
+          post('/request', JSON.generate(age: 18), { 'CONTENT_TYPE' => 'application/json' })
         }.to raise_error(Errors::ParameterInvalid)
+      end
+
+      context '作为选项传递' do
+        def define_route(route)
+          route.params do
+            param :name, required: true
+            param :age
+          end
+        end
+
+        it 'raises error when missing required params' do
+          expect { 
+            post('/request', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
+          }.to raise_error(Errors::ParameterInvalid)
+        end
       end
     end
 
