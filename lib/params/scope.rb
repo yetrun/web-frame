@@ -6,7 +6,7 @@
 #   - ArrayScope
 #   - PrimitiveScope
 
-require_relative 'checker'
+require_relative 'type_converter'
 require_relative 'validators'
 
 module Params
@@ -128,10 +128,9 @@ module Params
     end
 
     def filter(value, path)
-      value = value || @options[:default]
-      value = ParamChecker.convert_type('some param', value, @options[:type]) if @options.key?(:type) && !value.nil?
+      value = @options[:default] if value.nil?
+      value = TypeConverter.convert_value(path, value, @options[:type]) if @options.key?(:type) && !value.nil?
 
-      # 验证参数
       validate(value, options, path)
 
       value

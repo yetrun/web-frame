@@ -3,7 +3,7 @@
 require_relative '../errors'
 
 module Params
-  module ParamChecker
+  module TypeConverter
     @types = {
       'boolean' => {
         string_converter: ->(name, value) {
@@ -42,7 +42,7 @@ module Params
     }
 
     class << self
-      def convert_type(name, value, type)
+      def convert_value(name, value, type)
         return nil if value.nil?
         return convert_string_value_to_specific_type(name, value, type) if value.is_a?(String) && type != 'string'
 
