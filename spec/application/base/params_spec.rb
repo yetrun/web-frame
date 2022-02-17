@@ -160,6 +160,73 @@ describe Application, '.param' do
         include_examples 'accepting any values'
       end
     end
+
+    describe 'array type' do
+      def app
+        app = Class.new(Application)
+
+        the_holder = holder
+        route = app.route('/request', :post)
+        define_route(route)
+        route.do_any { the_holder[:params] = params }
+
+        app
+      end
+
+      context 'setting type as "string[]" style' do
+        def define_route(route)
+          the_holder = holder
+          route.params {
+            param :an_array, type: 'integer[]'
+          }
+        end
+
+        it '是 `type: "integer", is_array: true` 选项的语法糖' do
+          post('/request', JSON.generate({ an_array: ['1', 2, '3'] }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(holder[:params]).to eq(an_array: [1, 2, 3])
+
+          expect {
+            post('/request', JSON.generate({ an_array: "1,2,3" }), { 'CONTENT_TYPE' => 'application/json' })
+          }.to raise_error(Errors::ParameterInvalid)
+        end
+      end
+
+      context 'setting type as "array<string>" style' do
+        def define_route(route)
+          the_holder = holder
+          route.params {
+            param :an_array, type: 'array<integer>'
+          }
+        end
+
+        it '是 `type: "integer", is_array: true` 选项的语法糖' do
+          post('/request', JSON.generate({ an_array: ['1', 2, '3'] }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(holder[:params]).to eq(an_array: [1, 2, 3])
+
+          expect {
+            post('/request', JSON.generate({ an_array: "1,2,3" }), { 'CONTENT_TYPE' => 'application/json' })
+          }.to raise_error(Errors::ParameterInvalid)
+        end
+      end
+
+      context 'setting type as "array"' do
+        def define_route(route)
+          the_holder = holder
+          route.params {
+            param :an_array, type: 'array'
+          }
+        end
+
+        it '是 `is_array: true` 选项的语法糖' do
+          post('/request', JSON.generate({ an_array: ['1', 2, '3'] }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(holder[:params]).to eq(an_array: ['1', 2, '3'])
+
+          expect {
+            post('/request', JSON.generate({ an_array: "1,2,3" }), { 'CONTENT_TYPE' => 'application/json' })
+          }.to raise_error(Errors::ParameterInvalid)
+        end
+      end
+    end
   end
 
   describe 'default' do

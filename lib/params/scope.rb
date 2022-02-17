@@ -23,6 +23,15 @@ module Params
     def param(name, options = {}, &block)
       name = name.to_sym
 
+      # 规范化 options
+      if options[:type] =~ /array<(\w+)>/
+        options[:type] = $1
+        options[:is_array] = true
+      elsif options[:type] =~ /(\w+)\[\]/
+        options[:type] = options[:type][0..-3]
+        options[:is_array] = true
+      end
+
       if options[:is_array]
         @properties[name] = ArrayScope.new(options, &block)
       elsif block_given?
