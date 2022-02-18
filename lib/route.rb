@@ -2,7 +2,7 @@
 
 # 每个块都是在 execution 环境下执行的
 
-require_relative 'params/scope'
+require_relative 'params/scope_builders'
 require_relative 'entity_scope'
 require_relative 'execution'
 require 'json'
@@ -47,7 +47,7 @@ class Route
   end
 
   def params(&block)
-    param_scope = Params::ObjectScope.new(&block)
+    param_scope = Params::ObjectScopeBuilder.new(&block).to_scope
     meta[:param_scope] = param_scope
 
     do_any {

@@ -11,47 +11,9 @@ require_relative 'validators'
 
 module Params
   class ObjectScope
-    def initialize(&block)
-      @properties = {}
-      @validations = {}
-
-      @required = []
-
-      instance_eval(&block)
-
-      validates :required, @required unless @required.empty?
-    end
-
-    # 当且仅当 ObjectScope 提供了 `param` 方法
-    def param(name, options = {}, &block)
-      name = name.to_sym
-
-      # 规范化 options
-      if options[:type] =~ /array<(\w+)>/
-        options[:type] = $1
-        options[:is_array] = true
-      elsif options[:type] =~ /(\w+)\[\]/
-        options[:type] = options[:type][0..-3]
-        options[:is_array] = true
-      end
-
-      @required << name if options.delete(:required)
-
-      if options[:is_array]
-        @properties[name] = ArrayScope.new(options, &block)
-      elsif block_given?
-        @properties[name] = ObjectScope.new(&block) # TODO: options 怎么办？
-      else
-        @properties[name] = PrimitiveScope.new(options)
-      end
-    end
-
-    def validates(type, names)
-      @validations[type] = names
-    end
-
-    def required(*names)
-      @required += names
+    def initialize(properties = {}, validations = {})
+      @properties = properties
+      @validations = validations
     end
 
     def filter(params, path = '')
@@ -112,12 +74,8 @@ module Params
   end
 
   class ArrayScope
-    def initialize(options, &block)
-      if block_given?
-        @items  = ObjectScope.new(&block) # TODO: options 怎么办？
-      else
-        @items = PrimitiveScope.new(options)
-      end
+    def initialize(items)
+      @items = items
     end
 
     def filter(array_params, path)

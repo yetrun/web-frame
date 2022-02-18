@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ParamScope::ObjectScope do
+describe Params::ObjectScope do
   describe 'to_schema' do
     subject do
       ParamScope::ObjectScope.new do
