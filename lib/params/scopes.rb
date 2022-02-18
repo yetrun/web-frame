@@ -11,9 +11,12 @@ require_relative 'validators'
 
 module Params
   class ObjectScope
-    def initialize(properties = {}, validations = {})
+    attr_reader :properties, :validations, :options
+
+    def initialize(properties = {}, validations = {}, options = {})
       @properties = properties
       @validations = validations
+      @options = options
     end
 
     def filter(params, path = '')
@@ -44,20 +47,21 @@ module Params
     #
     # 的格式。
     def to_schema
-      # 提取根路径的所有 `:in` 选项为 `body` 的元素（默认值为 `body`）
-      scopes = @properties.values.filter { |scope| scope.options[:in].nil? || scope.options[:in] == 'body' }
-
-      properties = scopes.map do |scope|
-        [scope.name, scope.to_schema]
-      end.to_h
+      properties = @properties.filter { |name, scope|
+        scope.options[:in].nil? || scope.options[:in] == 'body' 
+      }.transform_values do |scope|
+        scope.to_schema
+      end
 
       if properties.empty?
         nil
       else
-        {
+        schema = {
           type: 'object',
-          properties: properties
+          properties: properties,
         }
+        schema[:description] = options[:description] if options[:description]
+        schema
       end
     end
 
@@ -74,8 +78,11 @@ module Params
   end
 
   class ArrayScope
-    def initialize(items)
+    attr_reader :items, :options
+
+    def initialize(items, options = {})
       @items = items
+      @options = options
     end
 
     def filter(array_params, path)
@@ -89,18 +96,22 @@ module Params
     end
 
     def to_schema
-      {
+      schema = {
         type: 'array',
         items: @items ? @items.to_schema : {}
       }
+      schema[:description] = options[:description] if options[:description]
+      schema
     end
   end
 
   class PrimitiveScope
     attr_reader :options
 
-    def initialize(options = {})
+    # 传递 path 参数主要是为了渲染 Parameter 文档时需要
+    def initialize(options = {}, path = nil)
       @options = options
+      @path = path
     end
 
     def filter(value, path)
@@ -113,21 +124,17 @@ module Params
     end
 
     def to_schema
-      if @inner_scope
-        schema = @inner_scope.to_schema
-      else
-        schema = {}
-        schema[:type] = @options[:type] if @options[:type]
-      end
-
+      schema = {}
+      schema[:type] = @options[:type] if @options[:type]
       schema[:description] = @options[:description] if @options[:description]
 
       schema
     end
 
+    # 生成 Swagger 的参数文档，这个文档不同于 Schema，它主要存在于 Header、Path、Query 这些部分
     def generate_parameter_doc
       {
-        name: name,
+        name: @path,
         in: options[:in],
         type: options[:type],
         required: options[:required] || false,

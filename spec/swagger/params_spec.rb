@@ -137,7 +137,7 @@ describe 'SwaggerDocUtil.generate' do
 
             app.route('/users', :post)
               .params {
-                param :users, type: 'array', description: '用户数组' do
+                param :users, type: 'array', description: '用户数组', is_array: true do
                   param :name
                   param :age
                 end

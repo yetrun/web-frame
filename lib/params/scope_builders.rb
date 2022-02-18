@@ -4,8 +4,10 @@ require_relative 'scopes'
 
 module Params
   class ObjectScopeBuilder
-    def initialize(&block)
+    def initialize(options = {}, &block)
       @properties = {}
+      @options = options
+
       @required = []
 
       instance_exec(&block)
@@ -23,14 +25,17 @@ module Params
         options[:is_array] = true
       end
 
-      @required << name if options.delete(:required)
+      if options[:required]
+        @required << name 
+        options.delete(:required) unless options[:in] && options[:in] != :body
+      end
 
       if options[:is_array]
         @properties[name] = ArrayScopeBuilder.new(options, &block).to_scope
       elsif block_given?
-        @properties[name] = ObjectScopeBuilder.new(&block).to_scope # TODO: options 怎么办？
+        @properties[name] = ObjectScopeBuilder.new(options, &block).to_scope # TODO: options 怎么办？
       else
-        @properties[name] = PrimitiveScope.new(options)
+        @properties[name] = PrimitiveScope.new(options, name)
       end
     end
 
@@ -42,12 +47,14 @@ module Params
       properties = @properties
       validations = { required: @required }
 
-      ObjectScope.new(properties, validations)
+      ObjectScope.new(properties, validations, @options)
     end
   end
 
   class ArrayScopeBuilder
     def initialize(options, &block)
+      @options = options
+
       if block_given?
         @items  = ObjectScopeBuilder.new(&block).to_scope # TODO: options 怎么办？
       else
@@ -56,7 +63,7 @@ module Params
     end
 
     def to_scope
-      ArrayScope.new(@items)
+      ArrayScope.new(@items, @options)
     end
   end
 end
