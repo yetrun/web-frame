@@ -63,6 +63,7 @@ module Entities
       else
         options = options.dup
         options.delete(:is_array)
+        options.delete(:description)
         @items = BaseScope.new(options)
       end
     end

@@ -17,7 +17,7 @@ describe 'SwaggerDocUtil.generate' do
     the_arguments = arguments
     app.route('/user', :get)
       .if_status(200) {
-        entity(*the_arguments)
+        expose(*the_arguments)
       }
 
     app
@@ -30,8 +30,8 @@ describe 'SwaggerDocUtil.generate' do
   end
 
   describe 'generating responses schema documentation' do
-    context '.entity(:key, entity_class)' do
-      let(:arguments) { [:user, entity_class] }
+    context '.expose(:key, entity_class)' do
+      let(:arguments) { [:user, presenter: entity_class] }
 
       it {
         is_expected.to eq(
@@ -49,20 +49,9 @@ describe 'SwaggerDocUtil.generate' do
       }
     end
 
-    context '.entity(:key)' do
-      let(:arguments) { [:user] }
+    context '.expose(entity_class)' do
+      before { skip('暂不支持将 Grape::Entity 应用在顶层') }
 
-      it {
-        is_expected.to eq(
-          type: 'object',
-          properties: {
-            user: {}
-          }
-        )
-      }
-    end
-
-    context '.entity(entity_class)' do
       let(:arguments) { [entity_class] }
 
       it {
@@ -103,20 +92,9 @@ describe 'SwaggerDocUtil.generate' do
       end
     end
 
-    context '.entity()' do
-      let(:arguments) { [] }
-
-      it {
-        is_expected.to eq(
-          type: 'object',
-          properties: {}
-        )
-      }
-    end
-
     describe 'array type entity class' do
       context 'ExposureScope.entity with `is_array` is true' do
-        let(:arguments) { [:user, entity_class, { is_array: true }] }
+        let(:arguments) { [:user, presenter: entity_class, is_array: true] }
 
         it {
           is_expected.to eq(
@@ -138,7 +116,7 @@ describe 'SwaggerDocUtil.generate' do
       end
 
       context 'Grape::Entity.expose with `is_array` is true' do
-        let(:arguments) { [entity_class] }
+        let(:arguments) { [:data, presenter: entity_class] }
 
         let(:entity_class) do
           inner_entity_class = Class.new(Grape::Entity) do
@@ -154,13 +132,18 @@ describe 'SwaggerDocUtil.generate' do
           is_expected.to eq(
             type: 'object',
             properties: {
-              user: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: {},
-                    age: {}
+              data: {
+                type: 'object',
+                properties: {
+                  user: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        name: {},
+                        age: {}
+                      }
+                    }
                   }
                 }
               }
@@ -172,7 +155,7 @@ describe 'SwaggerDocUtil.generate' do
 
     describe 'type and description' do
       context 'declaring type and description in Grape::Entity' do
-        let(:arguments) { [:user, entity_class] }
+        let(:arguments) { [:user, presenter: entity_class] }
 
         let(:entity_class) do
           Class.new(Grape::Entity) do
@@ -197,7 +180,7 @@ describe 'SwaggerDocUtil.generate' do
         }
 
         context 'exposing a hash' do
-          let(:arguments) { [entity_class] }
+          let(:arguments) { [:data, presenter: entity_class] }
 
           # HACK: 命名为 user_entity_class
           let(:inner_entity_class) do
@@ -218,12 +201,17 @@ describe 'SwaggerDocUtil.generate' do
             is_expected.to eq(
               type: 'object',
               properties: {
-                user: {
+                data: {
                   type: 'object',
-                  description: '用户',
                   properties: {
-                    name: {},
-                    age: {}
+                    user: {
+                      type: 'object',
+                      description: '用户',
+                      properties: {
+                        name: {},
+                        age: {}
+                      }
+                    }
                   }
                 }
               }
@@ -232,7 +220,7 @@ describe 'SwaggerDocUtil.generate' do
         end
 
         context 'exposing a array' do
-          let(:arguments) { [entity_class] }
+          let(:arguments) { [:data, presenter: entity_class] }
 
           let(:inner_entity_class) do
             Class.new(Grape::Entity) do
@@ -252,14 +240,19 @@ describe 'SwaggerDocUtil.generate' do
             is_expected.to eq(
               type: 'object',
               properties: {
-                user: {
-                  type: 'array',
-                  description: '用户',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      name: {},
-                      age: {}
+                data: {
+                  type: 'object',
+                  properties: {
+                    user: {
+                      type: 'array',
+                      description: '用户',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          name: {},
+                          age: {}
+                        }
+                      }
                     }
                   }
                 }
@@ -304,7 +297,7 @@ describe 'SwaggerDocUtil.generate' do
         end
 
         context 'entitying an entity class' do
-          let(:arguments) { [:user, entity_class, { description: '用户' }] }
+          let(:arguments) { [:user, presenter: entity_class, description: '用户'] }
 
           it {
             is_expected.to eq(
@@ -324,7 +317,7 @@ describe 'SwaggerDocUtil.generate' do
         end
 
         context 'entitying an entity class array' do
-          let(:arguments) { [:user, entity_class, { is_array: true, description: '用户数组' }] }
+          let(:arguments) { [:user, presenter: entity_class, is_array: true, description: '用户数组'] }
 
           it {
             is_expected.to eq(

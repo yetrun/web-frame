@@ -8,6 +8,7 @@
 
 require_relative 'type_converter'
 require_relative 'validators'
+require_relative '../grape_entity_helper'
 
 module Entities
   class BaseScope
@@ -39,6 +40,12 @@ module Entities
     end
 
     def to_schema
+      if options[:presenter]
+        schema = GrapeEntityHelper.generate_entity_schema(options[:presenter])
+        schema[:description] = options[:description] if options[:description]
+        return schema
+      end
+
       schema = {}
       schema[:type] = @options[:type] if @options[:type]
       schema[:description] = @options[:description] if @options[:description]
