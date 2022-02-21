@@ -100,7 +100,7 @@ class Route
       next unless response.status == code
 
       hash = JSON.parse(response.body[0])
-      new_hash = entity_scope.filter(hash)
+      new_hash = entity_scope.filter(hash, '', self)
       response.body = [JSON.generate(new_hash)]
     }
   end

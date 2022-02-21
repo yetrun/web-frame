@@ -19,7 +19,8 @@ module Entities
       @options = options
     end
 
-    def filter(params, path = '')
+    def filter(params, path = '', execution = nil)
+      params = execution.instance_exec(&@options[:value]) if @options[:value]
       return nil if params.nil?
       raise Errors::ParameterInvalid, '参数应该传递一个对象' unless params.is_a?(Hash)
 
@@ -32,7 +33,7 @@ module Entities
       # 递归解析参数
       @properties.map do |name, scope|
         p = path.empty? ? name : "#{path}.#{name}"
-        [name, scope.filter(params[name.to_s], p)]
+        [name, scope.filter(params[name.to_s], p, execution)]
       end.to_h
     end
 
@@ -85,13 +86,14 @@ module Entities
       @options = options
     end
 
-    def filter(array_params, path)
+    def filter(array_params, path, execution = nil)
+      array_params = execution.instance_exec(&@options[:value]) if @options[:value]
       return nil if array_params.nil?
       raise Errors::ParameterInvalid, '参数应该传递一个数组' unless array_params.is_a?(Array)
 
       array_params.each_with_index.map do |item, index|
         p = "#{path}[#{index}]"
-        @items.filter(item, p)
+        @items.filter(item, p, execution)
       end
     end
 
@@ -114,8 +116,10 @@ module Entities
       @path = path
     end
 
-    def filter(value, path)
-      value = @options[:default] if value.nil?
+    def filter(value, path, execution = nil)
+      value = execution.instance_exec(&@options[:value]) if @options[:value]
+      value = @options[:default] if value.nil? && @options[:default]
+      value = @options[:transform].call(value) if @options[:transform]
       value = TypeConverter.convert_value(path, value, @options[:type]) if @options.key?(:type) && !value.nil?
 
       validate(value, options, path)
