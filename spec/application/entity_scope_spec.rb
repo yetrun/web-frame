@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'grape-entity'
+require_relative '../../lib/entity_scope'
 
 describe EntityScope do
   include Rack::Test::Methods

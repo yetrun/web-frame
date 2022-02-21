@@ -118,6 +118,7 @@ module Entities
 
     def filter(value, path, execution = nil)
       value = execution.instance_exec(&@options[:value]) if @options[:value]
+      value = @options[:presenter].represent(value).as_json if @options[:presenter]
       value = @options[:default] if value.nil? && @options[:default]
       value = @options[:transform].call(value) if @options[:transform]
       value = TypeConverter.convert_value(path, value, @options[:type]) if @options.key?(:type) && !value.nil?

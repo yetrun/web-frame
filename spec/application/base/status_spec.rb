@@ -34,13 +34,13 @@ describe Application do
           response.status = 201
         }
         .if_status(200) {
-          entity(:status) { 'ok' }
+          expose :status, value: proc { 'ok' }
         }
         .if_status(201) {
-          entity(:status) { 'created' }
+          expose :status, value: proc { 'created' }
         }
         .if_status(202) {
-          entity(:status) { 'accepted' }
+          expose :status, value: proc { 'accepted' }
         }
 
       app

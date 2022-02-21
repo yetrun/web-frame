@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# 也许已经被废弃
+
 class EntityScope
   def initialize(&block)
     @root_entity = nil

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'json'
+require 'grape-entity'
 
 describe Application, '.exposures' do
   include Rack::Test::Methods
@@ -12,7 +13,7 @@ describe Application, '.exposures' do
         .do_any {
           response.body = [JSON.generate(name: 'Jim', age: '18', foo: 'foo')]
         }
-        .if_status2(200) {
+        .if_status(200) {
           expose :name, type: 'string'
           expose :age, type: 'integer'
         }
@@ -35,7 +36,7 @@ describe Application, '.exposures' do
         .do_any {
           response.body = [JSON.generate(name: 'Jim', age: 18)]
         }
-        .if_status2(200) {
+        .if_status(200) {
           expose :name, type: 'string', transform: proc { |value| value.upcase }
           expose :age, type: 'integer', transform: proc { |value| value + 1 }
         }
@@ -62,7 +63,7 @@ describe Application, '.exposures' do
 
             response.body = ['{}']
           }
-          .if_status2(200) {
+          .if_status(200) {
             expose :name, type: 'string', value: proc { @name } # TODO: lambda 表达式是不是可以检测参数个数
             expose :age, type: 'integer', value: proc { @age }
           }
@@ -85,7 +86,7 @@ describe Application, '.exposures' do
           .do_any {
             response.body = ['{}']
           }
-          .if_status2(200) {
+          .if_status(200) {
             expose :user, value: proc { { 'name' => 'Jim', 'age' => '18' } } do
               expose :name, type: 'string'
               expose :age, type: 'integer'
@@ -110,7 +111,7 @@ describe Application, '.exposures' do
           .do_any {
             response.body = ['{}']
           }
-          .if_status2(200) {
+          .if_status(200) {
             expose :user, is_array: true, value: proc { [{ 'name' => 'Jim', 'age' => '18' }] } do
               expose :name, type: 'string'
               expose :age, type: 'integer'
@@ -125,6 +126,44 @@ describe Application, '.exposures' do
 
         expect(JSON.parse(last_response.body)).to eq('user' => [{ 'name' => 'Jim', 'age' => 18 }])
       end
+    end
+  end
+
+  describe '渲染器：presenter' do
+    let(:entity_class) do
+      Class.new(Grape::Entity) do
+        expose :name, :age
+      end
+    end
+
+    let(:entity) do
+      user = Object.new
+      def user.name; 'Jim' end
+      def user.age; 18 end
+      user
+    end
+
+    def app
+      app = Class.new(Application)
+
+      the_entity_class = entity_class
+      the_entity = entity
+
+      route = app.route('/request', :post)
+        .do_any {
+          response.body = ['{}']
+        }
+        .if_status(200) {
+          expose :user, presenter: the_entity_class, value: proc { the_entity }
+        }
+
+      app
+    end
+
+    it '使用自定义行为渲染 name 和 age 属性' do
+      post '/request'
+
+      expect(JSON.parse(last_response.body)).to eq('user' => { 'name' => 'Jim', 'age' => 18 })
     end
   end
 end

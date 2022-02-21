@@ -3,7 +3,6 @@
 # 每个块都是在 execution 环境下执行的
 
 require_relative 'entities/scope_builders'
-require_relative 'entity_scope'
 require_relative 'execution'
 require 'json'
 
@@ -79,18 +78,18 @@ class Route
     }
   end
 
+  # def if_status(code, &block)
+  #   entity_scope = EntityScope.new(&block)
+
+  #   meta[:responses] = meta[:responses] || {}
+  #   meta[:responses][code] = entity_scope
+
+  #   do_any {
+  #     response.body = [entity_scope.generate_json(self)] if response.status == code
+  #   }
+  # end
+
   def if_status(code, &block)
-    entity_scope = EntityScope.new(&block)
-
-    meta[:responses] = meta[:responses] || {}
-    meta[:responses][code] = entity_scope
-
-    do_any {
-      response.body = [entity_scope.generate_json(self)] if response.status == code
-    }
-  end
-
-  def if_status2(code, &block)
     entity_scope = Entities::ObjectScopeBuilder.new(&block).to_scope
 
     meta[:responses] = meta[:responses] || {}
@@ -99,7 +98,8 @@ class Route
     do_any {
       next unless response.status == code
 
-      hash = JSON.parse(response.body[0])
+      response_body = response.body ? response.body[0] : nil
+      hash = response_body ? JSON.parse(response_body) : {}
       new_hash = entity_scope.filter(hash, '', self)
       response.body = [JSON.generate(new_hash)]
     }
