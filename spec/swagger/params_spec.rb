@@ -6,7 +6,6 @@ require 'json'
 require 'grape-entity'
 
 describe 'SwaggerDocUtil.generate' do
-
   describe 'generating parameters documentation' do
     describe 'path params' do
       subject { SwaggerDocUtil.generate(app) }
