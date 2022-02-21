@@ -35,7 +35,7 @@ module Entities
       elsif block_given?
         @properties[name] = ObjectScopeBuilder.new(options, &block).to_scope # TODO: options 怎么办？
       else
-        @properties[name] = PrimitiveScope.new(options, name)
+        @properties[name] = BaseScope.new(options, name)
       end
     end
 
@@ -61,7 +61,9 @@ module Entities
       if block_given?
         @items  = ObjectScopeBuilder.new(&block).to_scope # TODO: options 怎么办？
       else
-        @items = PrimitiveScope.new(options)
+        options = options.dup
+        options.delete(:is_array)
+        @items = BaseScope.new(options)
       end
     end
 
