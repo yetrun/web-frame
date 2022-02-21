@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Params
+module Entities
   class ObjectScope
     module Validators
       @validators = {

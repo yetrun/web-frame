@@ -2,7 +2,7 @@
 
 require_relative 'scopes'
 
-module Params
+module Entities
   class ObjectScopeBuilder
     def initialize(options = {}, &block)
       @properties = {}
@@ -13,7 +13,7 @@ module Params
       instance_exec(&block)
     end
 
-    def param(name, options = {}, &block)
+    def property(name, options = {}, &block)
       name = name.to_sym
 
       # 规范化 options
@@ -38,6 +38,9 @@ module Params
         @properties[name] = PrimitiveScope.new(options, name)
       end
     end
+
+    alias :expose :property
+    alias :param :property
 
     def required(*names)
       @required += names

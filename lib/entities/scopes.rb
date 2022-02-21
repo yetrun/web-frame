@@ -9,7 +9,7 @@
 require_relative 'type_converter'
 require_relative 'validators'
 
-module Params
+module Entities
   class ObjectScope
     attr_reader :properties, :validations, :options
 
@@ -25,7 +25,7 @@ module Params
 
       # 在解析参数前先对整体参数进行验证
       @validations.each do |type, names|
-        validator = Params::ObjectScope::Validators[type]
+        validator = ObjectScope::Validators[type]
         validator.call(params, names, path)
       end
 

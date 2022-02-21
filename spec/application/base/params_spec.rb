@@ -42,7 +42,6 @@ describe Application, '.param' do
       post('/users', JSON.generate(name: 'Jim', age: 18, foo: 'bar'), { 'CONTENT_TYPE' => 'application/json' })
 
       expect(last_response).to be_ok
-
       expect(@holder[:params]).to eq(name: 'Jim', age: 18)
     end
   end

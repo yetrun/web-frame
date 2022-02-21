@@ -2,7 +2,7 @@
 
 require_relative '../errors'
 
-module Params
+module Entities
   module TypeConverter
     @types = {
       'boolean' => {
