@@ -28,7 +28,7 @@ describe Application, '.exposures' do
     end
   end
 
-  describe '值转换：transform' do
+  describe '值转换：convert' do
     def app
       app = Class.new(Application)
 
@@ -37,8 +37,8 @@ describe Application, '.exposures' do
           response.body = [JSON.generate(name: 'Jim', age: 18)]
         }
         .if_status(200) {
-          expose :name, type: 'string', transform: proc { |value| value.upcase }
-          expose :age, type: 'integer', transform: proc { |value| value + 1 }
+          expose :name, type: 'string', convert: proc { |value| value.upcase }
+          expose :age, type: 'integer', convert: proc { |value| value + 1 }
         }
 
       app
