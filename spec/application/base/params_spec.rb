@@ -172,11 +172,12 @@ describe Application, '.param' do
         app
       end
 
+      # TODO: 不支持 "type[]" style
       context 'setting type as "string[]" style' do
         def define_route(route)
           the_holder = holder
           route.params {
-            param :an_array, type: 'integer[]'
+            param :an_array, type: 'array', items: { type: 'integer' }
           }
         end
 
@@ -190,11 +191,12 @@ describe Application, '.param' do
         end
       end
 
+      # TODO: 不支持 "array<type>" style
       context 'setting type as "array<string>" style' do
         def define_route(route)
           the_holder = holder
           route.params {
-            param :an_array, type: 'array<integer>'
+            param :an_array, type: 'array', items: { type: 'integer' }
           }
         end
 
@@ -406,7 +408,7 @@ describe Application, '.param' do
 
             app.route('/users', :post)
               .params {
-                param :users, type: 'object', is_array: true do
+                param :users, type: 'array' do
                   param :name
                   param :age
                 end
@@ -515,7 +517,7 @@ describe Application, '.param' do
         the_holder = holder
         app.route('/request', :post)
           .params {
-            param(:an_array, type: 'integer', is_array: true)
+            param(:an_array, type: 'array', items: { type: 'integer' })
           }
           .do_any { the_holder[:params] = params }
 
@@ -551,7 +553,7 @@ describe Application, '.param' do
         the_holder = holder
         app.route('/request', :post)
           .params {
-            param(:an_array, is_array: true)
+            param(:an_array, type: 'array')
           }
           .do_any { the_holder[:params] = params }
 
@@ -579,7 +581,7 @@ describe Application, '.param' do
 
         app.route('/users', :post)
           .params {
-            param :users, type: 'object', is_array: true do
+            param :users, type: 'array' do
               param :name
               param :age
             end
@@ -717,7 +719,7 @@ describe Application, '.param' do
         context '包裹一层数组嵌套' do
           def define_route(route)
             route.params {
-              param :a_object, type: 'object', is_array: true do
+              param :a_object, type: 'array' do
                 param :a_str, type: 'string', format: /^x\d\d$/
               end
             }

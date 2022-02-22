@@ -94,7 +94,7 @@ describe 'SwaggerDocUtil.generate' do
 
     describe 'array type entity class' do
       context 'ExposureScope.entity with `is_array` is true' do
-        let(:arguments) { [:user, presenter: entity_class, is_array: true] }
+        let(:arguments) { [:user, type: 'array', items: { presenter: entity_class }] }
 
         it {
           is_expected.to eq(
@@ -278,7 +278,7 @@ describe 'SwaggerDocUtil.generate' do
         }
 
         context 'is array' do
-          let(:arguments) { [:count, { type: 'integer', is_array: true, description: '数量' }] }
+          let(:arguments) { [:count, { type: 'array', items: { type: 'integer' }, description: '数量' }] }
 
           it {
             is_expected.to eq(
@@ -317,7 +317,7 @@ describe 'SwaggerDocUtil.generate' do
         end
 
         context 'entitying an entity class array' do
-          let(:arguments) { [:user, presenter: entity_class, is_array: true, description: '用户数组'] }
+          let(:arguments) { [:user, type: 'array', items: { presenter: entity_class }, description: '用户数组'] }
 
           it {
             is_expected.to eq(
