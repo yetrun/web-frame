@@ -1051,13 +1051,36 @@ describe Application, '.param' do
               property :age
             end
           }
-          .do_any { the_holder[:params] = params }
+          .do_any { 
+            the_holder[:params] = params 
+            response.body = [JSON.generate(user: {
+              id: 1, password: 'password', name: 'Jim', age: 18 
+            })]
+          }
+          .if_status(200) do
+            expose(:user, type: 'object') do
+              property :id, scope: 'return'
+              property :password, scope: 'param'
+              property :name
+              property :age
+            end
+          end
         app
       end
 
+      before do
+        post('/users', JSON.generate(user: { 
+          id: 0, password: 'password', name: 'Jim', age: 18 
+        }), { 'CONTENT_TYPE' => 'application/json' })
+      end
+
       it '正确解析参数' do
-        post('/users', JSON.generate(user: { id: 0, password: 'password', name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
         expect(@holder[:params]).to eq(user: { password: 'password', name: 'Jim', age: 18 })
+      end
+
+      # 由于 scope: 'param' 和 scope: 'return' 的逻辑实现一致，所以只测试这一个用例即可
+      it '正确解析返回值' do
+        expect(JSON.parse(last_response.body)).to eq('user' => { 'id' => 1, 'name' => 'Jim', 'age' => 18 })
       end
     end
 

@@ -100,7 +100,7 @@ class Route
 
       response_body = response.body ? response.body[0] : nil
       hash = response_body ? JSON.parse(response_body) : {}
-      new_hash = entity_scope.filter(hash, '', self)
+      new_hash = entity_scope.filter(hash, '', self, scope: 'return')
       response.body = [JSON.generate(new_hash)]
     }
   end
