@@ -41,12 +41,25 @@ module Entities
         options.delete(:required) unless options[:in] && options[:in] != :body
       end
 
-      if array_property?(options, block)
-        @properties[name] = ArrayScopeBuilder.new(options, &block).to_scope
-      elsif object_property?(options, block)
-        @properties[name] = ObjectScopeBuilder.new(options, &block).to_scope # TODO: options 怎么办？
+      # 能且仅能 ObjectScopeBuilder 内能使用 using 选项
+      block = options[:using] unless block_given?
+      if block.nil? || block.is_a?(Proc)
+        if apply_array_scope?(options, block)
+          @properties[name] = ArrayScopeBuilder.new(options, &block).to_scope
+        elsif apply_object_scope?(options, block)
+          @properties[name] = ObjectScopeBuilder.new(options, &block).to_scope # TODO: options 怎么办？
+        else
+          @properties[name] = BaseScope.new(options, name)
+        end
+      elsif block.respond_to?(:to_scope)
+        scope = block.to_scope
+        if options[:type] == 'array'
+          @properties[name] = ArrayScope.new(scope)
+        else
+          @properties[name] = scope
+        end
       else
-        @properties[name] = BaseScope.new(options, name)
+        raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_scope` 方法的对象。当前传递：#{block}"
       end
     end
 
@@ -57,6 +70,12 @@ module Entities
       @required += names
     end
 
+    # 能且仅能 ObjectScopeBuilder 内能使用 use 方法
+    def use(proc)
+      proc = proc.to_proc if proc.respond_to?(:to_proc)
+      instance_exec &proc
+    end
+
     def to_scope
       properties = @properties
       validations = { required: @required }
@@ -64,11 +83,13 @@ module Entities
       ObjectScope.new(properties, validations, @options)
     end
 
-    def array_property?(options, block)
+    private
+
+    def apply_array_scope?(options, block)
       options[:type] == 'array' && (options[:items] || block)
     end
 
-    def object_property?(options, block)
+    def apply_object_scope?(options, block)
       (options[:type] == 'object' || block) && (options[:properties] || block)
     end
   end

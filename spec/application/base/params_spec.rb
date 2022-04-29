@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'json'
+require_relative '../../../lib/entities/entity'
 
 describe Application, '.param' do
   include Rack::Test::Methods
@@ -468,47 +469,7 @@ describe Application, '.param' do
     end
   end
 
-  describe 'do not repeat yourself' do
-    def app
-      holder = @holder
-
-      app = Class.new(Application)
-
-      block = proc {
-        param :name
-        param :age
-      }
-
-      app.route('/users', :post)
-        .params {
-          param(:user, type: 'object', &block)
-        }
-        .do_any { holder[:params] = params }
-
-      app.route('/users/:id', :put)
-        .params {
-          param :user, type: 'object' do
-            instance_eval(&block)
-          end
-        }
-        .do_any { holder[:params] = params }
-
-      app
-    end
-
-    it 'retrieves right params when requesting POST /users' do
-      post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-
-      expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
-    end
-
-    it 'retrieves right params when requesting PUT /users/:id' do
-      put('/users/1', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-
-      expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18})
-    end
-  end
-
+  # TODO: 似乎可更新个名称
   describe 'is_array' do
     context 'providing type' do
       def app
@@ -557,7 +518,7 @@ describe Application, '.param' do
           }
           .do_any { the_holder[:params] = params }
 
-          app
+        app
       end
 
       it 'raises error if it does not pass array params' do
@@ -777,6 +738,297 @@ describe Application, '.param' do
             }.to raise_error(Errors::ParameterInvalid) { |error| 
               expect(error.message).to include('`a_object.a_str`')
             }
+          end
+        end
+      end
+    end
+  end
+
+  describe '引入外部模块' do
+    context '传递块' do
+      def app
+        @holder = {}
+        the_holder = @holder
+
+        block = proc {
+          param :name
+          param :age
+        }
+
+        app = Class.new(Application)
+        app.route('/users', :post)
+          .params {
+            param(:user, type: 'object', &block)
+          }
+          .do_any { the_holder[:params] = params }
+        app
+      end
+
+      it '正确处理参数' do
+        post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+        expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+      end
+    end
+
+    context '执行块' do
+      def app
+        @holder = {}
+        the_holder = @holder
+
+        block = proc {
+          param :name
+          param :age
+        }
+
+        app = Class.new(Application)
+        app.route('/users', :post)
+          .params {
+            param :user, type: 'object' do
+              instance_eval(&block)
+            end
+          }
+          .do_any { the_holder[:params] = params }
+        app
+      end
+
+      it '正确处理参数' do
+        post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+        expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+      end
+    end
+
+    describe '#use' do
+      def app
+        the_holder = holder
+        the_proc = proc
+
+        app = Class.new(Application)
+
+        app.route('/users', :post)
+          .params {
+            param :user, type: 'object' do
+              use the_proc
+            end
+          }
+          .do_any { the_holder[:params] = params }
+
+        app
+      end
+
+      context 'use(Proc)' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          the_proc = Proc.new do
+            param :name
+            param :age
+          end
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param :user, type: 'object' do
+                use the_proc
+              end
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确处理参数' do
+          post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        end
+      end
+
+      context 'use(&:to_proc)' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          the_proc = Proc.new do
+            param :name
+            param :age
+          end
+
+          the_object = Object.new
+          the_object.define_singleton_method(:to_proc) { the_proc }
+          the_object
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param :user, type: 'object' do
+                use the_object
+              end
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确处理参数' do
+          post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        end
+      end
+    end
+
+    describe 'using:' do
+      context 'using: Proc' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          the_proc = Proc.new do
+            param :name
+            param :age
+          end
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param :user, type: 'object', using: the_proc 
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确处理参数' do
+          post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        end
+      end
+
+      context 'using: ObjectScope' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          the_scope = Entities::ObjectScope.new({
+            name: Entities::BaseScope.new,
+            age: Entities::BaseScope.new 
+          })
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param :user, type: 'object', using: the_scope
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确处理参数' do
+          post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        end
+      end
+
+      context 'using: &:to_scope' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          the_entity = Object.new
+          def the_entity.to_scope
+            Entities::ObjectScope.new({
+              name: Entities::BaseScope.new,
+              age: Entities::BaseScope.new 
+            })
+          end
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param :user, type: 'object', using: the_entity
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确处理参数' do
+          post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+        end
+      end
+
+      context 'using: Entity' do
+        context '简单的实体' do
+          def app
+            @holder = {}
+            the_holder = @holder
+
+            the_entity = Class.new(Entities::Entity) do
+              param :name
+              param :age
+            end
+
+            app = Class.new(Application)
+            app.route('/users', :post)
+              .params {
+                param :user, type: 'object', using: the_entity 
+              }
+              .do_any { the_holder[:params] = params }
+            app
+          end
+
+          it '正确处理参数' do
+            post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+            expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
+          end
+        end
+
+        context '内部使用 using' do
+          def app
+            @holder = {}
+            the_holder = @holder
+
+            address_entity = Class.new(Entities::Entity) do
+              param :city
+              param :street
+            end
+            user_entity = Class.new(Entities::Entity) do
+              param :address, type: 'object', using: address_entity
+            end
+
+            app = Class.new(Application)
+            app.route('/users', :post)
+              .params {
+                param :user, type: 'object', using: user_entity 
+              }
+              .do_any { the_holder[:params] = params }
+            app
+          end
+
+          it '正确解析参数' do
+            post('/users', JSON.generate(user: { address: { city: 'city', street: 'street' } }), { 'CONTENT_TYPE' => 'application/json' })
+            expect(@holder[:params]).to eq(user: { address: { city: 'city', street: 'street' } })
+          end
+        end
+
+        context '使用数组类型' do
+          def app
+            @holder = {}
+            the_holder = @holder
+
+            the_entity = Class.new(Entities::Entity) do
+              param :name
+              param :age
+            end
+
+            app = Class.new(Application)
+            app.route('/users', :post)
+              .params {
+                param(:user, type: 'array', using: the_entity)
+              }
+              .do_any { the_holder[:params] = params }
+            app
+          end
+
+          it '正确解析参数' do
+            post('/users', JSON.generate(user: [{ name: 'Jim', age: 18 }]), { 'CONTENT_TYPE' => 'application/json' })
+            expect(@holder[:params]).to eq(user: [{ name: 'Jim', age: 18 }])
           end
         end
       end

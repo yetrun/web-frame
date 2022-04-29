@@ -64,6 +64,10 @@ module Entities
       }
     end
 
+    def to_scope
+      self
+    end
+
     private
 
     def validate(value, options, path)
