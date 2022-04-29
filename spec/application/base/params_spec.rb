@@ -1034,4 +1034,167 @@ describe Application, '.param' do
       end
     end
   end
+
+  describe '区分参数和返回值' do
+    context '简单情形' do
+      def app
+        @holder = {}
+        the_holder = @holder
+
+        app = Class.new(Application)
+        app.route('/users', :post)
+          .params {
+            param(:user, type: 'object') do
+              property :id, scope: 'return'
+              property :password, scope: 'param'
+              property :name
+              property :age
+            end
+          }
+          .do_any { the_holder[:params] = params }
+        app
+      end
+
+      it '正确解析参数' do
+        post('/users', JSON.generate(user: { id: 0, password: 'password', name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+        expect(@holder[:params]).to eq(user: { password: 'password', name: 'Jim', age: 18 })
+      end
+    end
+
+    context '嵌套情形' do
+      context '嵌套在对象内' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param(:user, type: 'object') do
+                property :id, scope: 'return'
+                property :password, scope: 'param'
+                property :address, type: 'object' do
+                  property :city, scope: 'return'
+                  property :street, scope: 'param'
+                end
+              end
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确解析参数' do
+          post('/users', JSON.generate(user: { 
+            id: 0, 
+            password: 'password', 
+            address: { city: 'city', street: 'street' } 
+          }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { password: 'password', address: { street: 'street' } })
+        end
+      end
+
+      context '嵌套在数组内' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param(:user, type: 'object') do
+                property :id, scope: 'return'
+                property :password, scope: 'param'
+                property :addresses, type: 'array' do
+                  property :city, scope: 'return'
+                  property :street, scope: 'param'
+                end
+              end
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确解析参数' do
+          post('/users', JSON.generate(user: { 
+            id: 0, 
+            password: 'password', 
+            addresses: [{ city: 'city', street: 'street' }] 
+          }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { password: 'password', addresses: [{ street: 'street' }] })
+        end
+      end
+
+      context '嵌套在对象之上' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param(:user, type: 'object') do
+                property :id, scope: 'return'
+                property :password, scope: 'param'
+                property :address_one, type: 'object', scope: 'return' do
+                  property :city
+                  property :street
+                end
+                property :address_two, type: 'object', scope: 'param' do
+                  property :city
+                  property :street
+                end
+              end
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确解析参数' do
+          post('/users', JSON.generate(user: { 
+            id: 0, 
+            password: 'password', 
+            address_one: { city: 'city one', street: 'street one' },
+            address_two: { city: 'city two', street: 'street two' } 
+          }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { password: 'password', address_two: { city: 'city two', street: 'street two' } })
+        end
+      end
+
+      context '嵌套在数组之上' do
+        def app
+          @holder = {}
+          the_holder = @holder
+
+          app = Class.new(Application)
+          app.route('/users', :post)
+            .params {
+              param(:user, type: 'object') do
+                property :id, scope: 'return'
+                property :password, scope: 'param'
+                property :address_one, type: 'array', scope: 'return' do
+                  property :city
+                  property :street
+                end
+                property :address_two, type: 'array', scope: 'param' do
+                  property :city
+                  property :street
+                end
+              end
+            }
+            .do_any { the_holder[:params] = params }
+          app
+        end
+
+        it '正确解析参数' do
+          post('/users', JSON.generate(user: { 
+            id: 0, 
+            password: 'password', 
+            address_one: [{ city: 'city one', street: 'street one' }],
+            address_two: [{ city: 'city two', street: 'street two' }] 
+          }), { 'CONTENT_TYPE' => 'application/json' })
+          expect(@holder[:params]).to eq(user: { password: 'password', address_two: [{ city: 'city two', street: 'street two' }] })
+        end
+      end
+    end
+  end
 end

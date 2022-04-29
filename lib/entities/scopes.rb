@@ -27,14 +27,14 @@ module Entities
       @path = path
     end
 
-    def filter(value, path, execution = nil)
+    def filter(value, path, execution, options = {})
       value = execution.instance_exec(&@options[:value]) if @options[:value]
       value = @options[:presenter].represent(value).as_json if @options[:presenter]
       value = @options[:default] if value.nil? && @options[:default]
       value = @options[:convert].call(value) if @options[:convert]
       value = TypeConverter.convert_value(path, value, @options[:type]) if @options.key?(:type) && !value.nil?
 
-      validate(value, options, path)
+      validate(value, @options, path)
 
       value
     end
@@ -89,7 +89,8 @@ module Entities
       @object_validations = object_validations
     end
 
-    def filter(object_value, path = '', execution = nil)
+    def filter(object_value, path, execution, options = {})
+      scope_filter = options[:scope]
       object_value = super
 
       return nil if object_value.nil?
@@ -102,9 +103,15 @@ module Entities
       end
 
       # 递归解析参数
-      @properties.map do |name, scope|
+      filtered_properties = @properties.filter do |name, scope|
+        next true if scope.options[:scope].nil?   # 该属性支持所有的 scope filter
+        next true if scope_filter.nil?            # 未提供任何 scope filter
+
+        scope_filter == scope.options[:scope]     # scope filter 不匹配
+      end
+      filtered_properties.map do |name, scope|
         p = path.empty? ? name : "#{path}.#{name}"
-        [name, scope.filter(object_value[name.to_s], p, execution)]
+        [name, scope.filter(object_value[name.to_s], p, execution, options)]
       end.to_h
     end
 
@@ -158,14 +165,14 @@ module Entities
       @items = items
     end
 
-    def filter(array_value, path, execution = nil)
+    def filter(array_value, path, execution, options = {})
       array_value = super
       return nil if array_value.nil?
       raise Errors::ParameterInvalid, '参数应该传递一个数组' unless array_value.is_a?(Array)
 
       array_value.each_with_index.map do |item, index|
         p = "#{path}[#{index}]"
-        @items.filter(item, p, execution)
+        @items.filter(item, p, execution, options)
       end
     end
 

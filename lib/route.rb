@@ -54,7 +54,7 @@ class Route
       json = request_body.empty? ? {} : JSON.parse(request_body)
       json.merge!(request.params)
 
-      params = param_scope.filter(json)
+      params = param_scope.filter(json, '', nil, scope: 'param')
 
       request.body.rewind
 
