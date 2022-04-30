@@ -100,7 +100,7 @@ class Route
 
       # 首先获取 JSON 响应值
       if @present
-        hash = JSON.parse(JSON.generate(@present[:value]))
+        hash = @present[:value]
         options = @present[:options]
       else
         response_body = response.body ? response.body[0] : nil

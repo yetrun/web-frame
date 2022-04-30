@@ -10,7 +10,7 @@ class Execution
     @response = Rack::Response.new
   end
 
-  def present(value, options)
+  def present(value, options = { scope: ['return'] })
     @present = { value: value, options: options }
   end
 

@@ -33,12 +33,10 @@ module Entities
         string_converter: ->(name, value) { value },
         class_matcher: [String]
       },
-      'object' => {
-        class_matcher: [Hash]
-      },
       'array' => {
         class_matcher: [Array]
       }
+      # 'object' 类型要单独处理
     }
 
     class << self
@@ -61,9 +59,14 @@ module Entities
       end
 
       def match_type?(value, type)
-        raise "未知的类型：#{type}" unless @types.key?(type) && @types[type].key?(:class_matcher)
+        if type == 'object'
+          classes = @types.values.map { |value| value[:class_matcher] }.flatten
+          classes.all? { |klass| !value.is_a?(klass) }
+        else
+          raise "未知的类型：#{type}" unless @types.key?(type) && @types[type].key?(:class_matcher)
 
-        @types[type][:class_matcher].any? { |klass| value.class <= klass }
+          @types[type][:class_matcher].any? { |klass| value.class <= klass }
+        end
       end
     end
   end

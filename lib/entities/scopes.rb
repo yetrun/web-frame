@@ -32,6 +32,7 @@ module Entities
       value = @options[:presenter].represent(value).as_json if @options[:presenter]
       value = @options[:default] if value.nil? && @options[:default]
       value = @options[:convert].call(value) if @options[:convert]
+      # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
       value = TypeConverter.convert_value(path, value, @options[:type]) if @options.key?(:type) && !value.nil?
 
       validate(value, @options, path)
@@ -95,7 +96,9 @@ module Entities
       object_value = super
 
       return nil if object_value.nil?
-      raise Errors::ParameterInvalid, '参数应该传递一个对象' unless object_value.is_a?(Hash)
+      if [TrueClass, FalseClass, Integer, Numeric, String, Array].any? { |type| object_value.is_a?(type) }
+        raise Errors::ParameterInvalid, '参数应该传递一个对象'
+      end
 
       # 在解析参数前先对整体参数进行验证
       @object_validations.each do |type, names|
@@ -116,7 +119,8 @@ module Entities
       end
       filtered_properties.map do |name, scope|
         p = path.empty? ? name : "#{path}.#{name}"
-        [name, scope.filter(object_value[name.to_s], p, execution, options)]
+        value = object_value.respond_to?(name) ? object_value.send(name) : object_value[name.to_s]
+        [name, scope.filter(value, p, execution, options)]
       end.to_h
     end
 
