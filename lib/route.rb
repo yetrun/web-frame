@@ -98,9 +98,22 @@ class Route
     do_any {
       next unless response.status == code
 
-      response_body = response.body ? response.body[0] : nil
-      hash = response_body ? JSON.parse(response_body) : {}
-      new_hash = entity_scope.filter(hash, '', self, scope: 'return')
+      # 首先获取 JSON 响应值
+      if @present
+        hash = JSON.parse(JSON.generate(@present[:value]))
+        options = @present[:options]
+      else
+        response_body = response.body ? response.body[0] : nil
+        hash = response_body ? JSON.parse(response_body) : {}
+        options = {}
+      end
+
+      scope_filter = options[:scope] ? options[:scope] : []
+      scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
+      scope_filter << 'return' unless scope_filter.include?('return')
+      options[:scope] = scope_filter
+
+      new_hash = entity_scope.filter(hash, '', self, options)
       response.body = [JSON.generate(new_hash)]
     }
   end

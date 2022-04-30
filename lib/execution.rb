@@ -10,6 +10,10 @@ class Execution
     @response = Rack::Response.new
   end
 
+  def present(value, options)
+    @present = { value: value, options: options }
+  end
+
   class Abort < StandardError
   end
 end

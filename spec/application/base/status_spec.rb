@@ -53,4 +53,28 @@ describe Application do
       expect(JSON.parse(last_response.body)).to eq('status' => 'created')
     end
   end
+
+  describe 'Execution#render' do
+    def app
+      app = Class.new(Application)
+      app.route('/article', :get)
+        .do_any {
+          present({ article: { title: 'Title', content: 'Content', other: 'Other' }}, scope: 'other')
+        }
+        .if_status(200) {
+          expose :article, type: 'object' do
+            expose :title
+            expose :content, scope: ['full', 'return']
+            expose :other, scope: ['other', 'return']
+          end
+        }
+      app
+    end
+
+    it '过滤掉 scope 声明不匹配的属性' do
+      get '/article'
+
+      expect(JSON.parse(last_response.body)).to eq('article' => { 'title' => 'Title', 'other' => 'Other' })
+    end
+  end
 end

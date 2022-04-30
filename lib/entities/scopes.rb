@@ -90,7 +90,8 @@ module Entities
     end
 
     def filter(object_value, path, execution, options = {})
-      scope_filter = options[:scope]
+      scope_filter = options[:scope] ? options[:scope] : []
+      scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
       object_value = super
 
       return nil if object_value.nil?
@@ -104,10 +105,14 @@ module Entities
 
       # 递归解析参数
       filtered_properties = @properties.filter do |name, scope|
-        next true if scope.options[:scope].nil?   # 该属性支持所有的 scope filter
-        next true if scope_filter.nil?            # 未提供任何 scope filter
+        # 获取并整理 scope 选项
+        scope_option = scope.options[:scope] ? scope.options[:scope] : []
+        scope_option = [scope_option] unless scope_option.is_a?(Array)
 
-        scope_filter == scope.options[:scope]     # scope filter 不匹配
+        next true if scope_option.empty?          # 该属性支持所有的 scope filter
+        next true if scope_filter.empty?          # 未提供任何 scope filter
+
+        (scope_filter - scope_option).empty?      # 未包含全部的 scope filter
       end
       filtered_properties.map do |name, scope|
         p = path.empty? ? name : "#{path}.#{name}"
