@@ -151,10 +151,10 @@ describe Application, '.route' do
           @resource = 'books'
         }
         .nesting do |route|
-          route.define_method(:get)
+          route.method(:get)
             .do_any { the_holder[0] = 'get ' + @resource }
 
-          route.define_method(:post)
+          route.method(:post)
             .do_any { the_holder[1] = 'post ' + @resource }
         end
       app
