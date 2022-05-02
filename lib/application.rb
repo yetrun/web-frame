@@ -36,7 +36,7 @@ class Application
     chain.any? { |mod| mod.match?(execution) }
   end
 
-  def route(path, method)
+  def route(path, method = nil)
     route = Route.new(path, method)
     chain << route
     route

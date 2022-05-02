@@ -139,4 +139,37 @@ describe Application, '.route' do
     include_examples 'missing matching route', :post, '/posts'
     include_examples 'missing matching route', :get, '/known'
   end
+
+  describe '嵌套子路由' do
+    def app
+      @holder = []
+      the_holder = @holder
+
+      app = Class.new(Application)
+      app.route('/books')
+        .do_any { 
+          @resource = 'books'
+        }
+        .nesting do |route|
+          route.define_method(:get)
+            .do_any { the_holder[0] = 'get ' + @resource }
+
+          route.define_method(:post)
+            .do_any { the_holder[1] = 'post ' + @resource }
+        end
+      app
+    end
+
+    it '匹配子路由' do
+      get '/books'
+      
+      expect(@holder[0]).to eq('get books')
+    end
+
+    it '不匹配子路由' do
+      expect{ 
+        put '/books' 
+      }.to raise_error(Errors::NoMatchingRoute)
+    end
+  end
 end

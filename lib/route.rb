@@ -7,36 +7,44 @@ require_relative 'execution'
 require 'json'
 
 class Route
-  attr_reader :path, :method, :meta
+  attr_reader :path, :method, :meta, :children
 
-  def initialize(path, method)
-    @path = path
-    @method = method.to_s.upcase
+  def initialize(path = :all, method = :all)
+    @path = path || :all
+    @method = method || :all
+
     @meta = {}
+    @children = []
     @blocks = []
   end
 
   def execute(execution)
-    # 将 path params 合并到 request 中
-    path_params = path_matching_regex.match(execution.request.path).named_captures
-    path_params.each { |name, value| execution.request.update_param(name, value) }
+    execute_in_current(execution)
 
-    # 依次执行这个环境
-    begin
-      @blocks.each do |b|
-        execution.instance_eval(&b)
-      end
-    rescue Execution::Abort
-      execution
-    end
+    route = children.find { |route| route.match?(execution) }
+    route.execute(execution) if route
   end
 
   def match?(execution)
-    request = execution.request
-    path = request.path
-    method = request.request_method
+    return false unless match_to_current?(execution)
+    return children.any? { |route| route.match?(execution) } unless children.empty?
 
-    path_matching_regex.match?(path) && @method == method
+    return true
+  end
+
+  # 定义子路由
+  # TODO: 使用构建器
+  def define_method(method)
+    route = Route.new(nil, method)
+    children << route
+
+    route
+  end
+
+  def nesting(&block)
+    instance_eval(&block)
+
+    nil
   end
 
   def do_any(&block)
@@ -151,6 +159,33 @@ class Route
   end
 
   private
+
+  def execute_in_current(execution)
+    # 将 path params 合并到 request 中
+    unless @path == :all
+      path_params = path_matching_regex.match(execution.request.path).named_captures
+      path_params.each { |name, value| execution.request.update_param(name, value) }
+    end
+
+    # 依次执行这个环境
+    begin
+      @blocks.each do |b|
+        execution.instance_eval(&b)
+      end
+    rescue Execution::Abort
+      execution
+    end
+  end
+
+  def match_to_current?(execution)
+    request = execution.request
+    path = request.path
+    method = request.request_method
+
+    return false unless @path == :all || path_matching_regex.match?(path)
+    return false unless @method == :all || @method.to_s.upcase == method
+    return true
+  end
 
   def path_matching_regex
     raw_regex = @path
