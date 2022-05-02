@@ -78,9 +78,11 @@ describe Application, '.param' do
     end
 
     it 'raises error when it is not compatible' do
-      expect { 
+      expect {
         post('/users', JSON.generate(name: 'Jim', age: 'a18'), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Errors::ParameterInvalid)
+      }.to raise_error(Errors::ParameterInvalid) { |e|
+        expect(e.errors).to eq('age' => '类型错误')
+      }
     end
 
     describe 'no providing `type` option' do
@@ -289,7 +291,9 @@ describe Application, '.param' do
       it 'supports passing `required` option' do
         expect {
           post('/users', JSON.generate(user: { age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Errors::ParameterInvalid) { |e|
+          expect(e.errors['user.name']).to eq('未提供') 
+        }
       end
 
       it 'supports passing `type` option' do
@@ -592,7 +596,9 @@ describe Application, '.param' do
       it 'raises error when param is not for format' do
         expect {
           post('/request', JSON.generate(a_str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid, /a_str/)
+        }.to raise_error(Errors::ParameterInvalid) { |e|
+          expect(e.errors).to eq('a_str' => '格式不正确')
+        }
       end
     end
 
@@ -653,8 +659,8 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |error|
-              expect(error.message).to include('`a_str`')
+            }.to raise_error(Errors::ParameterInvalid) { |e|
+              expect(e.errors).to include('a_str')
             }
           end
         end
@@ -671,8 +677,8 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_object: { a_str: 'x001' }), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |error|
-              expect(error.message).to include('`a_object.a_str`')
+            }.to raise_error(Errors::ParameterInvalid) { |e|
+              expect(e.errors).to include('a_object.a_str')
             }
           end
         end
@@ -689,8 +695,8 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_object: [{ a_str: 'x01' }, { a_str: 'x001' }]), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |error| 
-              expect(error.message).to include('`a_object[1].a_str`')
+            }.to raise_error(Errors::ParameterInvalid) { |e| 
+              expect(e.errors).to include('a_object[1].a_str')
             }
           end
         end
@@ -709,8 +715,8 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |error| 
-              expect(error.message).to include('`a_str`')
+            }.to raise_error(Errors::ParameterInvalid) { |e| 
+              expect(e.errors).to include('a_str')
             }
           end
         end
@@ -735,8 +741,8 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_object: {}), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |error| 
-              expect(error.message).to include('`a_object.a_str`')
+            }.to raise_error(Errors::ParameterInvalid) { |e| 
+              expect(e.errors).to include('a_object.a_str')
             }
           end
         end

@@ -7,7 +7,7 @@ module Entities
     @types = {
       'boolean' => {
         string_converter: ->(name, value) {
-          raise Errors::ParameterInvalid, "参数 `#{name}` 类型错误" unless ['true', 'false'].include?(value.downcase)
+          raise Errors::EntityInvalid.new(name.to_s => '类型错误') unless ['true', 'false'].include?(value.downcase)
 
           value == 'true'
         },
@@ -15,7 +15,7 @@ module Entities
       },
       'integer' => {
         string_converter: ->(name, value) {
-          raise Errors::ParameterInvalid, "参数 `#{name}` 类型错误" unless value =~ /^[+-]?\d+$/
+          raise Errors::EntityInvalid.new(name.to_s => '类型错误') unless value =~ /^[+-]?\d+$/
 
           value.to_i
         },
@@ -23,7 +23,7 @@ module Entities
       },
       'number' => {
         string_converter: ->(name, value) {
-          raise Errors::ParameterInvalid, "参数 `#{name}` 类型错误" unless value =~ /^[+-]?\d+(\.\d+)?$/
+          raise Errors::EntityInvalid.new(name.to_s => '类型错误') unless value =~ /^[+-]?\d+(\.\d+)?$/
 
           value.to_f
         },
@@ -45,7 +45,7 @@ module Entities
         return convert_string_value_to_specific_type(name, value, type) if value.is_a?(String) && type != 'string'
 
         # 默认情况下需要类型匹配
-        raise Errors::ParameterInvalid, "参数 `#{name}` 类型错误" unless match_type?(value, type)
+        raise Errors::EntityInvalid.new(name.to_s => '类型错误') unless match_type?(value, type)
 
         value
       end
@@ -53,7 +53,7 @@ module Entities
       private
 
       def convert_string_value_to_specific_type(name, value, type)
-        raise Errors::ParameterInvalid, "参数 `#{name}` 类型错误" unless @types.key?(type) && @types[type].key?(:string_converter)
+        raise Errors::EntityInvalid.new(name.to_s => '类型错误') unless @types.key?(type) && @types[type].key?(:string_converter)
 
         @types[type][:string_converter].call(name, value)
       end

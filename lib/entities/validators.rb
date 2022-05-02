@@ -8,7 +8,7 @@ module Entities
 
         if missing_param
           p = path.empty? ? missing_param : "#{path}.#{missing_param}"
-          raise Errors::ParameterInvalid, "缺少必传参数 `#{p}`"
+          raise Errors::EntityInvalid.new(p.to_s => '未提供')
         end
       }
     }
@@ -23,7 +23,7 @@ module Entities
   module BaseValidators
     @validators = {
       format: ->(value, format, path) {
-        raise Errors::ParameterInvalid, "参数 `#{path}` 格式不正确" unless value =~ format
+        raise Errors::EntityInvalid.new(path.to_s => '格式不正确') unless value =~ format
       }
     }
 

@@ -54,7 +54,11 @@ class Route
       json = request_body.empty? ? {} : JSON.parse(request_body)
       json.merge!(request.params)
 
-      params = param_scope.filter(json, '', nil, scope: 'param')
+      begin
+        params = param_scope.filter(json, '', nil, scope: 'param')
+      rescue Errors::EntityInvalid => e
+        raise Errors::ParameterInvalid.new(e.errors)
+      end
 
       request.body.rewind
 
@@ -113,7 +117,11 @@ class Route
       scope_filter << 'return' unless scope_filter.include?('return')
       options[:scope] = scope_filter
 
-      new_hash = entity_scope.filter(hash, '', self, options)
+      begin
+        new_hash = entity_scope.filter(hash, '', self, options)
+      rescue Errors::EntityInvalid => e
+        raise Errors::RenderingInvalid.new(e.errors)
+      end
       response.body = [JSON.generate(new_hash)]
     }
   end

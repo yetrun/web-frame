@@ -71,6 +71,7 @@ module Entities
 
     private
 
+    # TODO: 如果该函数抛出异常，应加叹号结尾 
     def validate(value, options, path)
       # options 的每一个键都有可能是一个参数验证
       options.each do |key, option|
@@ -97,13 +98,18 @@ module Entities
 
       return nil if object_value.nil?
       if [TrueClass, FalseClass, Integer, Numeric, String, Array].any? { |type| object_value.is_a?(type) }
-        raise Errors::ParameterInvalid, '参数应该传递一个对象'
+        raise Errors::EntityInvalid.new(path => '参数应该传递一个对象')
       end
 
       # 在解析参数前先对整体参数进行验证
+      errors = {}
       @object_validations.each do |type, names|
         validator = ObjectValidators[type]
-        validator.call(object_value, names, path)
+        begin
+          validator.call(object_value, names, path)
+        rescue Errors::EntityInvalid => e
+          errors.merge! e.errors
+        end
       end
 
       # 递归解析参数
@@ -117,11 +123,24 @@ module Entities
 
         (scope_filter - scope_option).empty?      # 未包含全部的 scope filter
       end
-      filtered_properties.map do |name, scope|
+
+      object = {}
+      filtered_properties.each do |name, scope|
         p = path.empty? ? name : "#{path}.#{name}"
         value = object_value.respond_to?(name) ? object_value.send(name) : object_value[name.to_s]
-        [name, scope.filter(value, p, execution, options)]
+
+        begin
+          object[name] = scope.filter(value, p, execution, options)
+        rescue Errors::EntityInvalid => e
+          errors.merge! e.errors
+        end
       end.to_h
+
+      if errors.empty?
+        object
+      else
+        raise Errors::EntityInvalid.new(errors)
+      end
     end
 
     # 生成 Swagger 文档的 schema 格式，所谓 schema 格式，是指形如
@@ -177,7 +196,7 @@ module Entities
     def filter(array_value, path, execution, options = {})
       array_value = super
       return nil if array_value.nil?
-      raise Errors::ParameterInvalid, '参数应该传递一个数组' unless array_value.is_a?(Array)
+      raise Errors::EntityInvalid.new(path => '参数应该传递一个数组') unless array_value.is_a?(Array)
 
       array_value.each_with_index.map do |item, index|
         p = "#{path}[#{index}]"
