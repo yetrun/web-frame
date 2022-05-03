@@ -55,7 +55,7 @@ class Route
       json.merge!(request.params)
 
       begin
-        params = param_scope.filter(json, '', nil, scope: 'param')
+        params = param_scope.filter(json, '', nil, stage: :param) # TODO: execution 改成 self 可否？
       rescue Errors::EntityInvalid => e
         raise Errors::ParameterInvalid.new(e.errors)
       end
@@ -112,13 +112,13 @@ class Route
         options = {}
       end
 
-      scope_filter = options[:scope] ? options[:scope] : []
-      scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
-      scope_filter << 'return' unless scope_filter.include?('return')
-      options[:scope] = scope_filter
+      # scope_filter = options[:scope] ? options[:scope] : []
+      # scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
+      # scope_filter << 'return' unless scope_filter.include?('return')
+      # options[:scope] = scope_filter
 
       begin
-        new_hash = entity_scope.filter(hash, '', self, options)
+        new_hash = entity_scope.filter(hash, '', self, stage: :render, **options)
       rescue Errors::EntityInvalid => e
         raise Errors::RenderingInvalid.new(e.errors)
       end

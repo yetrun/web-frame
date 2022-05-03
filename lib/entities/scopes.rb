@@ -19,49 +19,67 @@ module Entities
     # `options` 属性都是描述该对象的本身，而不是深层的属性。
     #
     # 较常出现错误的是数组，`options` 是描述数组的，而不是描述数组内部元素的。
-    attr_reader :options
+    attr_reader :param_options, :render_options
 
     # 传递 path 参数主要是为了渲染 Parameter 文档时需要
     def initialize(options = {}, path = nil)
-      @options = options
+      options = options.dup
+      param_options = options.delete(:param)           # true、false 或者 Hash
+      render_options = options.delete(:render) # true、false 或者 Hash
+      param_options = {} if param_options.nil? || param_options == true
+      render_options = {} if render_options.nil? || render_options == true
+
+      @param_options = param_options ? options.merge(param_options) : false
+      @render_options = render_options ? options.merge(render_options) : false
+
       @path = path
     end
 
-    def filter(value, path, execution, options = {})
-      value = execution.instance_exec(&@options[:value]) if @options[:value]
-      value = @options[:presenter].represent(value).as_json if @options[:presenter]
-      value = @options[:default] if value.nil? && @options[:default]
-      value = @options[:convert].call(value) if @options[:convert]
-      # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
-      value = TypeConverter.convert_value(path, value, @options[:type]) if @options.key?(:type) && !value.nil?
+    def options
+      param_options.merge(render_options)
+    end
 
-      validate(value, @options, path)
+    def filter(value, path, execution, options = {})
+      scope_options = options[:stage] == :param ? @param_options : @render_options
+
+      value = execution.instance_exec(&scope_options[:value]) if scope_options[:value]
+      value = scope_options[:presenter].represent(value).as_json if scope_options[:presenter]
+      value = scope_options[:default] if value.nil? && scope_options[:default]
+      value = scope_options[:convert].call(value) if scope_options[:convert]
+      # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
+      value = TypeConverter.convert_value(path, value, scope_options[:type]) if scope_options.key?(:type) && !value.nil?
+
+      validate(value, scope_options, path)
 
       value
     end
 
-    def to_schema
-      if options[:presenter]
-        schema = GrapeEntityHelper.generate_entity_schema(options[:presenter])
-        schema[:description] = options[:description] if options[:description]
+    def to_schema(options = {})
+      scope_options = options[:stage] == :param ? @param_options : @render_options
+
+      if scope_options[:presenter]
+        schema = GrapeEntityHelper.generate_entity_schema(scope_options[:presenter])
+        schema[:description] = scope_options[:description] if scope_options[:description]
         return schema
       end
 
       schema = {}
-      schema[:type] = @options[:type] if @options[:type]
-      schema[:description] = @options[:description] if @options[:description]
+      schema[:type] = scope_options[:type] if scope_options[:type]
+      schema[:description] = scope_options[:description] if scope_options[:description]
 
       schema
     end
 
     # 生成 Swagger 的参数文档，这个文档不同于 Schema，它主要存在于 Header、Path、Query 这些部分
-    def generate_parameter_doc
+    def generate_parameter_doc(options = {})
+      scope_options = options[:stage] == :param ? @param_options : @render_options
+
       {
         name: @path,
-        in: options[:in],
-        type: options[:type],
-        required: options[:required] || false,
-        description: options[:description] || ''
+        in: scope_options[:in],
+        type: scope_options[:type],
+        required: scope_options[:required] || false,
+        description: scope_options[:description] || ''
       }
     end
 
@@ -92,16 +110,14 @@ module Entities
     end
 
     def filter(object_value, path, execution, options = {})
-      scope_filter = options[:scope] ? options[:scope] : []
-      scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
       object_value = super
-
       return nil if object_value.nil?
+
       if [TrueClass, FalseClass, Integer, Numeric, String, Array].any? { |type| object_value.is_a?(type) }
         raise Errors::EntityInvalid.new(path => '参数应该传递一个对象')
       end
 
-      # 在解析参数前先对整体参数进行验证
+      # 第一步，在解析参数前先对整体参数进行验证
       errors = {}
       @object_validations.each do |type, names|
         validator = ObjectValidators[type]
@@ -111,19 +127,32 @@ module Entities
           errors.merge! e.errors
         end
       end
+      # TODO: 是否应该提前返回
 
-      # 递归解析参数
+      # 第二步，需要过滤一些字段
+      # options[:scope] 应是一个数组
+      scope_filter = options[:scope] || []
+      scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
+      stage = options[:stage]
       filtered_properties = @properties.filter do |name, scope|
-        # 获取并整理 scope 选项
-        scope_option = scope.options[:scope] ? scope.options[:scope] : []
+        # 首先通过 stage 过滤。
+        next false if stage == :param && !scope.param_options
+        next false if stage == :render && !scope.render_options
+
+        # 然后通过 scope 过滤
+        scope_options = stage == :param ? scope.param_options : scope.render_options
+
+        # scope_option 是构建 Scope 时传递的 `scope` 选项，它应是一个数组
+        # 它与 scope_options 仅一个字母之差，却千壤之别
+        scope_option = scope_options[:scope] || []
         scope_option = [scope_option] unless scope_option.is_a?(Array)
+        next true if scope_option.empty? # 未声明任何的 scope
 
-        next true if scope_option.empty?          # 该属性支持所有的 scope filter
-        next true if scope_filter.empty?          # 未提供任何 scope filter
-
-        (scope_filter - scope_option).empty?      # 未包含全部的 scope filter
+        # scope_option 应包含所有的 scope_filter
+        (scope_filter - scope_option).empty?
       end
 
+      # 第三步，递归过滤每一个属性
       object = {}
       filtered_properties.each do |name, scope|
         p = path.empty? ? name : "#{path}.#{name}"
@@ -173,7 +202,7 @@ module Entities
     end
 
     # 生成 Swagger 文档的 parameters 部分，这里是指生成路径位于 `path`、`query`
-    # 的参数
+    # 的参数。
     def generate_parameters_doc
       # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
       scopes = @properties.values.filter { |scope| scope.options[:in] && scope.options[:in] != 'body' }

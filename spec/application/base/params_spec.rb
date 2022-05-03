@@ -1050,43 +1050,35 @@ describe Application, '.param' do
         app = Class.new(Application)
         app.route('/users', :post)
           .params {
-            param(:user, type: 'object') do
-              property :id, scope: 'return'
-              property :password, scope: 'param'
-              property :name
-              property :age
-            end
+            property :id, param: false
+            property :password, render: false
+            property :name
+            property :age
           }
           .do_any { 
             the_holder[:params] = params 
-            response.body = [JSON.generate(user: {
-              id: 1, password: 'password', name: 'Jim', age: 18 
-            })]
+            response.body = [JSON.generate(id: 1, password: 'password', name: 'Jim', age: 18)]
           }
           .if_status(200) do
-            expose(:user, type: 'object') do
-              property :id, scope: 'return'
-              property :password, scope: 'param'
-              property :name
-              property :age
-            end
+            property :id, param: false
+            property :password, render: false
+            property :name
+            property :age
           end
         app
       end
 
       before do
-        post('/users', JSON.generate(user: { 
-          id: 0, password: 'password', name: 'Jim', age: 18 
-        }), { 'CONTENT_TYPE' => 'application/json' })
+        post('/users', JSON.generate(id: 0, password: 'password', name: 'Jim', age: 18), { 'CONTENT_TYPE' => 'application/json' })
       end
 
       it '正确解析参数' do
-        expect(@holder[:params]).to eq(user: { password: 'password', name: 'Jim', age: 18 })
+        expect(@holder[:params]).to eq(password: 'password', name: 'Jim', age: 18)
       end
 
       # 由于 scope: 'param' 和 scope: 'return' 的逻辑实现一致，所以只测试这一个用例即可
       it '正确解析返回值' do
-        expect(JSON.parse(last_response.body)).to eq('user' => { 'id' => 1, 'name' => 'Jim', 'age' => 18 })
+        expect(JSON.parse(last_response.body)).to eq('id' => 1, 'name' => 'Jim', 'age' => 18)
       end
     end
 
@@ -1100,11 +1092,11 @@ describe Application, '.param' do
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
-                property :id, scope: 'return'
-                property :password, scope: 'param'
+                property :id, param: false
+                property :password, render: false
                 property :address, type: 'object' do
-                  property :city, scope: 'return'
-                  property :street, scope: 'param'
+                  property :city, param: false
+                  property :street, render: false
                 end
               end
             }
@@ -1131,11 +1123,11 @@ describe Application, '.param' do
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
-                property :id, scope: 'return'
-                property :password, scope: 'param'
+                property :id, param: false
+                property :password, render: false
                 property :addresses, type: 'array' do
-                  property :city, scope: 'return'
-                  property :street, scope: 'param'
+                  property :city, param: false
+                  property :street, render: false
                 end
               end
             }
@@ -1162,13 +1154,13 @@ describe Application, '.param' do
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
-                property :id, scope: 'return'
-                property :password, scope: 'param'
-                property :address_one, type: 'object', scope: 'return' do
+                property :id, param: false
+                property :password, render: false
+                property :address_one, type: 'object', param: false do
                   property :city
                   property :street
                 end
-                property :address_two, type: 'object', scope: 'param' do
+                property :address_two, type: 'object', render: false do
                   property :city
                   property :street
                 end
@@ -1198,13 +1190,13 @@ describe Application, '.param' do
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
-                property :id, scope: 'return'
-                property :password, scope: 'param'
-                property :address_one, type: 'array', scope: 'return' do
+                property :id, param: false
+                property :password, render: false
+                property :address_one, type: 'array', param: false do
                   property :city
                   property :street
                 end
-                property :address_two, type: 'array', scope: 'param' do
+                property :address_two, type: 'array', render: false do
                   property :city
                   property :street
                 end

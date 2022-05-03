@@ -55,27 +55,49 @@ describe Application do
   end
 
   describe 'Execution#render' do
-    describe 'scope filter' do
-      def app
-        app = Class.new(Application)
-        app.route('/article', :get)
-          .do_any {
-            present({ 'article' => { 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' }}, scope: 'other')
-          }
-          .if_status(200) {
-          expose :article, type: 'object' do
-            expose :title
-            expose :content, scope: ['full', 'return']
-            expose :other, scope: ['other', 'return']
-          end
-        }
-        app
+    describe 'scope 过滤' do
+      context '渲染时不传递 scope 选项' do
+        def app
+          app = Class.new(Application)
+          app.route('/article', :get)
+            .do_any {
+              present({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' })
+            }
+            .if_status(200) {
+              expose :title
+              expose :content, scope: 'full'
+              expose :other, scope: 'other'
+            }
+          app
+        end
+
+        it '过滤掉 scope 声明不匹配的属性' do
+          get '/article'
+
+          expect(JSON.parse(last_response.body)).to eq('title' => 'Title')
+        end
       end
 
-      it '过滤掉 scope 声明不匹配的属性' do
-        get '/article'
+      context '渲染时传递 scope 选项' do
+        def app
+          app = Class.new(Application)
+          app.route('/article', :get)
+            .do_any {
+              present({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' }, scope: 'full')
+            }
+            .if_status(200) {
+              expose :title
+              expose :content, scope: 'full'
+              expose :other, scope: 'other'
+            }
+          app
+        end
 
-        expect(JSON.parse(last_response.body)).to eq('article' => { 'title' => 'Title', 'other' => 'Other' })
+        it '过滤掉 scope 声明不匹配的属性' do
+          get '/article'
+
+          expect(JSON.parse(last_response.body)).to eq('title' => 'Title', 'content' => 'Content')
+        end
       end
     end
 
