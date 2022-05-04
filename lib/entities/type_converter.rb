@@ -42,6 +42,7 @@ module Entities
     class << self
       def convert_value(name, value, type)
         return nil if value.nil?
+        return value.to_s if type == 'string' # 字符串类型的参数直接返回字符串表示
         return convert_string_value_to_specific_type(name, value, type) if value.is_a?(String) && type != 'string'
 
         # 默认情况下需要类型匹配

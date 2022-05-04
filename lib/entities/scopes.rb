@@ -146,17 +146,21 @@ module Entities
         # 它与 scope_options 仅一个字母之差，却千壤之别
         scope_option = scope_options[:scope] || []
         scope_option = [scope_option] unless scope_option.is_a?(Array)
-        next true if scope_option.empty? # 未声明任何的 scope
+        next true if scope_option.empty? # ScopeBuilder 中未声明需要任何的 scope
 
-        # scope_option 应包含所有的 scope_filter
-        (scope_filter - scope_option).empty?
+        # scope_filter 应传递、并且 scope_option 应包含所有的 scope_filter
+        !scope_filter.empty? && (scope_filter - scope_option).empty?
       end
 
       # 第三步，递归过滤每一个属性
       object = {}
       filtered_properties.each do |name, scope|
         p = path.empty? ? name : "#{path}.#{name}"
-        value = object_value.respond_to?(name) ? object_value.send(name) : object_value[name.to_s]
+        if object_value.is_a?(Hash) 
+          value = object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
+        else
+          value = object_value.send(name)
+        end
 
         begin
           object[name] = scope.filter(value, p, execution, options)

@@ -16,13 +16,13 @@ module Errors
 
   class ParameterInvalid < EntityInvalid
     def initialize(errors)
-      super(errors, '参数异常')
+      super(errors, "参数异常：#{errors}")
     end
   end
 
   class RenderingInvalid < EntityInvalid
     def initialize(errors)
-      super(errors, '渲染实体异常')
+      super(errors, "渲染实体异常：#{errors}")
     end
   end
 
