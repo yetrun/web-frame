@@ -56,7 +56,7 @@ module Entities
         if options[:type] == 'array'
           @properties[name] = ArrayScope.new(scope)
         else
-          @properties[name] = scope
+          @properties[name] = ObjectScope.new(scope.properties, scope.object_validations, options)
         end
       else
         raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_scope` 方法的对象。当前传递：#{block}"

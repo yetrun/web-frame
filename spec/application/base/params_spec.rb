@@ -1217,5 +1217,30 @@ describe Application, '.param' do
         end
       end
     end
+
+    context '引用外部模块' do
+      def app
+        @holder = {}
+        the_holder = @holder
+
+        the_entity = Class.new(Entities::Entity) do
+          property :name
+          property :age
+        end
+
+        app = Class.new(Application)
+        app.route('/users', :post)
+          .params {
+            param :user, type: 'object', using: the_entity, param: false
+          }
+          .do_any { the_holder[:params] = params }
+        app
+      end
+
+      it '正确解析参数' do
+        post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+        expect(@holder[:params][:user]).to be nil
+      end
+    end
   end
 end
