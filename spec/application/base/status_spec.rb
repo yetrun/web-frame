@@ -61,7 +61,7 @@ describe Application do
           app = Class.new(Application)
           app.route('/article', :get)
             .do_any {
-              present({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' })
+              render({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' })
             }
             .if_status(200) {
               expose :title
@@ -83,7 +83,7 @@ describe Application do
           app = Class.new(Application)
           app.route('/article', :get)
             .do_any {
-              present({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' }, scope: 'full')
+              render({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' }, scope: 'full')
             }
             .if_status(200) {
               expose :title
@@ -110,7 +110,7 @@ describe Application do
         app = Class.new(Application)
         app.route('/article', :get)
           .do_any {
-            present('article' => the_object)
+            render('article' => the_object)
           }
           .if_status(200) {
             expose :article, type: 'object' do

@@ -10,8 +10,8 @@ class Execution
     @response = Rack::Response.new
   end
 
-  def present(value, options = { scope: ['return'] })
-    @present = { value: value, options: options }
+  def render(value, options = {})
+    @render = { value: value, options: options }
   end
 
   class Abort < StandardError

@@ -103,9 +103,9 @@ class Route
       next unless response.status == code
 
       # 首先获取 JSON 响应值
-      if @present
-        hash = @present[:value]
-        options = @present[:options]
+      if @render
+        hash = @render[:value]
+        options = @render[:options]
       else
         response_body = response.body ? response.body[0] : nil
         hash = response_body ? JSON.parse(response_body) : {}
