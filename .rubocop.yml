@@ -9,6 +9,8 @@ Style/Documentation:
   Enabled: false
 Style/GuardClause:
   Enabled: false
+Style/RaiseArgs:
+  Enabled: false
 
 Metrics/MethodLength:
   Max: 20

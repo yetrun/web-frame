@@ -233,7 +233,7 @@ describe Application, '.rescue_error' do
             param :name, type: 'string'
             param :age, type: 'integer'
             param :date, type: 'string', format: /\d{4}-\d{2}-\d{2}/
-            
+
             required :name
           end
 
@@ -249,9 +249,9 @@ describe Application, '.rescue_error' do
           date: '1234'
         }), { 'CONTENT_TYPE' => 'application/json' })
       }.to raise_error(Errors::ParameterInvalid) { |e|
-        expect(e.errors).to eq(
+        expect(e.errors).to match(
           'user.name' => '未提供',
-          'user.age' => '类型错误',
+          'user.age' => a_string_including('类型转化出现错误'),
           'user.date' => '格式不正确'
         )
       }
