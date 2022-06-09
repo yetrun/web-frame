@@ -6,9 +6,6 @@ require_relative 'schemas/object_schema'
 require_relative 'schemas/array_schema'
 
 module JsonSchema
-  class ValidationError < StandardError
-  end
-
   class ValidationErrors < StandardError
     attr_reader :errors
 
@@ -17,6 +14,28 @@ module JsonSchema
 
       super(message)
       @errors = errors
+    end
+
+    def prepend_root(root)
+      errors_prepend_root = errors.transform_keys do |name|
+        return name.to_s if root.empty?
+
+        path = name[0] == '[' ? "#{root}#{name}" : "#{root}.#{name}"
+        path = path[1..-1] if path[0] == '.'
+        path = path[0..-2] if path[-1] == '.'
+        path
+      end
+      ValidationErrors.new(errors_prepend_root)
+    end
+  end
+
+  class ValidationError < ValidationErrors
+    def initialize(message)
+      super('' => message)
+    end
+
+    def message
+      errors['']
     end
   end
 end

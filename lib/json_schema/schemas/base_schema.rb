@@ -30,7 +30,6 @@ module JsonSchema
     end
 
     def filter(value, options = {})
-      path = options[:root] || ''
       execution = options[:execution]
       scope_options = options[:stage] == :param ? @param_options : @render_options
 
@@ -43,15 +42,11 @@ module JsonSchema
         begin
           value = JsonSchema::TypeConverter.convert_value(value, scope_options[:type])
         rescue JsonSchema::TypeConvertError => e
-          raise Errors::EntityInvalid.new(path.to_s => e.message)
+          raise JsonSchema::ValidationError.new(e.message)
         end
       end
 
-      begin
-        validate!(value, scope_options)
-      rescue ValidationError => e
-        raise Errors::EntityInvalid.new(path.to_s => e.message)
-      end
+      validate!(value, scope_options)
 
       value
     end

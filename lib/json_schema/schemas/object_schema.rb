@@ -15,10 +15,8 @@ module JsonSchema
       object_value = super(object_value, options)
       return nil if object_value.nil?
 
-      path = options[:root] || ''
-
       if [TrueClass, FalseClass, Integer, Numeric, String, Array].any? { |type| object_value.is_a?(type) }
-        raise Errors::EntityInvalid.new(path.to_s => '参数应该传递一个对象')
+        raise Errors::ValidationError.new('参数应该传递一个对象')
       end
 
       # 第一步，在解析参数前先对整体参数进行验证
@@ -26,16 +24,12 @@ module JsonSchema
       @object_validations.each do |type, names|
         validator = Entities::ObjectValidators[type]
         begin
-          validator.call(object_value, names, path)
+          validator.call(object_value, names)
         rescue JsonSchema::ValidationErrors => e
-          # 将 path 依次加到 errors[names] 中去
-          errors.merge!(e.errors.transform_keys do |name|
-            path.empty? ? name.to_s : "#{path}.#{name}"
-          end)
-        rescue Errors::EntityInvalid => e
           errors.merge! e.errors
         end
       end
+      # TODO: 此处应该有 Bug
       # TODO: 是否应该提前返回
 
       # 第二步，需要过滤一些字段
@@ -64,7 +58,6 @@ module JsonSchema
       # 第三步，递归过滤每一个属性
       object = {}
       filtered_properties.each do |name, scope|
-        p = path.empty? ? name : "#{path}.#{name}"
         if object_value.is_a?(Hash) 
           value = object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
         else
@@ -72,16 +65,16 @@ module JsonSchema
         end
 
         begin
-          object[name] = scope.filter(value, **options, root: p)
-        rescue Errors::EntityInvalid => e
-          errors.merge! e.errors
+          object[name] = scope.filter(value, **options)
+        rescue JsonSchema::ValidationErrors => e
+          errors.merge! e.prepend_root(name).errors
         end
       end.to_h
 
       if errors.empty?
         object
       else
-        raise Errors::EntityInvalid.new(errors)
+        raise JsonSchema::ValidationErrors.new(errors)
       end
     end
 

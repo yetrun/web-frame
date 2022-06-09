@@ -56,7 +56,7 @@ class Route
 
         begin
           params = param_scope.filter(json, stage: :param) # TODO: execution 改成 self 可否？
-        rescue Errors::EntityInvalid => e
+        rescue JsonSchema::ValidationErrors => e
           raise Errors::ParameterInvalid.new(e.errors)
         end
 
@@ -119,7 +119,7 @@ class Route
 
         begin
           new_hash = entity_scope.filter(hash, **options, execution: self, stage: :render)
-        rescue Errors::EntityInvalid => e
+        rescue JsonSchema::ValidationErrors => e
           raise Errors::RenderingInvalid.new(e.errors)
         end
         response.body = [JSON.generate(new_hash)]
