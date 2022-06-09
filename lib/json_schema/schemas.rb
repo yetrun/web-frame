@@ -47,7 +47,11 @@ module JsonSchema
         end
       end
 
-      validate(value, scope_options, path)
+      begin
+        validate!(value, scope_options)
+      rescue ValidationError => e
+        raise Errors::EntityInvalid.new(path.to_s => e.message)
+      end
 
       value
     end
@@ -87,12 +91,11 @@ module JsonSchema
 
     private
 
-    # TODO: 如果该函数抛出异常，应加叹号结尾 
-    def validate(value, options, path)
+    def validate!(value, options)
       # options 的每一个键都有可能是一个参数验证
       options.each do |key, option|
         validator = Entities::BaseValidators[key]
-        validator.call(value, option, path) if validator
+        validator&.call(value, option)
       end
     end
   end
@@ -112,7 +115,7 @@ module JsonSchema
       return nil if object_value.nil?
 
       if [TrueClass, FalseClass, Integer, Numeric, String, Array].any? { |type| object_value.is_a?(type) }
-        raise Errors::EntityInvalid.new(path => '参数应该传递一个对象')
+        raise Errors::EntityInvalid.new(path.to_s => '参数应该传递一个对象')
       end
 
       # 第一步，在解析参数前先对整体参数进行验证
@@ -121,6 +124,11 @@ module JsonSchema
         validator = Entities::ObjectValidators[type]
         begin
           validator.call(object_value, names, path)
+        rescue JsonSchema::ValidationErrors => e
+          # 将 path 依次加到 errors[names] 中去
+          errors.merge!(e.errors.transform_keys do |name|
+            path.empty? ? name.to_s : "#{path}.#{name}"
+          end)
         rescue Errors::EntityInvalid => e
           errors.merge! e.errors
         end
@@ -242,6 +250,20 @@ module JsonSchema
       }
       schema[:description] = options[:description] if options[:description]
       schema
+    end
+  end
+
+  class ValidationError < StandardError
+  end
+
+  class ValidationErrors < StandardError
+    attr_reader :errors
+
+    def initialize(errors, message = nil)
+      raise ArgumentError, '参数 errors 应传递一个 Hash' unless errors.is_a?(Hash)
+
+      super(message)
+      @errors = errors
     end
   end
 end

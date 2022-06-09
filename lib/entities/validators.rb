@@ -3,12 +3,11 @@
 module Entities
   module ObjectValidators
     @validators = {
-      required: ->(params, names, path) {
+      required: proc { |params, names|
         missing_param = names.find { |name| params[name.to_s].nil? }
 
         if missing_param
-          p = path.empty? ? missing_param : "#{path}.#{missing_param}"
-          raise Errors::EntityInvalid.new(p.to_s => '未提供')
+          raise JsonSchema::ValidationErrors.new(missing_param.to_s => '未提供')
         end
       }
     }
@@ -22,8 +21,8 @@ module Entities
 
   module BaseValidators
     @validators = {
-      format: ->(value, format, path) {
-        raise Errors::EntityInvalid.new(path.to_s => '格式不正确') unless value =~ format
+      format: proc { |value, format|
+        raise JsonSchema::ValidationError, '格式不正确' unless value =~ format
       }
     }
 
