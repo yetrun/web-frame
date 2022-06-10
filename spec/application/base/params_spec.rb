@@ -1226,4 +1226,22 @@ describe Application, '.param' do
       end
     end
   end
+
+  context '定义简单代码' do
+    def app
+      @holder = {}
+      the_holder = @holder
+
+      app = Class.new(Application)
+      app.route('/users', :post)
+        .params(type: 'string')
+        .do_any { the_holder[:params] = params }
+      app
+    end
+
+    it '正确解析参数' do
+      post('/users', JSON.generate('Jim'), { 'CONTENT_TYPE' => 'application/json' })
+      expect(@holder[:params]).to eq 'Jim'
+    end
+  end
 end

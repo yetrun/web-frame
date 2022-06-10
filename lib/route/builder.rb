@@ -45,14 +45,16 @@ class Route
       self
     end
 
-    def params(&block)
-      param_scope = JsonSchema::ObjectSchemaBuilder.new(&block).to_scope
+    def params(options = {}, &block)
+      # TODO: expose 等也要如是处理
+      param_scope = JsonSchema::BaseSchemaBuilder.build(options, &block)
+
       @meta[:param_scope] = param_scope
 
       do_any {
         request_body = request.body.read
         json = request_body.empty? ? {} : JSON.parse(request_body)
-        json.merge!(request.params)
+        json.merge!(request.params) if json.is_a?(Hash) # TODO: 如果参数模式不是对象，就无法合并 query 和 path 里的参数
 
         begin
           params = param_scope.filter(json, stage: :param) # TODO: execution 改成 self 可否？
@@ -94,7 +96,7 @@ class Route
     # end
 
     def if_status(code, &block)
-      entity_scope = JsonSchema::ObjectSchemaBuilder.new(&block).to_scope
+      entity_scope = JsonSchema::BaseSchemaBuilder.build(&block).to_scope
 
       @meta[:responses] = @meta[:responses] || {}
       @meta[:responses][code] = entity_scope
