@@ -87,12 +87,12 @@ module JsonSchema
     def validate!(value, options)
       # TODO: 就一点： 如果将来添加新的选项，都要在这里添加，很烦
       discarding_options = %i[type desc value using default presenter convert scope]
-      registered_validators = JsonSchema::BaseValidators.keys + discarding_options
+      registered_validators = JsonSchema::Validators.keys + discarding_options
       unknown_validators = options.keys - registered_validators
       raise "未知的选项：#{unknown_validators.join(', ')}" unless unknown_validators.empty?
 
       options.each do |key, option|
-        validator = JsonSchema::BaseValidators[key]
+        validator = JsonSchema::Validators[key]
         validator&.call(value, option, options)
       end
     end

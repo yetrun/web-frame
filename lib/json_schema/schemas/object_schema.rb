@@ -19,21 +19,7 @@ module JsonSchema
         raise Errors::ValidationError.new('参数应该传递一个对象')
       end
 
-      # 第一步，在解析参数前先对整体参数进行验证
-      errors = {}
-      @object_validations.each do |type, names|
-        validator = JsonSchema::ObjectValidators[type]
-        begin
-          validator.call(object_value, names)
-        rescue JsonSchema::ValidationErrors => e
-          errors.merge!(e.errors) { |_key, original, _new_one| original }
-        end
-      end
-      # 这个是对对象整体进行的异常处理。为防止接下来进一步处理处于一个未定义的状态，方法提前终止。
-      raise JsonSchema::ValidationErrors.new(errors) unless errors.empty?
-      # TODO: 是否应该提前返回
-
-      # 第二步，需要过滤一些字段
+      # 第一步，根据 options[:scope] 需要过滤一些字段
       # options[:scope] 应是一个数组
       scope_filter = options[:scope] || []
       scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
@@ -56,8 +42,9 @@ module JsonSchema
         !scope_filter.empty? && (scope_filter - scope_option).empty?
       end
 
-      # 第三步，递归过滤每一个属性
+      # 第二步，递归过滤每一个属性
       object = {}
+      errors = {}
       filtered_properties.each do |name, scope|
         if object_value.is_a?(Hash) 
           value = object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
