@@ -26,10 +26,9 @@ module JsonSchema
         begin
           validator.call(object_value, names)
         rescue JsonSchema::ValidationErrors => e
-          errors.merge! e.errors
+          errors.merge!(e.errors) { |_key, original, _new_one| original }
         end
       end
-      # TODO: 此处应该有 Bug
       # TODO: 是否应该提前返回
 
       # 第二步，需要过滤一些字段

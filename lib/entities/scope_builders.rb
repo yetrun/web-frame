@@ -8,6 +8,7 @@ module Entities
     def initialize(options = {}, &block)
       @properties = {}
       @required = []
+      @validations = {}
 
       options = options.dup
       properties = options.delete(:properties)
@@ -70,6 +71,10 @@ module Entities
       @required += names
     end
 
+    def validates(type, options = nil)
+      @validations[type] = options
+    end
+
     # 能且仅能 ObjectScopeBuilder 内能使用 use 方法
     def use(proc)
       proc = proc.to_proc if proc.respond_to?(:to_proc)
@@ -78,7 +83,7 @@ module Entities
 
     def to_scope
       properties = @properties
-      validations = { required: @required }
+      validations = { required: @required }.merge(@validations)
 
       ObjectScope.new(properties, validations, @options)
     end

@@ -1,21 +1,32 @@
 # frozen_string_literal: true
 
 module JsonSchema
+  module HashExtension
+    def [](key)
+      @validators[key]
+    end
+
+    def []=(key, validator)
+      @validators[key] = validator
+    end
+
+    def delete(key)
+      @validators.delete(key)
+    end
+  end
+
   module ObjectValidators
     @validators = {
       required: proc { |params, names|
-        missing_param = names.find { |name| params[name.to_s].nil? }
+        missing_names = names.find_all { |name| params[name.to_s].nil? }
 
-        if missing_param
-          raise JsonSchema::ValidationErrors.new(missing_param.to_s => '未提供')
-        end
+        errors = missing_names.to_h { |name| [name.to_s, '未提供'] }
+        raise JsonSchema::ValidationErrors.new(errors)
       }
     }
 
     class << self
-      def [](key)
-        @validators[key]
-      end
+      include HashExtension
     end
   end
 
@@ -27,9 +38,7 @@ module JsonSchema
     }
 
     class << self
-      def [](key)
-        @validators[key]
-      end
+      include HashExtension
     end
   end
 end

@@ -18,7 +18,7 @@ class Application
   # 所有主函数分两个区，第一个是构建区，类似于 Builder；第二个是执行区，是在构建完成以后作为不可变对象运行。
 
   ## 执行区
-  
+
   def execute(execution)
     build
 
