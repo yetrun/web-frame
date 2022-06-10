@@ -1,4 +1,4 @@
-require_relative '../entities/scope_builders'
+require_relative '../entity'
 require_relative '../route'
 require 'json'
 
@@ -46,7 +46,7 @@ class Route
     end
 
     def params(&block)
-      param_scope = Entities::ObjectScopeBuilder.new(&block).to_scope
+      param_scope = JsonSchema::ObjectSchemaBuilder.new(&block).to_scope
       @meta[:param_scope] = param_scope
 
       do_any {
@@ -94,7 +94,7 @@ class Route
     # end
 
     def if_status(code, &block)
-      entity_scope = Entities::ObjectScopeBuilder.new(&block).to_scope
+      entity_scope = JsonSchema::ObjectSchemaBuilder.new(&block).to_scope
 
       @meta[:responses] = @meta[:responses] || {}
       @meta[:responses][code] = entity_scope

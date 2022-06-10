@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'json'
-require_relative '../../../lib/entities/entity'
+require_relative '../../../lib/entity'
 
 describe Application, '.param' do
   include Rack::Test::Methods
@@ -903,9 +903,9 @@ describe Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          the_scope = Entities::ObjectScope.new({
-            name: Entities::BaseScope.new,
-            age: Entities::BaseScope.new 
+          the_scope = JsonSchema::ObjectSchema.new({
+            name: JsonSchema::BaseSchema.new,
+            age: JsonSchema::BaseSchema.new 
           })
 
           app = Class.new(Application)
@@ -930,9 +930,9 @@ describe Application, '.param' do
 
           the_entity = Object.new
           def the_entity.to_scope
-            Entities::ObjectScope.new({
-              name: Entities::BaseScope.new,
-              age: Entities::BaseScope.new 
+            JsonSchema::ObjectSchema.new({
+              name: JsonSchema::BaseSchema.new,
+              age: JsonSchema::BaseSchema.new 
             })
           end
 

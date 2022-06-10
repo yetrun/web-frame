@@ -24,7 +24,7 @@ module JsonSchema
       name = name.to_sym
       options = options.dup
 
-      # 能且仅能 ObjectScopeBuilder 内能使用 using 选项
+      # 能且仅能 ObjectSchemaBuilder 内能使用 using 选项
       block = options[:using] unless block_given?
       if block.nil? || block.is_a?(Proc)
         if apply_array_scope?(options, block)
@@ -53,7 +53,7 @@ module JsonSchema
       @validations[type] = options
     end
 
-    # 能且仅能 ObjectScopeBuilder 内能使用 use 方法
+    # 能且仅能 ObjectSchemaBuilder 内能使用 use 方法
     def use(proc)
       proc = proc.to_proc if proc.respond_to?(:to_proc)
       instance_exec &proc

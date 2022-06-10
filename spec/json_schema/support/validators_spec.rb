@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../../lib/entities/scope_builders'
+require_relative '../../../lib/entity'
 require_relative '../../../lib/json_schema/schemas'
 
 describe JsonSchema::ObjectValidators do
@@ -21,7 +21,7 @@ describe JsonSchema::ObjectValidators do
     end
 
     it '检验 ObjectValidators' do
-      builder = Entities::ObjectScopeBuilder.new do
+      builder = JsonSchema::ObjectSchemaBuilder.new do
         property :x
         property :y
         property :z

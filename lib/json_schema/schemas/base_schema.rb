@@ -89,7 +89,7 @@ module JsonSchema
     def validate!(value, options)
       # options 的每一个键都有可能是一个参数验证
       options.each do |key, option|
-        validator = Entities::BaseValidators[key]
+        validator = JsonSchema::BaseValidators[key]
         validator&.call(value, option)
       end
     end

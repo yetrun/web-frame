@@ -22,7 +22,7 @@ module JsonSchema
       # 第一步，在解析参数前先对整体参数进行验证
       errors = {}
       @object_validations.each do |type, names|
-        validator = Entities::ObjectValidators[type]
+        validator = JsonSchema::ObjectValidators[type]
         begin
           validator.call(object_value, names)
         rescue JsonSchema::ValidationErrors => e
