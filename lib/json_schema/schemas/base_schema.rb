@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module JsonSchema
   class BaseSchema
     # `options` 包含了转换器、验证器、文档、选项。
@@ -87,7 +85,12 @@ module JsonSchema
     private
 
     def validate!(value, options)
-      # options 的每一个键都有可能是一个参数验证
+      # TODO: 就一点： 如果将来添加新的选项，都要在这里添加，很烦
+      discarding_options = %i[type desc value using default presenter convert scope]
+      registered_validators = JsonSchema::BaseValidators.keys + discarding_options
+      unknown_validators = options.keys - registered_validators
+      raise "未知的选项：#{unknown_validators.join(', ')}" unless unknown_validators.empty?
+
       options.each do |key, option|
         validator = JsonSchema::BaseValidators[key]
         validator&.call(value, option, options)

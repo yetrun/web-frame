@@ -13,6 +13,10 @@ module JsonSchema
     def delete(key)
       @validators.delete(key)
     end
+
+    def keys
+      @validators.keys
+    end
   end
 
   module ObjectValidators
