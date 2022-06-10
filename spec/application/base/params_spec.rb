@@ -603,7 +603,7 @@ describe Application, '.param' do
     describe 'required' do
       def define_route(route)
         route.params {
-          param :name, required: true
+          param :name, type: 'string', required: true
           param :age
         }
       end
@@ -616,30 +616,21 @@ describe Application, '.param' do
       end
 
       it 'raises error when missing required params' do
-        expect { 
+        expect {
           post('/request', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
         }.to raise_error(Errors::ParameterInvalid)
       end
 
       it 'raises error when missing required params' do
-        expect { 
+        expect {
           post('/request', JSON.generate(age: 18), { 'CONTENT_TYPE' => 'application/json' })
         }.to raise_error(Errors::ParameterInvalid)
       end
 
-      context '作为选项传递' do
-        def define_route(route)
-          route.params do
-            param :name, required: true
-            param :age
-          end
-        end
-
-        it 'raises error when missing required params' do
-          expect { 
-            post('/request', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
-          }.to raise_error(Errors::ParameterInvalid)
-        end
+      it '空字符串也要被报告错误' do
+        expect {
+          post('/request', JSON.generate(name: '', age: 18), { 'CONTENT_TYPE' => 'application/json' })
+        }.to raise_error(Errors::ParameterInvalid)
       end
     end
 

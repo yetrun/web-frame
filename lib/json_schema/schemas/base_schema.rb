@@ -90,7 +90,7 @@ module JsonSchema
       # options 的每一个键都有可能是一个参数验证
       options.each do |key, option|
         validator = JsonSchema::BaseValidators[key]
-        validator&.call(value, option)
+        validator&.call(value, option, options)
       end
     end
   end
