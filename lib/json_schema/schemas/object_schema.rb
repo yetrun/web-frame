@@ -12,8 +12,6 @@ module JsonSchema
     end
 
     def filter(object_value, options = {})
-      options = options.dup
-      options[:type] = 'object'
       object_value = super(object_value, options)
       return nil if object_value.nil?
 

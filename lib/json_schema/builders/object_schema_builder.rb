@@ -2,22 +2,22 @@
 
 module JsonSchema
   class ObjectSchemaBuilder
-    def initialize(options = {}, &block)
+    def initialize(options = {}, &)
+      raise 'type 选项必须是 object' if !options[:type].nil? && options[:type] != 'object'
+
       @properties = {}
       @required = []
       @validations = {}
 
-      options = options.dup
+      options = options.merge(type: 'object')
       properties = options.delete(:properties)
       @options = options
 
-      if properties
-        properties.each do |name, property_options|
-          property name, property_options
-        end
+      properties&.each do |name, property_options|
+        property name, property_options
       end
 
-      instance_exec(&block) if block_given?
+      instance_exec(&) if block_given?
     end
 
     def property(name, options = {}, &block)
@@ -46,17 +46,13 @@ module JsonSchema
       end
     end
 
-    alias :expose :property
-    alias :param :property
-
-    def validates(type, options = nil)
-      @validations[type] = options
-    end
+    alias expose property
+    alias param property
 
     # 能且仅能 ObjectSchemaBuilder 内能使用 use 方法
     def use(proc)
       proc = proc.to_proc if proc.respond_to?(:to_proc)
-      instance_exec &proc
+      instance_exec(&proc)
     end
 
     def to_scope

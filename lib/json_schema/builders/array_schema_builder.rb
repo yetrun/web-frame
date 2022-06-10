@@ -3,7 +3,9 @@
 module JsonSchema
   class ArraySchemaBuilder
     def initialize(options, &block)
-      options = options.dup
+      raise 'type 选项必须是 array' if !options[:type].nil? && options[:type] != 'array'
+
+      options = options.merge(type: 'array')
       @options = options
 
       # TODO: 使用 BaseBuilder 如果没有 items
@@ -20,7 +22,7 @@ module JsonSchema
     end
 
     def object_property?(options, block)
-      (options && options[:properties] != nil) || block != nil
+      (options && !options[:properties].nil?) || !block.nil?
     end
   end
 end
