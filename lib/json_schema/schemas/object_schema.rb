@@ -12,12 +12,10 @@ module JsonSchema
     end
 
     def filter(object_value, options = {})
+      options = options.dup
+      options[:type] = 'object'
       object_value = super(object_value, options)
       return nil if object_value.nil?
-
-      if [TrueClass, FalseClass, Integer, Numeric, String, Array].any? { |type| object_value.is_a?(type) }
-        raise Errors::ValidationError.new('参数应该传递一个对象')
-      end
 
       # 第一步，根据 options[:scope] 需要过滤一些字段
       # options[:scope] 应是一个数组
