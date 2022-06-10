@@ -4,8 +4,17 @@ require 'spec_helper'
 require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'
+require_relative '../support/grape_entity_presenter_handler'
 
 describe 'SwaggerDocUtil.generate' do
+  before(:all) do
+    JsonSchema::Presenters.register(GrapeEntityPresenterHandler)
+  end
+
+  after(:all) do
+    JsonSchema::Presenters.unregister(GrapeEntityPresenterHandler)
+  end
+
   subject do
     doc = SwaggerDocUtil.generate(app)
     doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]

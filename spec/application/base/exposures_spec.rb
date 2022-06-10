@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'json'
 require 'grape-entity'
+require_relative '../../support/grape_entity_presenter_handler'
+
 
 describe Application, '.exposures' do
   include Rack::Test::Methods
@@ -141,6 +143,14 @@ describe Application, '.exposures' do
       def user.name; 'Jim' end
       def user.age; 18 end
       user
+    end
+
+    before(:all) do
+      JsonSchema::Presenters.register(GrapeEntityPresenterHandler)
+    end
+
+    after(:all) do
+      JsonSchema::Presenters.unregister(GrapeEntityPresenterHandler)
     end
 
     def app

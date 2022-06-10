@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'errors'
-require_relative 'grape_entity_helper'
 require_relative 'json_schema/schemas'
 
 # 我们仅把具有内部结构的元素视为 ArrayScope 或 ObjectScope，哪怕它们的 type 是 object 或 array.

@@ -32,7 +32,8 @@ module JsonSchema
       scope_options = options[:stage] == :param ? @param_options : @render_options
 
       value = execution.instance_exec(&scope_options[:value]) if scope_options[:value]
-      value = scope_options[:presenter].represent(value).as_json if scope_options[:presenter]
+      # value = scope_options[:presenter].represent(value).as_json if scope_options[:presenter]
+      value = JsonSchema::Presenters.present(scope_options[:presenter], value) if scope_options[:presenter]
       value = scope_options[:default] if value.nil? && scope_options[:default]
       value = scope_options[:convert].call(value) if scope_options[:convert]
       # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
@@ -52,11 +53,7 @@ module JsonSchema
     def to_schema(options = {})
       scope_options = options[:stage] == :param ? @param_options : @render_options
 
-      if scope_options[:presenter]
-        schema = GrapeEntityHelper.generate_entity_schema(scope_options[:presenter])
-        schema[:description] = scope_options[:description] if scope_options[:description]
-        return schema
-      end
+      return Presenters.to_schema(scope_options[:presenter], scope_options) if scope_options[:presenter]
 
       schema = {}
       schema[:type] = scope_options[:type] if scope_options[:type]
