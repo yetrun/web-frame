@@ -32,6 +32,9 @@ module JsonSchema
 
   module BaseValidators
     @validators = {
+      required: proc { |value, required|
+        raise JsonSchema::ValidationError, '未提供' if required && value.nil?
+      },
       format: proc { |value, format|
         raise JsonSchema::ValidationError, '格式不正确' unless value =~ format
       }

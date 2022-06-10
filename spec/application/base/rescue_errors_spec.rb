@@ -229,15 +229,11 @@ describe Application, '.rescue_error' do
       app = Class.new(Application)
       app.route('/users', :post)
         .params {
-          param :user do
-            param :name, type: 'string'
+          param :user, required: true do
+            param :name, type: 'string', required: true
             param :age, type: 'integer'
             param :date, type: 'string', format: /\d{4}-\d{2}-\d{2}/
-
-            required :name
           end
-
-          required :user
         }
       app
     end

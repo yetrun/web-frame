@@ -27,21 +27,6 @@ module Entities
       name = name.to_sym
       options = options.dup
 
-      # Note: 暂时停用 integer[]、is_array 等写法
-      # 规范化 options
-      # if options[:type] =~ /array<(\w+)>/
-      #   options[:type] = $1
-      #   options[:is_array] = true
-      # elsif options[:type] =~ /(\w+)\[\]/
-      #   options[:type] = options[:type][0..-3]
-      #   options[:is_array] = true
-      # end
-
-      if options[:required]
-        @required << name
-        options.delete(:required) unless options[:in] && options[:in] != :body
-      end
-
       # 能且仅能 ObjectScopeBuilder 内能使用 using 选项
       block = options[:using] unless block_given?
       if block.nil? || block.is_a?(Proc)
@@ -67,10 +52,6 @@ module Entities
     alias :expose :property
     alias :param :property
 
-    def required(*names)
-      @required += names
-    end
-
     def validates(type, options = nil)
       @validations[type] = options
     end
@@ -82,10 +63,7 @@ module Entities
     end
 
     def to_scope
-      properties = @properties
-      validations = { required: @required }.merge(@validations)
-
-      ObjectScope.new(properties, validations, @options)
+      ObjectScope.new(@properties, @validations, @options)
     end
 
     private

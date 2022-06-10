@@ -29,6 +29,8 @@ module JsonSchema
           errors.merge!(e.errors) { |_key, original, _new_one| original }
         end
       end
+      # 这个是对对象整体进行的异常处理。为防止接下来进一步处理处于一个未定义的状态，方法提前终止。
+      raise JsonSchema::ValidationErrors.new(errors) unless errors.empty?
       # TODO: 是否应该提前返回
 
       # 第二步，需要过滤一些字段

@@ -271,10 +271,8 @@ describe Application, '.param' do
         app.route('/users', :post)
           .params {
             param :user do
-              param :name, type: 'string'
+              param :name, type: 'string', required: true
               param :age, type: 'integer', default: 18
-
-              required :name
             end
           }
           .do_any { the_holder[:params] = params }
@@ -292,7 +290,7 @@ describe Application, '.param' do
         expect {
           post('/users', JSON.generate(user: { age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
         }.to raise_error(Errors::ParameterInvalid) { |e|
-          expect(e.errors['user.name']).to eq('未提供') 
+          expect(e.errors['user.name']).to eq('未提供')
         }
       end
 
@@ -605,10 +603,8 @@ describe Application, '.param' do
     describe 'required' do
       def define_route(route)
         route.params {
-          param :name
+          param :name, required: true
           param :age
-
-          required :name
         }
       end
 
@@ -706,9 +702,7 @@ describe Application, '.param' do
         context '最外层参数异常' do
           def define_route(route)
             route.params {
-              param :a_str
-
-              required :a_str
+              param :a_str, required: true
             }
           end
 
@@ -725,9 +719,7 @@ describe Application, '.param' do
           def define_route(route)
             route.params {
               param :a_object, type: 'object' do
-                param :a_str
-
-                required :a_str
+                param :a_str, required: true
               end
             }
           end
