@@ -27,7 +27,7 @@ module JsonSchema
       # 能且仅能 ObjectSchemaBuilder 内能使用 using 选项
       block = options[:using] unless block_given?
       if block.nil? || block.is_a?(Proc)
-        @properties[name] = BaseSchemaBuilder.build(options, &block)
+        @properties[name] = BaseSchemaBuilder.build(options, name, &block)
       elsif block.respond_to?(:to_scope)
         scope = block.to_scope
         if options[:type] == 'array'

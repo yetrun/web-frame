@@ -3,13 +3,13 @@
 module JsonSchema
   class BaseSchemaBuilder
     class << self
-      def build(options = {}, &block)
+      def build(options = {}, path = nil, &block)
         if apply_array_scope?(options, block)
           ArraySchemaBuilder.new(options, &block).to_scope
         elsif apply_object_scope?(options, block)
           ObjectSchemaBuilder.new(options, &block).to_scope # TODO: options 怎么办？
         else
-          BaseSchema.new(options, name)
+          BaseSchema.new(options, path)
         end
       end
 
