@@ -32,6 +32,10 @@ module JsonSchema
       end,
       { 'integer' => 'float' } => lambda do |value|
         value.to_f
+      end,
+      { 'object' => 'string' } => lambda do |value|
+        # 包括解析出如日期等类型
+        value.to_s
       end
     }
     @type_resolvers = {
