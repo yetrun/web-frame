@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Application, '.resource' do
+describe Dain::Application, '.resource' do
   include Rack::Test::Methods
 
   before { @holder = {} }
@@ -8,10 +8,10 @@ describe Application, '.resource' do
   def app
     holder = @holder
 
-    app = Class.new(Application)
+    app = Class.new(Dain::Application)
 
     app.route('/users', :get)
-      .resource { "Self is a execution: #{self.is_a?(Execution)}" }
+      .resource { "Self is a execution: #{self.is_a?(Dain::Execution)}" }
       .do_any { holder[:resource] = resource }
 
     app

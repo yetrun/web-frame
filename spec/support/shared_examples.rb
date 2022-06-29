@@ -10,6 +10,6 @@ shared_examples 'missing matching route' do |method, path|
   it "raises error when request #{method} #{path}" do
     expect {
       send method, path
-    }.to raise_error(Errors::NoMatchingRoute)
+    }.to raise_error(Dain::Errors::NoMatchingRoute)
   end
 end

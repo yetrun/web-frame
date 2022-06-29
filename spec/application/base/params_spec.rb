@@ -2,13 +2,13 @@ require 'spec_helper'
 require 'json'
 require_relative '../../../lib/entity'
 
-describe Application, '.param' do
+describe Dain::Application, '.param' do
   include Rack::Test::Methods
 
   let(:holder) { {} }
 
   def app
-    app = Class.new(Application)
+    app = Class.new(Dain::Application)
 
     route = app.route('/request', :post)
     define_route(route)
@@ -27,7 +27,7 @@ describe Application, '.param' do
     def app
       holder = @holder
 
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
 
       app.route('/users', :post)
         .params {
@@ -51,7 +51,7 @@ describe Application, '.param' do
     def app
       holder = @holder
 
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
 
       app.route('/users', :post)
         .params {
@@ -80,7 +80,7 @@ describe Application, '.param' do
     it 'raises error when it is not compatible' do
       expect {
         post('/users', JSON.generate(name: 'Jim', age: 'a18'), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Errors::ParameterInvalid) { |e|
+      }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
         expect(e.errors).to match('age' => a_string_including('类型转化出现错误'))
       }
     end
@@ -92,7 +92,7 @@ describe Application, '.param' do
         the_holder = holder
         the_extract_params = method(:extract_params)
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         route = app.route('/users', :post)
         define_params(route)
@@ -165,7 +165,7 @@ describe Application, '.param' do
 
     describe 'array type' do
       def app
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         the_holder = holder
         route = app.route('/request', :post)
@@ -190,7 +190,7 @@ describe Application, '.param' do
 
           expect {
             post('/request', JSON.generate({ an_array: "1,2,3" }), { 'CONTENT_TYPE' => 'application/json' })
-          }.to raise_error(Errors::ParameterInvalid)
+          }.to raise_error(Dain::Errors::ParameterInvalid)
         end
       end
 
@@ -209,7 +209,7 @@ describe Application, '.param' do
 
           expect {
             post('/request', JSON.generate({ an_array: "1,2,3" }), { 'CONTENT_TYPE' => 'application/json' })
-          }.to raise_error(Errors::ParameterInvalid)
+          }.to raise_error(Dain::Errors::ParameterInvalid)
         end
       end
 
@@ -227,7 +227,7 @@ describe Application, '.param' do
 
           expect {
             post('/request', JSON.generate({ an_array: "1,2,3" }), { 'CONTENT_TYPE' => 'application/json' })
-          }.to raise_error(Errors::ParameterInvalid)
+          }.to raise_error(Dain::Errors::ParameterInvalid)
         end
       end
     end
@@ -237,7 +237,7 @@ describe Application, '.param' do
     def app
       holder = @holder
 
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
 
       app.route('/users', :post)
         .params {
@@ -265,7 +265,7 @@ describe Application, '.param' do
   describe 'nesting' do
     context 'in the inner block' do
       def app
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         the_holder = holder
         app.route('/users', :post)
@@ -289,7 +289,7 @@ describe Application, '.param' do
       it 'supports passing `required` option' do
         expect {
           post('/users', JSON.generate(user: { age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid) { |e|
+        }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
           expect(e.errors['user.name']).to eq('未提供')
         }
       end
@@ -311,7 +311,7 @@ describe Application, '.param' do
       def app
         holder = @holder
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route('/users', :post)
           .params {
@@ -341,7 +341,7 @@ describe Application, '.param' do
         def app
           holder = @holder
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
 
           app.route('/users', :post)
             .params {
@@ -362,7 +362,7 @@ describe Application, '.param' do
 
       context 'nesting' do
         def app
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
 
           the_holder = holder
           app.route('/users', :post)
@@ -400,14 +400,14 @@ describe Application, '.param' do
         it 'raises error when passing not hash value to inner params' do
           expect {
             post('/users', JSON.generate(user: 'user'), { 'CONTENT_TYPE' => 'application/json' })
-          }.to raise_error(Errors::ParameterInvalid)
+          }.to raise_error(Dain::Errors::ParameterInvalid)
         end
 
         context 'when outer param is an array' do
           def app
             holder = @holder
 
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
 
             app.route('/users', :post)
               .params {
@@ -442,7 +442,7 @@ describe Application, '.param' do
           it 'raise error when passing not array value to inner params' do
             expect {
               post('/users', JSON.generate(users: 'users'), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid)
+            }.to raise_error(Dain::Errors::ParameterInvalid)
           end
         end
       end
@@ -453,7 +453,7 @@ describe Application, '.param' do
     def app
       holder = @holder
 
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
 
       app.route('/users/:id', :get)
         .params {
@@ -475,7 +475,7 @@ describe Application, '.param' do
   describe 'is_array' do
     context 'providing type' do
       def app
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         the_holder = holder
         app.route('/request', :post)
@@ -493,7 +493,7 @@ describe Application, '.param' do
       it 'raises error if it does not pass array params' do
         expect {
           post('/request', JSON.generate(an_array: 1), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Dain::Errors::ParameterInvalid)
       end
 
       it 'passes and converts type if it passes array params' do
@@ -505,13 +505,13 @@ describe Application, '.param' do
       it 'raises error if type is not compatible' do
         expect {
           post('/request', JSON.generate(an_array: [1, 'x2']), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Dain::Errors::ParameterInvalid)
       end
     end
 
     context 'not providing type' do
       def app
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         the_holder = holder
         app.route('/request', :post)
@@ -526,7 +526,7 @@ describe Application, '.param' do
       it 'raises error if it does not pass array params' do
         expect {
           post('/request', JSON.generate(an_array: 1), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Dain::Errors::ParameterInvalid)
       end
 
       it 'passes if it passes array params' do
@@ -540,7 +540,7 @@ describe Application, '.param' do
       def app
         the_holder = holder
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route('/users', :post)
           .params {
@@ -563,7 +563,7 @@ describe Application, '.param' do
       it 'raises error when passing a hash' do
         expect {
           post('/users', JSON.generate(users: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Dain::Errors::ParameterInvalid)
       end
     end
   end
@@ -574,7 +574,7 @@ describe Application, '.param' do
       def app
         the_holder = holder
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route('/request', :post)
           .params {
@@ -594,7 +594,7 @@ describe Application, '.param' do
       it 'raises error when param is not for format' do
         expect {
           post('/request', JSON.generate(a_str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid) { |e|
+        }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
           expect(e.errors).to eq('a_str' => '格式不正确')
         }
       end
@@ -618,19 +618,19 @@ describe Application, '.param' do
       it 'raises error when missing required params' do
         expect {
           post('/request', JSON.generate(name: nil, age: 18), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Dain::Errors::ParameterInvalid)
       end
 
       it 'raises error when missing required params' do
         expect {
           post('/request', JSON.generate(age: 18), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Dain::Errors::ParameterInvalid)
       end
 
       it '空字符串也要被报告错误' do
         expect {
           post('/request', JSON.generate(name: '', age: 18), { 'CONTENT_TYPE' => 'application/json' })
-        }.to raise_error(Errors::ParameterInvalid)
+        }.to raise_error(Dain::Errors::ParameterInvalid)
       end
     end
 
@@ -646,7 +646,7 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_str: 'x001'), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |e|
+            }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
               expect(e.errors).to include('a_str')
             }
           end
@@ -664,7 +664,7 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_object: { a_str: 'x001' }), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |e|
+            }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
               expect(e.errors).to include('a_object.a_str')
             }
           end
@@ -682,7 +682,7 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_object: [{ a_str: 'x01' }, { a_str: 'x001' }]), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |e| 
+            }.to raise_error(Dain::Errors::ParameterInvalid) { |e| 
               expect(e.errors).to include('a_object[1].a_str')
             }
           end
@@ -700,7 +700,7 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |e| 
+            }.to raise_error(Dain::Errors::ParameterInvalid) { |e| 
               expect(e.errors).to include('a_str')
             }
           end
@@ -724,7 +724,7 @@ describe Application, '.param' do
           it 'raises error' do
             expect {
               post('/request', JSON.generate(a_object: {}), { 'CONTENT_TYPE' => 'application/json' })
-            }.to raise_error(Errors::ParameterInvalid) { |e| 
+            }.to raise_error(Dain::Errors::ParameterInvalid) { |e| 
               expect(e.errors).to include('a_object.a_str')
             }
           end
@@ -744,7 +744,7 @@ describe Application, '.param' do
           param :age
         }
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
         app.route('/users', :post)
           .params {
             param(:user, type: 'object', &block)
@@ -769,7 +769,7 @@ describe Application, '.param' do
           param :age
         }
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
         app.route('/users', :post)
           .params {
             param :user, type: 'object' do
@@ -791,7 +791,7 @@ describe Application, '.param' do
         the_holder = holder
         the_proc = proc
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route('/users', :post)
           .params {
@@ -814,7 +814,7 @@ describe Application, '.param' do
             param :age
           end
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param :user, type: 'object' do
@@ -845,7 +845,7 @@ describe Application, '.param' do
           the_object.define_singleton_method(:to_proc) { the_proc }
           the_object
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param :user, type: 'object' do
@@ -874,7 +874,7 @@ describe Application, '.param' do
             param :age
           end
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param :user, type: 'object', using: the_proc 
@@ -894,12 +894,12 @@ describe Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          the_scope = JsonSchema::ObjectSchema.new({
-            name: JsonSchema::BaseSchema.new,
-            age: JsonSchema::BaseSchema.new 
+          the_scope = Dain::JsonSchema::ObjectSchema.new({
+            name: Dain::JsonSchema::BaseSchema.new,
+            age: Dain::JsonSchema::BaseSchema.new 
           })
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param :user, type: 'object', using: the_scope
@@ -921,13 +921,13 @@ describe Application, '.param' do
 
           the_entity = Object.new
           def the_entity.to_scope
-            JsonSchema::ObjectSchema.new({
-              name: JsonSchema::BaseSchema.new,
-              age: JsonSchema::BaseSchema.new 
+            Dain::JsonSchema::ObjectSchema.new({
+              name: Dain::JsonSchema::BaseSchema.new,
+              age: Dain::JsonSchema::BaseSchema.new 
             })
           end
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param :user, type: 'object', using: the_entity
@@ -948,12 +948,12 @@ describe Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            the_entity = Class.new(Entities::Entity) do
+            the_entity = Class.new(Dain::Entities::Entity) do
               param :name
               param :age
             end
 
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
             app.route('/users', :post)
               .params {
                 param :user, type: 'object', using: the_entity 
@@ -973,15 +973,15 @@ describe Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            address_entity = Class.new(Entities::Entity) do
+            address_entity = Class.new(Dain::Entities::Entity) do
               param :city
               param :street
             end
-            user_entity = Class.new(Entities::Entity) do
+            user_entity = Class.new(Dain::Entities::Entity) do
               param :address, type: 'object', using: address_entity
             end
 
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
             app.route('/users', :post)
               .params {
                 param :user, type: 'object', using: user_entity 
@@ -1001,12 +1001,12 @@ describe Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            the_entity = Class.new(Entities::Entity) do
+            the_entity = Class.new(Dain::Entities::Entity) do
               param :name
               param :age
             end
 
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
             app.route('/users', :post)
               .params {
                 param(:user, type: 'array', using: the_entity)
@@ -1030,7 +1030,7 @@ describe Application, '.param' do
         @holder = {}
         the_holder = @holder
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
         app.route('/users', :post)
           .params {
             property :id, param: false
@@ -1071,7 +1071,7 @@ describe Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
@@ -1102,7 +1102,7 @@ describe Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
@@ -1133,7 +1133,7 @@ describe Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
@@ -1169,7 +1169,7 @@ describe Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
           app.route('/users', :post)
             .params {
               param(:user, type: 'object') do
@@ -1206,12 +1206,12 @@ describe Application, '.param' do
         @holder = {}
         the_holder = @holder
 
-        the_entity = Class.new(Entities::Entity) do
+        the_entity = Class.new(Dain::Entities::Entity) do
           property :name
           property :age
         end
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
         app.route('/users', :post)
           .params {
             param :user, type: 'object', using: the_entity, param: false
@@ -1232,7 +1232,7 @@ describe Application, '.param' do
       @holder = {}
       the_holder = @holder
 
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
       app.route('/users', :post)
         .params(type: 'string')
         .do_any { the_holder[:params] = params }

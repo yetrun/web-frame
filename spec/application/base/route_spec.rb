@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'support/shared_examples'
 
-describe Application, '.route' do
+describe Dain::Application, '.route' do
   include Rack::Test::Methods
 
   def app
-    app = Class.new(Application)
+    app = Class.new(Dain::Application)
 
     app.route('/users', :get)
     app.route('/users', :post)
@@ -25,7 +25,7 @@ describe Application, '.route' do
       let(:base_app) do
         the_holder = holder
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route(path, :get)
           .do_any { the_holder[:params] = request.params }
@@ -114,7 +114,7 @@ describe Application, '.route' do
 
         context 'defining in modules' do
           def app
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
             app.apply base_app
             app
           end
@@ -145,7 +145,7 @@ describe Application, '.route' do
       @holder = []
       the_holder = @holder
 
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
       app.route('/books')
         .do_any { 
           @resource = 'books'
@@ -169,7 +169,7 @@ describe Application, '.route' do
     it '不匹配子路由' do
       expect{ 
         put '/books' 
-      }.to raise_error(Errors::NoMatchingRoute)
+      }.to raise_error(Dain::Errors::NoMatchingRoute)
     end
   end
 end

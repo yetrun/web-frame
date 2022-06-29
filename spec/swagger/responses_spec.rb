@@ -5,14 +5,14 @@
 require 'spec_helper'
 require_relative '../../lib/swagger_doc'
 
-describe 'SwaggerDocUtil.generate' do
+describe 'Dain::SwaggerDocUtil.generate' do
   subject do
-    doc = SwaggerDocUtil.generate(app)
+    doc = Dain::SwaggerDocUtil.generate(app)
     doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
   end
 
   def app
-    app = Class.new(Application)
+    app = Class.new(Dain::Application)
 
     app.route('/user', :get)
       .if_status(200) {

@@ -3,13 +3,13 @@ require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'
 
-describe 'SwaggerDocUtil.generate' do
-  subject { SwaggerDocUtil.generate(app) }
+describe 'Dain::SwaggerDocUtil.generate' do
+  subject { Dain::SwaggerDocUtil.generate(app) }
 
   describe 'generating route paths part' do
     context 'singular module' do
       let(:app) do
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route('/users', :get)
         app.route('/users', :post)
@@ -35,16 +35,16 @@ describe 'SwaggerDocUtil.generate' do
 
     context 'including multiple modules' do
       let(:app) do
-        users_app = Class.new(Application) do
+        users_app = Class.new(Dain::Application) do
           route('/users', :get)
           route('/users', :post)
         end
-        posts_app = Class.new(Application) do
+        posts_app = Class.new(Dain::Application) do
           route('/posts', :get)
           route('/posts', :post)
         end
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.apply users_app
         app.apply posts_app
@@ -68,7 +68,7 @@ describe 'SwaggerDocUtil.generate' do
 
     context 'with path parameters' do
       let(:app) do
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route('/users/:id', :get)
         app.route('/posts/*title', :get)
@@ -91,7 +91,7 @@ describe 'SwaggerDocUtil.generate' do
 
   describe 'generating route description part' do
     let(:app) do
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
 
       app.route('/users', :get)
         .title('查看用户列表')

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Application, '.rescue_error' do
+describe Dain::Application, '.rescue_error' do
   include Rack::Test::Methods
 
   context '捕获自定义异常' do
@@ -8,7 +8,7 @@ describe Application, '.rescue_error' do
     let(:escaped_error) { Class.new(StandardError) }
 
     def app
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
 
       app.rescue_error(caught_error) {
         response.status = 500
@@ -43,7 +43,7 @@ describe Application, '.rescue_error' do
       let(:escaped_error) { Class.new(StandardError) }
 
       def app
-        inner_app = Class.new(Application)
+        inner_app = Class.new(Dain::Application)
 
         inner_app.rescue_error(caught_by_inner_error) {
           response.status = 500
@@ -61,7 +61,7 @@ describe Application, '.rescue_error' do
         inner_app.route('/escaped', :get)
           .do_any { raise the_escaped_error }
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
         app.rescue_error(caught_by_outer_error) {
           response.status = 500
           response.body = ['Caught by outer module!']
@@ -104,14 +104,14 @@ describe Application, '.rescue_error' do
         the_caught_by_inner_error = caught_by_inner_error
         the_caught_by_outer_error = caught_by_outer_error
 
-        inner_app = Class.new(Application)
+        inner_app = Class.new(Dain::Application)
         inner_app.rescue_error(caught_by_inner_error) {
           raise the_caught_by_outer_error
         }
         inner_app.route('/caught', :get)
           .do_any { raise the_caught_by_inner_error }
 
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
         app.rescue_error(caught_by_outer_error) {
           response.status = 500
           response.body = ['Caught by outer module!']
@@ -131,22 +131,22 @@ describe Application, '.rescue_error' do
       end
     end
 
-    describe 'Errors::NoMatchingRoute' do
+    describe 'Dain::Errors::NoMatchingRoute' do
       let(:holder) { {} }
 
       def rescue_error(app)
         the_holder = holder
 
-        app.rescue_error(Errors::NoMatchingRoute) {
+        app.rescue_error(Dain::Errors::NoMatchingRoute) {
           the_holder[:rescued] = true
         }
       end
 
-      shared_examples 'raises `Errors::NoMatchingRoute`' do
-        it 'raises `Errors::NoMatchingRoute`' do
+      shared_examples 'raises `Dain::Errors::NoMatchingRoute`' do
+        it 'raises `Dain::Errors::NoMatchingRoute`' do
           expect {
             get '/unknown'
-          }.to raise_error Errors::NoMatchingRoute
+          }.to raise_error Dain::Errors::NoMatchingRoute
         end
       end
 
@@ -161,17 +161,17 @@ describe Application, '.rescue_error' do
       context 'not applying modules' do
         context 'not defining `rescue_error`' do
           def app
-            Class.new(Application)
+            Class.new(Dain::Application)
           end
 
-          it_behaves_like 'raises `Errors::NoMatchingRoute`'
+          it_behaves_like 'raises `Dain::Errors::NoMatchingRoute`'
         end
 
         context 'defining `rescue_error`' do
           let(:holder) { {} }
 
           def app
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
 
             rescue_error(app)
             app
@@ -184,21 +184,21 @@ describe Application, '.rescue_error' do
       context 'applying modules' do
         context 'not defining `rescue_error`' do
           def app
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
 
-            app.apply Class.new(Application)
+            app.apply Class.new(Dain::Application)
             app
           end
 
-          it_behaves_like 'raises `Errors::NoMatchingRoute`'
+          it_behaves_like 'raises `Dain::Errors::NoMatchingRoute`'
         end
 
         context 'defining `rescue_error` in outer module' do
           let(:holder) { {} }
 
           def app
-            app = Class.new(Application)
-            app.apply Class.new(Application)
+            app = Class.new(Dain::Application)
+            app.apply Class.new(Dain::Application)
 
             rescue_error(app)
             app
@@ -209,16 +209,16 @@ describe Application, '.rescue_error' do
 
         context 'defining `rescue_error` in inner module' do
           def app
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
 
-            inner_app = Class.new(Application)
+            inner_app = Class.new(Dain::Application)
             rescue_error(inner_app)
 
             app.apply inner_app
             app
           end
 
-          it_behaves_like 'raises `Errors::NoMatchingRoute`'
+          it_behaves_like 'raises `Dain::Errors::NoMatchingRoute`'
         end
       end
     end
@@ -226,7 +226,7 @@ describe Application, '.rescue_error' do
 
   context '捕获参数异常' do
     def app
-      app = Class.new(Application)
+      app = Class.new(Dain::Application)
       app.route('/users', :post)
         .params {
           param :user, required: true do
@@ -244,7 +244,7 @@ describe Application, '.rescue_error' do
           age: 'a18',
           date: '1234'
         }), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Errors::ParameterInvalid) { |e|
+      }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
         expect(e.errors).to match(
           'user.name' => '未提供',
           'user.age' => a_string_including('类型转化出现错误'),
@@ -256,7 +256,7 @@ describe Application, '.rescue_error' do
     it '报告外部参数的异常' do
       expect {
         post('/users', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Errors::ParameterInvalid) { |e|
+      }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
         expect(e.errors).to eq('user' => '未提供')
       }
     end

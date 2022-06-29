@@ -5,13 +5,13 @@ require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'
 
-describe 'SwaggerDocUtil.generate' do
+describe 'Dain::SwaggerDocUtil.generate' do
   describe 'generating parameters documentation' do
     describe 'path params' do
-      subject { SwaggerDocUtil.generate(app) }
+      subject { Dain::SwaggerDocUtil.generate(app) }
 
       let(:app) do
-        app = Class.new(Application)
+        app = Class.new(Dain::Application)
 
         app.route('/users/:id', :get)
           .params {
@@ -52,12 +52,12 @@ describe 'SwaggerDocUtil.generate' do
 
     describe 'body params' do
       subject do 
-        SwaggerDocUtil.generate(app)[:paths]['/users'][:post][:requestBody][:content]['application/json'][:schema]
+        Dain::SwaggerDocUtil.generate(app)[:paths]['/users'][:post][:requestBody][:content]['application/json'][:schema]
       end
 
       context 'with simple parameters' do # 同时包含了 type 和 description 的测试
         let(:app) do
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
 
           app.route('/users', :post)
             .params {
@@ -100,7 +100,7 @@ describe 'SwaggerDocUtil.generate' do
       context 'with nesting parameters' do
         context 'nesting hash' do # 同时包含 description 的测试
           let(:app) do
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
 
             app.route('/users', :post)
               .params {
@@ -132,7 +132,7 @@ describe 'SwaggerDocUtil.generate' do
 
         context 'nesting array' do # 同时包含 description 的测试
           let(:app) do
-            app = Class.new(Application)
+            app = Class.new(Dain::Application)
 
             app.route('/users', :post)
               .params {
@@ -168,11 +168,11 @@ describe 'SwaggerDocUtil.generate' do
 
       describe 'no body params' do
         subject do 
-          SwaggerDocUtil.generate(app)[:paths]['/users'][:post]
+          Dain::SwaggerDocUtil.generate(app)[:paths]['/users'][:post]
         end
 
         let(:app) do
-          app = Class.new(Application)
+          app = Class.new(Dain::Application)
 
           app.route('/users', :post)
             .params {
