@@ -8,7 +8,7 @@ module Dain
           if apply_array_scope?(options, block)
             ArraySchemaBuilder.new(options, &block).to_scope
           elsif apply_object_scope?(options, block)
-            ObjectSchemaBuilder.new(options, &block).to_scope # TODO: options 怎么办？
+            ObjectSchemaBuilder.new(options, &block).to_scope
           else
             BaseSchema.new(options, path)
           end

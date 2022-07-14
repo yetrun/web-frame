@@ -175,8 +175,7 @@ describe Dain::Application, '.param' do
         app
       end
 
-      # TODO: 不支持 "type[]" style
-      context 'setting type as "string[]" style' do
+      context '设置数组内部的类型' do
         def define_route(route)
           the_holder = holder
           route.params {
@@ -184,7 +183,7 @@ describe Dain::Application, '.param' do
           }
         end
 
-        it '是 `type: "integer", is_array: true` 选项的语法糖' do
+        it '正确解析内部类型' do
           post('/request', JSON.generate({ an_array: ['1', 2, '3'] }), { 'CONTENT_TYPE' => 'application/json' })
           expect(holder[:params]).to eq(an_array: [1, 2, 3])
 
@@ -194,26 +193,7 @@ describe Dain::Application, '.param' do
         end
       end
 
-      # TODO: 不支持 "array<type>" style
-      context 'setting type as "array<string>" style' do
-        def define_route(route)
-          the_holder = holder
-          route.params {
-            param :an_array, type: 'array', items: { type: 'integer' }
-          }
-        end
-
-        it '是 `type: "integer", is_array: true` 选项的语法糖' do
-          post('/request', JSON.generate({ an_array: ['1', 2, '3'] }), { 'CONTENT_TYPE' => 'application/json' })
-          expect(holder[:params]).to eq(an_array: [1, 2, 3])
-
-          expect {
-            post('/request', JSON.generate({ an_array: "1,2,3" }), { 'CONTENT_TYPE' => 'application/json' })
-          }.to raise_error(Dain::Errors::ParameterInvalid)
-        end
-      end
-
-      context 'setting type as "array"' do
+      context '不设置数组内部的类型' do
         def define_route(route)
           the_holder = holder
           route.params {
@@ -221,7 +201,7 @@ describe Dain::Application, '.param' do
           }
         end
 
-        it '是 `is_array: true` 选项的语法糖' do
+        it '内部所有类型都接受' do
           post('/request', JSON.generate({ an_array: ['1', 2, '3'] }), { 'CONTENT_TYPE' => 'application/json' })
           expect(holder[:params]).to eq(an_array: ['1', 2, '3'])
 
@@ -377,7 +357,11 @@ describe Dain::Application, '.param' do
           app
         end
 
-        # TODO: 传递空值给对象参数
+        it '支持传递整个 null 作为参数' do
+          post('/users', JSON.generate(nil), { 'CONTENT_TYPE' => 'application/json' })
+
+          expect(holder[:params]).to eq(nil)
+        end
 
         it 'supports passing empty hash to outer params' do
           post('/users', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
@@ -471,8 +455,7 @@ describe Dain::Application, '.param' do
     end
   end
 
-  # TODO: 似乎可更新个名称
-  describe 'is_array' do
+  describe 'array' do
     context 'providing type' do
       def app
         app = Class.new(Dain::Application)
@@ -487,8 +470,10 @@ describe Dain::Application, '.param' do
         app
       end
 
-      # TODO: 传递空值给数组参数
-      # TODO: 嵌套的咋说？
+      # TODO: 不紧急。
+      #       似乎在另一个地方也存在一个 describe 'array'，我们需要整理
+      #       有关 array 的测试用例，例如整个传递 null 给数组参数，以及
+      #       嵌套的数组用例
 
       it 'raises error if it does not pass array params' do
         expect {

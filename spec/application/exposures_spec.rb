@@ -66,8 +66,8 @@ describe Dain::Application, '.exposures' do
             response.body = ['{}']
           }
           .if_status(200) {
-            expose :name, type: 'string', value: proc { @name } # TODO: lambda 表达式是不是可以检测参数个数
-            expose :age, type: 'integer', value: proc { @age }
+            expose :name, type: 'string', value: -> { @name }
+            expose :age, type: 'integer', value: -> { @age }
           }
 
         app

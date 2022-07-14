@@ -47,7 +47,6 @@ module Dain
       end
 
       def params(options = {}, &block)
-        # TODO: expose 等也要如是处理
         params_schema = JsonSchema::BaseSchemaBuilder.build(options, &block)
 
         @meta[:params_schema] = params_schema
@@ -58,7 +57,7 @@ module Dain
           json.merge!(request.params) if json.is_a?(Hash) # TODO: 如果参数模式不是对象，就无法合并 query 和 path 里的参数
 
           begin
-            params = params_schema.filter(json, stage: :param) # TODO: execution 改成 self 可否？
+            params = params_schema.filter(json, stage: :param)
           rescue JsonSchema::ValidationErrors => e
             raise Errors::ParameterInvalid.new(e.errors)
           end
@@ -87,22 +86,11 @@ module Dain
         }
       end
 
-      # def if_status(code, &block)
-      #   entity_scope = EntityScope.new(&block)
-
-      #   meta[:responses] = meta[:responses] || {}
-      #   meta[:responses][code] = entity_scope
-
-      #   do_any {
-      #     response.body = [entity_scope.generate_json(self)] if response.status == code
-      #   }
-      # end
-
       def if_status(code, &block)
-        entity_scope = JsonSchema::BaseSchemaBuilder.build(&block).to_scope
+        entity_schema = JsonSchema::BaseSchemaBuilder.build(&block).to_scope
 
         @meta[:responses] = @meta[:responses] || {}
-        @meta[:responses][code] = entity_scope
+        @meta[:responses][code] = entity_schema
 
         do_any {
           next unless response.status == code
@@ -123,7 +111,7 @@ module Dain
           # options[:scope] = scope_filter
 
           begin
-            new_hash = entity_scope.filter(hash, **options, execution: self, stage: :render)
+            new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render)
           rescue JsonSchema::ValidationErrors => e
             raise Errors::RenderingInvalid.new(e.errors)
           end
