@@ -171,5 +171,35 @@ describe Dain::Application, '.route' do
         put '/books' 
       }.to raise_error(Dain::Errors::NoMatchingRoute)
     end
+
+    describe '嵌套路由是如何处理参数的' do
+      def app
+        holder = @holder = []
+
+        app = Class.new(Dain::Application)
+
+        app.route('/request')
+          .params {
+            param :foo, type: 'string'
+          }
+          .do_any { holder[0] = params }
+          .nesting do |route|
+            route.method(:post)
+              .params {
+                param :bar, type: 'string'
+              }
+              .do_any { holder[1] = params }
+            end
+
+          app
+      end
+
+      it '分别接受两个参数' do
+        post('/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' })
+
+        expect(@holder[0]).to eq({ foo: 'foo' })
+        expect(@holder[1]).to eq({ bar: 'bar' })
+      end
+    end
   end
 end

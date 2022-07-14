@@ -48,9 +48,9 @@ module Dain
 
       def params(options = {}, &block)
         # TODO: expose 等也要如是处理
-        param_scope = JsonSchema::BaseSchemaBuilder.build(options, &block)
+        params_schema = JsonSchema::BaseSchemaBuilder.build(options, &block)
 
-        @meta[:param_scope] = param_scope
+        @meta[:params_schema] = params_schema
 
         do_any {
           request_body = request.body.read
@@ -58,7 +58,7 @@ module Dain
           json.merge!(request.params) if json.is_a?(Hash) # TODO: 如果参数模式不是对象，就无法合并 query 和 path 里的参数
 
           begin
-            params = param_scope.filter(json, stage: :param) # TODO: execution 改成 self 可否？
+            params = params_schema.filter(json, stage: :param) # TODO: execution 改成 self 可否？
           rescue JsonSchema::ValidationErrors => e
             raise Errors::ParameterInvalid.new(e.errors)
           end

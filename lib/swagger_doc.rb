@@ -31,11 +31,11 @@ module Dain
         operation_object[:summary] = meta[:title] if meta.key?(:title)
         operation_object[:description] = meta[:description] if meta.key?(:description)
 
-        if meta.key?(:param_scope)
-          parameters = meta[:param_scope].generate_parameters_doc
+        if meta.key?(:params_schema)
+          parameters = meta[:params_schema].generate_parameters_doc
           operation_object[:parameters] = parameters unless parameters.empty?
 
-          schema = meta[:param_scope].to_schema
+          schema = meta[:params_schema].to_schema
           if schema
             operation_object[:requestBody] = {
               content: {
