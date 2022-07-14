@@ -20,6 +20,9 @@ module Dain
         },
         format: proc { |value, format|
           raise JsonSchema::ValidationError, '格式不正确' unless value =~ format
+        },
+        allowable: proc { |value, allowable_values|
+          raise JsonSchema::ValidationError, '不在允许的值范围内' unless allowable_values.include?(value)
         }
       }
 
