@@ -8,11 +8,13 @@ describe Dain::Application, '.rescue_error' do
     let(:escaped_error) { Class.new(StandardError) }
 
     def app
+      caught_error_holder = @caught_error_holder = []
       app = Class.new(Dain::Application)
 
-      app.rescue_error(caught_error) {
+      app.rescue_error(caught_error) { |e|
         response.status = 500
         response.body = ['Customized error!']
+        caught_error_holder[0] = e
       }
 
       the_caught_error = caught_error
@@ -31,6 +33,7 @@ describe Dain::Application, '.rescue_error' do
 
       expect(last_response.status).to eq 500
       expect(last_response.body).to eq 'Customized error!'
+      expect(@caught_error_holder[0]).to be_instance_of(caught_error)
     end
 
     it 'raises not rescued error' do

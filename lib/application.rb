@@ -38,7 +38,7 @@ module Dain
       guard = error_guards.find { |g| e.is_a?(g[:error_class]) }
       raise unless guard
 
-      execution.instance_eval(&guard[:caller])
+      execution.instance_exec(e, &guard[:caller])
     end
 
     def match?(execution)
