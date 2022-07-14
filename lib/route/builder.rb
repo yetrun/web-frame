@@ -73,6 +73,8 @@ module Dain
         do_any {
           resource = instance_exec(&block)
 
+          raise Errors::NotFound if resource.nil?
+
           # 为 execution 添加一个 resource 方法
           define_singleton_method(:resource) { resource }
         }

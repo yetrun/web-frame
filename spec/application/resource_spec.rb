@@ -3,24 +3,39 @@ require 'spec_helper'
 describe Dain::Application, '.resource' do
   include Rack::Test::Methods
 
-  before { @holder = {} }
+  context '返回一个 nil 值' do
+    def app
+      app = Class.new(Dain::Application)
 
-  def app
-    holder = @holder
+      app.route('/users', :get)
+        .resource { nil }
 
-    app = Class.new(Dain::Application)
+      app
+    end
 
-    app.route('/users', :get)
-      .resource { "Self is a execution: #{self.is_a?(Dain::Execution)}" }
-      .do_any { holder[:resource] = resource }
-
-    app
+    it 'sets and gets resource' do
+      expect { get '/users' }.to raise_error(Dain::Errors::NotFound)
+    end
   end
 
-  it 'sets and gets resource' do
-    get '/users'
+  context '返回一个非 nil 值' do
+    def app
+      holder = @holder = []
 
-    expect(last_response).to be_ok
-    expect(@holder[:resource]).to eq 'Self is a execution: true'
+      app = Class.new(Dain::Application)
+
+      app.route('/users', :get)
+        .resource { "Self is a execution: #{self.is_a?(Dain::Execution)}" }
+        .do_any { holder[0] = resource }
+
+      app
+    end
+
+    it 'sets and gets resource' do
+      get '/users'
+
+      expect(last_response).to be_ok
+      expect(@holder[0]).to eq 'Self is a execution: true'
+    end
   end
 end
