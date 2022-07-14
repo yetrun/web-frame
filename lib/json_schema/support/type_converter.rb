@@ -35,8 +35,13 @@ module Dain
           value.to_f
         end,
         { 'object' => 'string' } => lambda do |value|
-          # 包括解析出如日期等类型
-          value.to_s
+          if value.is_a?(Hash) || value.is_a?(Array)
+            raise JsonSchema::TypeConvertError.new('object', 'string')
+          else
+            # 有可能是日期等对象
+            # TODO：我觉得把参数和渲染的类型转换混在一起实为不妥
+            value.to_s
+          end
         end
       }
       @type_resolvers = {
