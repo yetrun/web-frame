@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'json'
 require 'grape-entity'
-require_relative '../../support/grape_entity_presenter_handler'
+require_relative '../support/grape_entity_presenter_handler'
 
 
 describe Dain::Application, '.exposures' do

@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'json'
-require_relative '../../../lib/entity'
+require_relative '../../lib/entity'
 
 describe Dain::Application, '.param' do
   include Rack::Test::Methods
