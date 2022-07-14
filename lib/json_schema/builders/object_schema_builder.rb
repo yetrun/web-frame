@@ -29,15 +29,15 @@ module Dain
         block = options[:using] unless block_given?
         if block.nil? || block.is_a?(Proc)
           @properties[name] = BaseSchemaBuilder.build(options, name, &block)
-        elsif block.respond_to?(:to_scope)
-          scope = block.to_scope
+        elsif block.respond_to?(:to_schema)
+          scope = block.to_schema
           if options[:type] == 'array'
             @properties[name] = ArraySchema.new(scope)
           else
             @properties[name] = ObjectSchema.new(scope.properties, scope.object_validations, options)
           end
         else
-          raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_scope` 方法的对象。当前传递：#{block}"
+          raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_schema` 方法的对象。当前传递：#{block}"
         end
       end
 
@@ -50,7 +50,7 @@ module Dain
         instance_exec(&proc)
       end
 
-      def to_scope
+      def to_schema
         ObjectSchema.new(@properties, @validations, @options)
       end
 

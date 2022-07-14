@@ -35,7 +35,7 @@ module Dain
           parameters = meta[:params_schema].generate_parameters_doc
           operation_object[:parameters] = parameters unless parameters.empty?
 
-          schema = meta[:params_schema].to_schema
+          schema = meta[:params_schema].to_schema_doc
           if schema
             operation_object[:requestBody] = {
               content: {
@@ -52,7 +52,7 @@ module Dain
             {
               content: {
                 'application/json' => {
-                  schema: entity_scope.to_schema
+                  schema: entity_scope.to_schema_doc
                 }
               }
             }

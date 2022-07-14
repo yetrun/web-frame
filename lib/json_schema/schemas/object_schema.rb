@@ -73,11 +73,11 @@ module Dain
       #     }
       #
       # 的格式。
-      def to_schema
+      def to_schema_doc
         properties = @properties.filter { |name, scope|
           scope.options[:in].nil? || scope.options[:in] == 'body' 
         }.transform_values do |scope|
-          scope.to_schema
+          scope.to_schema_doc
         end
 
         if properties.empty?

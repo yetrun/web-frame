@@ -22,11 +22,11 @@ module Dain
           end
         end
 
-        def to_schema(presenter, other_options)
+        def to_schema_doc(presenter, other_options)
           @presenter_handlers.each do |presenter_handler|
             next unless presenter_handler.handle?(presenter)
 
-            return presenter_handler.to_schema(presenter, other_options)
+            return presenter_handler.to_schema_doc(presenter, other_options)
           end
         end
       end

@@ -5,10 +5,10 @@ module Dain
     class BaseSchemaBuilder
       class << self
         def build(options = {}, path = nil, &block)
-          if apply_array_scope?(options, block)
-            ArraySchemaBuilder.new(options, &block).to_scope
-          elsif apply_object_scope?(options, block)
-            ObjectSchemaBuilder.new(options, &block).to_scope
+          if apply_array_schema?(options, block)
+            ArraySchemaBuilder.new(options, &block).to_schema
+          elsif apply_object_schema?(options, block)
+            ObjectSchemaBuilder.new(options, &block).to_schema
           else
             BaseSchema.new(options, path)
           end
@@ -16,13 +16,12 @@ module Dain
 
         private
 
-        def apply_array_scope?(options, block)
+        def apply_array_schema?(options, block)
           options[:type] == 'array' && (options[:items] || block)
         end
 
-        def apply_object_scope?(options, block)
-          # TODO: 有点问题
-          (options[:type] == 'object' || block) && (options[:properties] || block)
+        def apply_object_schema?(options, block)
+          (options[:type] == 'object' || options[:type].nil?) && (options[:properties] || block)
         end
       end
     end

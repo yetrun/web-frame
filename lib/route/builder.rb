@@ -87,7 +87,7 @@ module Dain
       end
 
       def if_status(code, &block)
-        entity_schema = JsonSchema::BaseSchemaBuilder.build(&block).to_scope
+        entity_schema = JsonSchema::BaseSchemaBuilder.build(&block).to_schema
 
         @meta[:responses] = @meta[:responses] || {}
         @meta[:responses][code] = entity_schema

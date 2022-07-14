@@ -10,7 +10,7 @@ class GrapeEntityPresenterHandler
       presenter.represent(value).as_json
     end
 
-    def to_schema(presenter, other_options)
+    def to_schema_doc(presenter, other_options)
       schema = generate_entity_schema(presenter)
       schema[:description] = other_options[:description] if other_options[:description]
       schema

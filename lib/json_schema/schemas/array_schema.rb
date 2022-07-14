@@ -25,10 +25,10 @@ module Dain
         end
       end
 
-      def to_schema # TODO: change name to to_schema_doc
+      def to_schema_doc
         schema = {
           type: 'array',
-          items: @items ? @items.to_schema : {}
+          items: @items ? @items.to_schema_doc : {}
         }
         schema[:description] = options[:description] if options[:description]
         schema

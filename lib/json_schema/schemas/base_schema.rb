@@ -53,10 +53,10 @@ module Dain
         value
       end
 
-      def to_schema(options = {})
+      def to_schema_doc(options = {})
         scope_options = options[:stage] == :param ? @param_options : @render_options
 
-        return Presenters.to_schema(scope_options[:presenter], scope_options) if scope_options[:presenter]
+        return Presenters.to_schema_doc(scope_options[:presenter], scope_options) if scope_options[:presenter]
 
         schema = {}
         schema[:type] = scope_options[:type] if scope_options[:type]
@@ -78,7 +78,7 @@ module Dain
         }
       end
 
-      def to_scope
+      def to_schema
         self
       end
 

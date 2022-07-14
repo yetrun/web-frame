@@ -23,7 +23,7 @@ module Dain
         def_delegator :scope_builder, :expose
         def_delegator :scope_builder, :required
         def_delegator :scope_builder, :use
-        def_delegator :scope_builder, :to_scope
+        def_delegator :scope_builder, :to_schema
       end
     end
   end

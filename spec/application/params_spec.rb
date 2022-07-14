@@ -899,13 +899,13 @@ describe Dain::Application, '.param' do
         end
       end
 
-      context 'using: &:to_scope' do
+      context 'using: &:to_schema' do
         def app
           @holder = {}
           the_holder = @holder
 
           the_entity = Object.new
-          def the_entity.to_scope
+          def the_entity.to_schema
             Dain::JsonSchema::ObjectSchema.new({
               name: Dain::JsonSchema::BaseSchema.new,
               age: Dain::JsonSchema::BaseSchema.new 

@@ -12,13 +12,13 @@ module Dain
         # TODO: 使用 BaseBuilder 如果没有 items
         items_options = options.delete(:items) || {}
         if object_property?(items_options, block)
-          @items = ObjectSchemaBuilder.new(items_options, &block).to_scope # TODO: options 怎么办？
+          @items = ObjectSchemaBuilder.new(items_options, &block).to_schema # TODO: options 怎么办？
         else
           @items = BaseSchema.new(items_options)
         end
       end
 
-      def to_scope
+      def to_schema
         ArraySchema.new(@items, @options)
       end
 
