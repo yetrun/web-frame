@@ -86,6 +86,7 @@ module Dain
         }
       end
 
+      # TODO: 如何定义数组和标量响应值
       def if_status(code, &block)
         entity_schema = JsonSchema::BaseSchemaBuilder.build(&block).to_schema
 

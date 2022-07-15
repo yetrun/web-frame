@@ -53,6 +53,19 @@ module Dain
         value
       end
 
+      # stage 取值为 :param、:render 或 nil
+      def value?(stage)
+        if stage.nil?
+          options[:value] != nil
+        elsif stage.to_sym == :param
+          param_options[:value] != nil
+        elsif stage.to_sym == :render
+          render_options[:value] != nil
+        else
+          raise "非法的 stage 参数，它允许的取值范围是 :param、:render 和 nil，实际却收获到 #{stage.inspect}"
+        end
+      end
+
       def to_schema_doc(options = {})
         scope_options = options[:stage] == :param ? @param_options : @render_options
 

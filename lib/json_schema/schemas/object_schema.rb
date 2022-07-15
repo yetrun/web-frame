@@ -42,15 +42,11 @@ module Dain
         # 第二步，递归过滤每一个属性
         object = {}
         errors = {}
-        filtered_properties.each do |name, scope|
-          if object_value.is_a?(Hash) 
-            value = object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
-          else
-            value = object_value.send(name)
-          end
+        filtered_properties.each do |name, property_schema|
+          value = resolve_property_value(object_value, name, property_schema, stage)
 
           begin
-            object[name] = scope.filter(value, **options)
+            object[name] = property_schema.filter(value, **options)
           rescue JsonSchema::ValidationErrors => e
             errors.merge! e.prepend_root(name).errors
           end
@@ -102,6 +98,18 @@ module Dain
           scope.generate_parameter_doc
         end
       end
+
+      private
+
+        def resolve_property_value(object_value, name, property_schema, stage)
+          if property_schema.value?(stage)
+            nil
+          elsif object_value.is_a?(Hash) 
+            value = object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
+          else
+            value = object_value.send(name)
+          end
+        end
     end
   end
 end
