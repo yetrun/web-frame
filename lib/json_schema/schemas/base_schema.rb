@@ -26,8 +26,9 @@ module Dain
         @path = path
       end
 
+      # 将 params 和 render 的选项合并
       def options
-        param_options.merge(render_options)
+        (param_options || {}).merge(render_options || {})
       end
 
       def filter(value, options = {})

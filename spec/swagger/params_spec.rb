@@ -167,6 +167,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
       end
 
       describe 'no body params' do
+        # TODO: 还是试一试类似于布局的方法
         subject do 
           Dain::SwaggerDocUtil.generate(app)[:paths]['/users'][:post]
         end
@@ -185,6 +186,35 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
         it 'generates no `requestBody` part' do
           expect(subject).not_to have_key(:requestBody)
+        end
+      end
+    end
+
+    context 'with Entities' do
+      context 'with setting param to `false`' do
+        subject do 
+          Dain::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
+        end
+
+        let(:app) do
+          app = Class.new(Dain::Application)
+
+          app.route('/request', :post)
+            .params {
+              property :foo, type: 'string', param: false
+              property :bar, type: 'string'
+            }
+
+          app
+        end
+
+        it '只渲染 `bar` 参数' do
+          expect(subject).to eq(
+            type: 'object',
+            properties: {
+              bar: { type: 'string' }
+            }
+          )
         end
       end
     end

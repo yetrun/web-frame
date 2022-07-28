@@ -69,9 +69,21 @@ module Dain
       #     }
       #
       # 的格式。
-      def to_schema_doc
+      def to_schema_doc(options = {})
+        stage = options[:stage]
+
         properties = @properties.filter { |name, scope|
-          scope.options[:in].nil? || scope.options[:in] == 'body' 
+          # 过滤掉非 body 的属性
+          next false unless scope.options[:in].nil? || scope.options[:in] == 'body' 
+
+          # 接下来要看该属性下的选项（我总觉得哪里有点问题）
+          unless stage.nil?
+            stage = stage.to_sym
+            next false if stage == :param && !scope.param_options
+            next false if stage == :render && !scope.render_options
+          end
+
+          true
         }.transform_values do |scope|
           scope.to_schema_doc
         end
