@@ -182,13 +182,19 @@ describe Dain::Application, '.route' do
           .params {
             param :foo, type: 'string'
           }
-          .do_any { holder[0] = params }
+          .do_any { 
+            # excution 相同
+            holder[0] = params 
+          }
           .nesting do |route|
             route.method(:post)
               .params {
                 param :bar, type: 'string'
               }
-              .do_any { holder[1] = params }
+              .do_any { 
+                # excution 相同
+                holder[1] = params 
+              }
             end
 
           app

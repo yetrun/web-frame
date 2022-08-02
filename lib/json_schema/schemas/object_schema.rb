@@ -21,20 +21,21 @@ module Dain
         scope_filter = user_options[:scope] || []
         scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
         stage = user_options[:stage]
-        filtered_properties = @properties.filter do |name, scope|
-          # 首先通过 stage 过滤。
-          next false if stage == :param && !scope.param_options
-          next false if stage == :render && !scope.render_options
+        filtered_properties = @properties.filter do |name, property_schema|
+          # 通过 discard_missing 过滤
+          next false if user_options[:discard_missing] && !object_value.key?(name.to_s)
 
-          # 然后通过 scope 过滤
-          scope_options = stage == :param ? scope.param_options : scope.render_options
+          # 通过 stage 过滤。
+          next false if stage == :param && !property_schema.param_options
+          next false if stage == :render && !property_schema.render_options
 
-          # scope_option 是构建 Schema 时传递的 `scope` 选项，它应是一个数组
-          # 它与 scope_options 仅一个字母之差，却千壤之别
-          scope_option = scope_options[:scope] || []
+          # 通过 param: false 或 render: false 过滤
+          property_schema_options = stage == :param ? property_schema.param_options : property_schema.render_options
+
+          # 通过 scope 过滤
+          scope_option = property_schema_options[:scope] || []
           scope_option = [scope_option] unless scope_option.is_a?(Array)
-          next true if scope_option.empty? # ScopeBuilder 中未声明需要任何的 scope
-
+          next true if scope_option.empty? # ScopeBuilder 中未声明需要任何的 property_schema
           # scope_filter 应传递、并且 scope_option 应包含所有的 scope_filter
           !scope_filter.empty? && (scope_filter - scope_option).empty?
         end

@@ -1212,6 +1212,34 @@ describe Dain::Application, '.param' do
     end
   end
 
+  describe '完整更新和局部更新' do
+    def app
+      @holder = {}
+      the_holder = @holder
+
+      app = Class.new(Dain::Application)
+      app.route('/request', :post)
+        .params {
+          param :foo, type: 'string'
+          param :bar, type: 'string'
+        }
+        .do_any { 
+          the_holder[:raw] = params(:raw)
+          the_holder[:part] = params(:discard_missing)
+          the_holder[:full] = params
+        }
+      app
+    end
+
+    it '正确解析参数' do
+      post('/request', JSON.generate(foo: 'foo', tar: 'tar'), { 'CONTENT_TYPE' => 'application/json' })
+
+      expect(@holder[:raw]).to eq('foo' => 'foo', 'tar' => 'tar')
+      expect(@holder[:full]).to eq(foo: 'foo', bar: nil)
+      expect(@holder[:part]).to eq(foo: 'foo')
+    end
+  end
+
   context '定义简单代码' do
     def app
       @holder = {}

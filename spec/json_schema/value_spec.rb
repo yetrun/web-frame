@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../../lib/json_schema/schemas'
+require_relative '../../lib/json_schema/schemas'
 
 describe 'value' do
   it '使用 value' do

@@ -52,19 +52,47 @@ module Dain
         @meta[:params_schema] = params_schema
 
         do_any {
-          request_body = request.body.read
-          json = request_body.empty? ? {} : JSON.parse(request_body)
-          json.merge!(request.params) if json.is_a?(Hash) # TODO: 如果参数模式不是对象，就无法合并 query 和 path 里的参数
+          remove_instance_variable(:@_raw_params) if instance_variable_defined?(:@_raw_params)
+          remove_instance_variable(:@_modified_params) if instance_variable_defined?(:@_modified_params)
+          remove_instance_variable(:@_replaced_params) if instance_variable_defined?(:@_replaced_params)
 
-          begin
-            params = params_schema.filter(json, stage: :param)
-          rescue JsonSchema::ValidationErrors => e
-            raise Errors::ParameterInvalid.new(e.errors)
+          define_singleton_method(:parse_raw_params) do
+            request_body = request.body.read
+            json = request_body.empty? ? {} : JSON.parse(request_body)
+            json.merge!(request.params) if json.is_a?(Hash) # TODO: 如果参数模式不是对象，就无法合并 query 和 path 里的参数
+
+            request.body.rewind
+            json
           end
 
-          request.body.rewind
+          define_singleton_method(:parse_modified_params) do
+            begin
+              params_schema.filter(params(:raw), stage: :param, discard_missing: true)
+            rescue JsonSchema::ValidationErrors => e
+              raise Errors::ParameterInvalid.new(e.errors)
+            end
+          end
 
-          define_singleton_method(:params) { params }
+          define_singleton_method(:parse_replaced_params) do
+            begin
+              params_schema.filter(params(:raw), stage: :param)
+            rescue JsonSchema::ValidationErrors => e
+              raise Errors::ParameterInvalid.new(e.errors)
+            end
+          end
+
+          define_singleton_method(:params) do |mode = nil|
+            case mode
+            when :raw
+              @_raw_params || @_raw_params = parse_raw_params.freeze
+            when :discard_missing
+              @_modified_params || @_modified_params = parse_modified_params.freeze
+            else
+              @_replaced_params || @_replaced_params = parse_replaced_params.freeze
+            end
+          end
+
+          params # 先激活一下
         }
       end
 
