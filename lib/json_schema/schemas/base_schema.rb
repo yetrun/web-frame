@@ -50,10 +50,9 @@ module Dain
       end
 
       def filter(value, user_options = {})
-        execution = user_options[:execution]
         scope_options = user_options[:stage] == :param ? @param_options : @render_options
 
-        value = execution.instance_exec(&scope_options[:value]) if scope_options[:value]
+        value = resolve_value(user_options) if scope_options[:value]
         # value = scope_options[:presenter].represent(value).as_json if scope_options[:presenter]
         value = JsonSchema::Presenters.present(scope_options[:presenter], value) if scope_options[:presenter]
         value = scope_options[:default] if value.nil? && scope_options[:default]
@@ -74,6 +73,19 @@ module Dain
 
       def value?(stage)
         options(stage, :value) != nil
+      end
+
+      def resolve_value(user_options)
+        scope_options = user_options[:stage] == :param ? @param_options : @render_options
+
+        value_proc = scope_options[:value]
+        value_proc_params = (value_proc.lambda? && value_proc.arity == 0) ?  [] : [user_options[:object_value]]
+
+        if user_options[:execution]
+          user_options[:execution].instance_exec(*value_proc_params, &value_proc)
+        else
+          value_proc.call(*value_proc_params)
+        end
       end
 
       def to_schema_doc(user_options = {})

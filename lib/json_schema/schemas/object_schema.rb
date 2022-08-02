@@ -47,7 +47,7 @@ module Dain
           value = resolve_property_value(object_value, name, property_schema, stage)
 
           begin
-            object[name] = property_schema.filter(value, **user_options)
+            object[name] = property_schema.filter(value, **user_options, object_value: object_value)
           rescue JsonSchema::ValidationErrors => e
             errors.merge! e.prepend_root(name).errors
           end
