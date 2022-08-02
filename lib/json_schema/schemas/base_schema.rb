@@ -26,14 +26,32 @@ module Dain
         @path = path
       end
 
+      def options(stage, key = nil)
+        stage_options = case stage 
+                        when :param 
+                          param_options
+                        when :render
+                          render_options
+                        when nil
+                          merged_options
+                        else
+                          raise "非法的 stage 参数，它只允许取值 :param、:render 或 nil，却收到 #{stage.inspect}"
+                        end
+        if key
+          stage_options ? stage_options[key] : nil
+        else
+          stage_options
+        end
+      end
+
       # 将 params 和 render 的选项合并
-      def options
+      def merged_options
         (param_options || {}).merge(render_options || {})
       end
 
-      def filter(value, options = {})
-        execution = options[:execution]
-        scope_options = options[:stage] == :param ? @param_options : @render_options
+      def filter(value, user_options = {})
+        execution = user_options[:execution]
+        scope_options = user_options[:stage] == :param ? @param_options : @render_options
 
         value = execution.instance_exec(&scope_options[:value]) if scope_options[:value]
         # value = scope_options[:presenter].represent(value).as_json if scope_options[:presenter]
@@ -54,34 +72,25 @@ module Dain
         value
       end
 
-      # stage 取值为 :param、:render 或 nil
       def value?(stage)
-        if stage.nil?
-          options[:value] != nil
-        elsif stage.to_sym == :param
-          param_options[:value] != nil
-        elsif stage.to_sym == :render
-          render_options[:value] != nil
-        else
-          raise "非法的 stage 参数，它允许的取值范围是 :param、:render 和 nil，实际却收获到 #{stage.inspect}"
-        end
+        options(stage, :value) != nil
       end
 
-      def to_schema_doc(options = {})
-        scope_options = options[:stage] == :param ? @param_options : @render_options
+      def to_schema_doc(user_options = {})
+        stage_options = user_options[:stage] == :param ? @param_options : @render_options
 
-        return Presenters.to_schema_doc(scope_options[:presenter], scope_options) if scope_options[:presenter]
+        return Presenters.to_schema_doc(stage_options[:presenter], stage_options) if stage_options[:presenter]
 
         schema = {}
-        schema[:type] = scope_options[:type] if scope_options[:type]
-        schema[:description] = scope_options[:description] if scope_options[:description]
+        schema[:type] = stage_options[:type] if stage_options[:type]
+        schema[:description] = stage_options[:description] if stage_options[:description]
 
         schema
       end
 
       # 生成 Swagger 的参数文档，这个文档不同于 Schema，它主要存在于 Header、Path、Query 这些部分
-      def generate_parameter_doc(options = {})
-        scope_options = options[:stage] == :param ? @param_options : @render_options
+      def generate_parameter_doc(user_options = {})
+        scope_options = user_options[:stage] == :param ? @param_options : @render_options
 
         {
           name: @path,
@@ -98,16 +107,16 @@ module Dain
 
       private
 
-      def validate!(value, options)
+      def validate!(value, user_options)
         # TODO: 就一点： 如果将来添加新的选项，都要在这里添加，很烦
         discarding_options = %i[type desc value using default presenter convert scope]
         registered_validators = JsonSchema::Validators.keys + discarding_options
-        unknown_validators = options.keys - registered_validators
+        unknown_validators = user_options.keys - registered_validators
         raise "未知的选项：#{unknown_validators.join(', ')}" unless unknown_validators.empty?
 
-        options.each do |key, option|
+        user_options.each do |key, option|
           validator = JsonSchema::Validators[key]
-          validator&.call(value, option, options)
+          validator&.call(value, option, user_options)
         end
       end
     end

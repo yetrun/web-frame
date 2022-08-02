@@ -12,15 +12,15 @@ module Dain
         @object_validations = object_validations
       end
 
-      def filter(object_value, options = {})
-        object_value = super(object_value, options)
+      def filter(object_value, user_options = {})
+        object_value = super(object_value, user_options)
         return nil if object_value.nil?
 
-        # 第一步，根据 options[:scope] 需要过滤一些字段
-        # options[:scope] 应是一个数组
-        scope_filter = options[:scope] || []
+        # 第一步，根据 user_options[:scope] 需要过滤一些字段
+        # user_options[:scope] 应是一个数组
+        scope_filter = user_options[:scope] || []
         scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
-        stage = options[:stage]
+        stage = user_options[:stage]
         filtered_properties = @properties.filter do |name, scope|
           # 首先通过 stage 过滤。
           next false if stage == :param && !scope.param_options
@@ -46,7 +46,7 @@ module Dain
           value = resolve_property_value(object_value, name, property_schema, stage)
 
           begin
-            object[name] = property_schema.filter(value, **options)
+            object[name] = property_schema.filter(value, **user_options)
           rescue JsonSchema::ValidationErrors => e
             errors.merge! e.prepend_root(name).errors
           end
@@ -69,12 +69,14 @@ module Dain
       #     }
       #
       # 的格式。
-      def to_schema_doc(options = {})
-        stage = options[:stage]
+      def to_schema_doc(user_options = {})
+        stage_options = user_options[:stage] == :param ? @param_options : @render_options
+        stage = user_options[:stage]
 
         properties = @properties.filter { |name, scope|
           # 过滤掉非 body 的属性
-          next false unless scope.options[:in].nil? || scope.options[:in] == 'body' 
+          param_in = scope.options(:param, :in) || 'body'
+          next false unless param_in == 'body'
 
           # 接下来要看该属性下的选项（我总觉得哪里有点问题）
           unless stage.nil?
@@ -95,7 +97,7 @@ module Dain
             type: 'object',
             properties: properties,
           }
-          schema[:description] = options[:description] if options[:description]
+          schema[:description] = stage_options[:description] if stage_options[:description]
           schema
         end
       end
@@ -104,7 +106,10 @@ module Dain
       # 的参数。
       def generate_parameters_doc
         # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
-        scopes = @properties.values.filter { |scope| scope.options[:in] && scope.options[:in] != 'body' }
+        scopes = @properties.values.filter do |scope| 
+          param_in = scope.options(:param, :in) || 'body'
+          param_in != 'body'
+        end
 
         scopes.map do |scope|
           scope.generate_parameter_doc

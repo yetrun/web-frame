@@ -25,12 +25,14 @@ module Dain
         end
       end
 
-      def to_schema_doc(options = {})
+      def to_schema_doc(user_options = {})
+        stage_options = user_options[:stage] == :param ? @param_options : @render_options
+
         schema = {
           type: 'array',
-          items: @items ? @items.to_schema_doc(options) : {}
+          items: @items ? @items.to_schema_doc(user_options) : {}
         }
-        schema[:description] = options[:description] if options[:description]
+        schema[:description] = stage_options[:description] if stage_options[:description]
         schema
       end
     end
