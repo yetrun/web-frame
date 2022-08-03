@@ -470,10 +470,7 @@ describe Dain::Application, '.param' do
         app
       end
 
-      # TODO: 不紧急。
-      #       似乎在另一个地方也存在一个 describe 'array'，我们需要整理
-      #       有关 array 的测试用例，例如整个传递 null 给数组参数，以及
-      #       嵌套的数组用例
+      # 有关数组的测试用例似乎有些零乱，就这样吧
 
       it 'raises error if it does not pass array params' do
         expect {

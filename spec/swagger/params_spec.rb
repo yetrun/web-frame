@@ -61,7 +61,8 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
           app.route('/users', :post)
             .params {
-              param :str, type: 'string', description: '字符串参数' # TODO: 关键字参数的拼写检查
+              # TODO: 关键字参数的拼写检查，例如 `type` 写得对不对，`description` 写得对不对
+              param :str, type: 'string', description: '字符串参数' 
               param :int, type: 'integer', description: '整型参数'
               param :hash, type: 'object', description: '对象参数'
               param :array, type: 'array', description: '数组参数'
