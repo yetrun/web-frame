@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../support/schema_options'
+
 module Dain
   module JsonSchema
     class BaseSchema
@@ -14,14 +16,7 @@ module Dain
 
       # 传递 path 参数主要是为了渲染 Parameter 文档时需要
       def initialize(options = {})
-        options = options.dup
-        param_options = options.delete(:param) # true、false 或者 Hash
-        render_options = options.delete(:render) # true、false 或者 Hash
-        param_options = {} if param_options.nil? || param_options == true
-        render_options = {} if render_options.nil? || render_options == true
-
-        @param_options = param_options ? options.merge(param_options) : false
-        @render_options = render_options ? options.merge(render_options) : false
+        @param_options, @render_options = SchemaOptions.normalize_to_param_and_render(options)
       end
 
       def options(stage, key = nil)
@@ -48,23 +43,22 @@ module Dain
       end
 
       def filter(value, user_options = {})
-        scope_options = user_options[:stage] == :param ? @param_options : @render_options
+        stage_options = options(user_options[:stage])
 
-        value = resolve_value(user_options) if scope_options[:value]
-        # value = scope_options[:presenter].represent(value).as_json if scope_options[:presenter]
-        value = JsonSchema::Presenters.present(scope_options[:presenter], value) if scope_options[:presenter]
-        value = scope_options[:default] if value.nil? && scope_options[:default]
-        value = scope_options[:convert].call(value) if scope_options[:convert]
+        value = resolve_value(user_options) if stage_options[:value]
+        value = JsonSchema::Presenters.present(stage_options[:presenter], value) if stage_options[:presenter]
+        value = stage_options[:default] if value.nil? && stage_options[:default]
+        value = stage_options[:convert].call(value) if stage_options[:convert]
         # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
-        if scope_options.key?(:type) && !value.nil?
+        if stage_options.key?(:type) && !value.nil?
           begin
-            value = JsonSchema::TypeConverter.convert_value(value, scope_options[:type])
+            value = JsonSchema::TypeConverter.convert_value(value, stage_options[:type])
           rescue JsonSchema::TypeConvertError => e
             raise JsonSchema::ValidationError.new(e.message)
           end
         end
 
-        validate!(value, scope_options)
+        validate!(value, stage_options)
 
         value
       end
@@ -74,9 +68,7 @@ module Dain
       end
 
       def resolve_value(user_options)
-        scope_options = user_options[:stage] == :param ? @param_options : @render_options
-
-        value_proc = scope_options[:value]
+        value_proc = options(user_options[:stage], :value)
         value_proc_params = (value_proc.lambda? && value_proc.arity == 0) ?  [] : [user_options[:object_value]]
 
         if user_options[:execution]
@@ -104,18 +96,18 @@ module Dain
 
       private
 
-      def validate!(value, user_options)
-        # TODO: 就一点： 如果将来添加新的选项，都要在这里添加，很烦
-        discarding_options = %i[type desc value using default presenter convert scope]
-        registered_validators = JsonSchema::Validators.keys + discarding_options
-        unknown_validators = user_options.keys - registered_validators
-        raise "未知的选项：#{unknown_validators.join(', ')}" unless unknown_validators.empty?
+        def validate!(value, stage_options)
+          # TODO: 就一点： 如果将来添加新的选项，都要在这里添加，很烦
+          discarding_options = %i[type desc value using default presenter convert scope in]
+          registered_validators = JsonSchema::Validators.keys + discarding_options
+          unknown_validators = stage_options.keys - registered_validators
+          raise "未知的选项：#{unknown_validators.join(', ')}" unless unknown_validators.empty?
 
-        user_options.each do |key, option|
-          validator = JsonSchema::Validators[key]
-          validator&.call(value, option, user_options)
+          stage_options.each do |key, option|
+            validator = JsonSchema::Validators[key]
+            validator&.call(value, option, stage_options)
+          end
         end
-      end
     end
   end
 end

@@ -26,18 +26,14 @@ module Dain
           next false if user_options[:discard_missing] && !object_value.key?(name.to_s)
 
           # 通过 stage 过滤。
-          next false if stage == :param && !property_schema.param_options
-          next false if stage == :render && !property_schema.render_options
-
-          # 通过 param: false 或 render: false 过滤
-          property_schema_options = stage == :param ? property_schema.param_options : property_schema.render_options
+          property_schema_options = property_schema.options(stage)
+          next false unless property_schema_options
 
           # 通过 scope 过滤
-          scope_option = property_schema_options[:scope] || []
-          scope_option = [scope_option] unless scope_option.is_a?(Array)
-          next true if scope_option.empty? # ScopeBuilder 中未声明需要任何的 property_schema
-          # scope_filter 应传递、并且 scope_option 应包含所有的 scope_filter
-          !scope_filter.empty? && (scope_filter - scope_option).empty?
+          scope_option = property_schema_options[:scope]
+          next true if scope_option.empty?
+          next false if scope_filter.empty?
+          (scope_filter - scope_option).empty? # scope_filter 应被消耗殆尽
         end
 
         # 第二步，递归过滤每一个属性
@@ -71,24 +67,18 @@ module Dain
       #
       # 的格式。
       def to_schema_doc(user_options = {})
-        stage_options = user_options[:stage] == :param ? @param_options : @render_options
         stage = user_options[:stage]
+        stage_options = options(stage)
 
-        properties = @properties.filter { |name, scope|
-          # 过滤掉非 body 的属性
-          param_in = scope.options(:param, :in) || 'body'
-          next false unless param_in == 'body'
-
-          # 接下来要看该属性下的选项（我总觉得哪里有点问题）
-          unless stage.nil?
-            stage = stage.to_sym
-            next false if stage == :param && !scope.param_options
-            next false if stage == :render && !scope.render_options
-          end
+        properties = @properties.filter do |name, property_schema|
+          # 首先要通过 stage 过滤
+          next false unless property_schema.options(:param)
+          # 然后过滤掉非 body 参数
+          next false unless property_schema.options(:param, :in) == 'body'
 
           true
-        }.transform_values do |scope|
-          scope.to_schema_doc
+        end.transform_values do |property_schema|
+          property_schema.to_schema_doc
         end
 
         if properties.empty?
@@ -108,11 +98,13 @@ module Dain
         doc = []
 
         # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
-        scopes = @properties.each do |key, scope| 
-          param_in = scope.options(:param, :in) || 'body'
-          next if param_in == 'body'
+        @properties.each do |key, property_schema| 
+          # 首先要通过 stage 过滤
+          next unless property_schema.options(:param)
+          # 然后过滤掉 body 参数
+          next if property_schema.options(:param, :in) == 'body'
 
-          property_options = scope.param_options
+          property_options = property_schema.param_options
           doc << {
             name: key,
             in: property_options[:in],
