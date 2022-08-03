@@ -4,13 +4,13 @@ module Dain
   module JsonSchema
     class BaseSchemaBuilder
       class << self
-        def build(options = {}, path = nil, &block)
+        def build(options = {}, &block)
           if apply_array_schema?(options, block)
             ArraySchemaBuilder.new(options, &block).to_schema
           elsif apply_object_schema?(options, block)
             ObjectSchemaBuilder.new(options, &block).to_schema
           else
-            BaseSchema.new(options, path)
+            BaseSchema.new(options)
           end
         end
 

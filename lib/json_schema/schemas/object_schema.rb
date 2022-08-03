@@ -103,18 +103,26 @@ module Dain
         end
       end
 
-      # 生成 Swagger 文档的 parameters 部分，这里是指生成路径位于 `path`、`query`
-      # 的参数。
+      # 生成 Swagger 文档的 parameters 部分，这里是指生成路径位于 `path`、`query`、`header` 的参数。
       def generate_parameters_doc
+        doc = []
+
         # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
-        scopes = @properties.values.filter do |scope| 
+        scopes = @properties.each do |key, scope| 
           param_in = scope.options(:param, :in) || 'body'
-          param_in != 'body'
+          next if param_in == 'body'
+
+          property_options = scope.param_options
+          doc << {
+            name: key,
+            in: property_options[:in],
+            type: property_options[:type],
+            required: property_options[:required] || false,
+            description: property_options[:description] || ''
+          }
         end
 
-        scopes.map do |scope|
-          scope.generate_parameter_doc
-        end
+        doc
       end
 
       private

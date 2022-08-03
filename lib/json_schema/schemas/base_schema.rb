@@ -13,7 +13,7 @@ module Dain
       attr_reader :param_options, :render_options
 
       # 传递 path 参数主要是为了渲染 Parameter 文档时需要
-      def initialize(options = {}, path = nil)
+      def initialize(options = {})
         options = options.dup
         param_options = options.delete(:param) # true、false 或者 Hash
         render_options = options.delete(:render) # true、false 或者 Hash
@@ -22,8 +22,6 @@ module Dain
 
         @param_options = param_options ? options.merge(param_options) : false
         @render_options = render_options ? options.merge(render_options) : false
-
-        @path = path
       end
 
       def options(stage, key = nil)
@@ -98,19 +96,6 @@ module Dain
         schema[:description] = stage_options[:description] if stage_options[:description]
 
         schema
-      end
-
-      # 生成 Swagger 的参数文档，这个文档不同于 Schema，它主要存在于 Header、Path、Query 这些部分
-      def generate_parameter_doc(user_options = {})
-        scope_options = user_options[:stage] == :param ? @param_options : @render_options
-
-        {
-          name: @path,
-          in: scope_options[:in],
-          type: scope_options[:type],
-          required: scope_options[:required] || false,
-          description: scope_options[:description] || ''
-        }
       end
 
       def to_schema
