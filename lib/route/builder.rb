@@ -125,9 +125,10 @@ module Dain
           next unless response.status == code
 
           # 首先获取 JSON 响应值
-          if @render
-            hash = @render[:value]
-            options = @render[:options]
+          renders = @renders || {}
+          if renders[:root]
+            hash = renders[:root][:value]
+            options = renders[:root][:options]
           else
             response_body = response.body ? response.body[0] : nil
             hash = response_body ? JSON.parse(response_body) : {}
