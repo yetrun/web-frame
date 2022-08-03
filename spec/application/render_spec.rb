@@ -33,28 +33,55 @@ describe 'render' do
   end
 
   context '带符号键名' do
-    def app
-      app = Class.new(Dain::Application)
+    context '渲染正确的键名' do
+      def app
+        app = Class.new(Dain::Application)
 
-      app.route('/request', :post)
-        .do_any {
-          render(:user, { 'name' => 'Jim', 'age' => 18 })
-        }
-        .if_status(200) {
-          property :user do
-            property :name
-            property :age
-          end
-        }
+        app.route('/request', :post)
+          .do_any {
+            render(:user, { 'name' => 'Jim', 'age' => 18 })
+          }
+          .if_status(200) {
+            property :user do
+              property :name
+              property :age
+            end
+          }
 
-      app
+        app
+      end
+
+      specify do
+        post('/request')
+
+        response_json = JSON.parse(last_response.body)
+        expect(response_json['user']).to eq('name' => 'Jim', 'age' => 18)
+      end
     end
 
-    specify do
-      post('/request')
+    context '渲染错误的键名' do
+      def app
+        app = Class.new(Dain::Application)
 
-      response_json = JSON.parse(last_response.body)
-      expect(response_json['user']).to eq('name' => 'Jim', 'age' => 18)
+        app.route('/request', :post)
+          .do_any {
+            render(:user2, { 'name' => 'Jim', 'age' => 18 })
+          }
+          .if_status(200) {
+            property :user do
+              property :name
+              property :age
+            end
+          }
+
+        app
+      end
+
+      specify do
+        expect {
+          post('/request')
+        }.to raise_error(Dain::Errors::RenderingError, /user2/)
+      end
     end
   end
 end

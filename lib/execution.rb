@@ -21,7 +21,7 @@ module Dain
       elsif params[0].is_a?(Symbol)
         key, value, options = params
       else
-        key = :root
+        key = :__root__
         value, options = params
       end
 

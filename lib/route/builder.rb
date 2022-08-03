@@ -126,26 +126,34 @@ module Dain
 
           # 首先获取 JSON 响应值
           renders = @renders || {}
-          if renders[:root]
-            hash = renders[:root][:value]
-            options = renders[:root][:options]
+
+          if renders.key?(:__root__) || renders.empty?
+            # 从 root 角度获取
+            if renders[:__root__]
+              hash = renders[:__root__][:value]
+              options = renders[:__root__][:options]
+            else
+              response_body = response.body ? response.body[0] : nil
+              hash = response_body ? JSON.parse(response_body) : {}
+              options = {}
+            end
+
+            begin
+              new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render)
+            rescue JsonSchema::ValidationErrors => e
+              raise Errors::RenderingInvalid.new(e.errors)
+            end
+            response.body = [JSON.generate(new_hash)]
           else
-            response_body = response.body ? response.body[0] : nil
-            hash = response_body ? JSON.parse(response_body) : {}
-            options = {}
-          end
+            # 渲染多键值结点
+            new_hash = renders.map do |key, render_content|
+              schema = entity_schema.properties[key]
+              raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" if schema.nil?
 
-          # scope_filter = options[:scope] ? options[:scope] : []
-          # scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
-          # scope_filter << 'return' unless scope_filter.include?('return')
-          # options[:scope] = scope_filter
-
-          begin
-            new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render)
-          rescue JsonSchema::ValidationErrors => e
-            raise Errors::RenderingInvalid.new(e.errors)
+              [key, schema.filter(render_content[:value], render_content[:options])]
+            end.to_h
+            response.body = [JSON.generate(new_hash)]
           end
-          response.body = [JSON.generate(new_hash)]
         }
       end
 

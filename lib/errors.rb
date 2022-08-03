@@ -18,6 +18,8 @@ module Dain
       end
     end
 
+    class RenderingError < StandardError; end
+
     class NotAuthorized < StandardError; end
 
     class NotFound < StandardError; end
