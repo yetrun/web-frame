@@ -9,10 +9,9 @@ module Dain
         options = options.merge(type: 'array')
         @options = options
 
-        # TODO: 使用 BaseBuilder 如果没有 items
         items_options = options.delete(:items) || {}
         if object_property?(items_options, block)
-          @items = ObjectSchemaBuilder.new(items_options, &block).to_schema # TODO: options 怎么办？
+          @items = ObjectSchemaBuilder.new(items_options, &block).to_schema
         else
           @items = BaseSchema.new(items_options)
         end

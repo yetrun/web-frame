@@ -114,15 +114,16 @@ module Dain
         }
       end
 
-      # TODO: 如何定义数组和标量响应值
-      def if_status(code, &block)
+      def if_status(code, *other_codes, &block)
+        codes = [code, *other_codes]
+
         entity_schema = JsonSchema::BaseSchemaBuilder.build(&block).to_schema
 
         @meta[:responses] = @meta[:responses] || {}
-        @meta[:responses][code] = entity_schema
+        codes.each { |code| @meta[:responses][code] = entity_schema }
 
         do_any {
-          next unless response.status == code
+          next unless codes.include?(response.status)
 
           # 首先获取 JSON 响应值
           renders = @renders || {}

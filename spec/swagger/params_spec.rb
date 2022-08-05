@@ -61,7 +61,6 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
           app.route('/users', :post)
             .params {
-              # TODO: 关键字参数的拼写检查，例如 `type` 写得对不对，`description` 写得对不对
               param :str, type: 'string', description: '字符串参数' 
               param :int, type: 'integer', description: '整型参数'
               param :hash, type: 'object', description: '对象参数'
@@ -168,7 +167,6 @@ describe 'Dain::SwaggerDocUtil.generate' do
       end
 
       describe 'no body params' do
-        # TODO: 还是试一试类似于布局的方法
         subject do 
           Dain::SwaggerDocUtil.generate(app)[:paths]['/users'][:post]
         end
