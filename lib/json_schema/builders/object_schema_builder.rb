@@ -32,7 +32,7 @@ module Dain
         elsif block.respond_to?(:to_schema)
           scope = block.to_schema
           if options[:type] == 'array'
-            @properties[name] = ArraySchema.new(scope)
+            @properties[name] = ArraySchema.new(scope, options)
           else
             @properties[name] = ObjectSchema.new(scope.properties, scope.object_validations, options)
           end
