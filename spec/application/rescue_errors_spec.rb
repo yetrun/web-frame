@@ -250,7 +250,7 @@ describe Dain::Application, '.rescue_error' do
       }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
         expect(e.errors).to match(
           'user.name' => '未提供',
-          'user.age' => a_string_including('类型转化出现错误'),
+          'user.age' => a_string_including('类型转化失败'),
           'user.date' => '格式不正确'
         )
       }

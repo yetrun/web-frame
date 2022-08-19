@@ -81,7 +81,7 @@ describe Dain::Application, '.param' do
       expect {
         post('/users', JSON.generate(name: 'Jim', age: 'a18'), { 'CONTENT_TYPE' => 'application/json' })
       }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
-        expect(e.errors).to match('age' => a_string_including('类型转化出现错误'))
+        expect(e.errors).to match('age' => a_string_including('类型转化失败'))
       }
     end
 

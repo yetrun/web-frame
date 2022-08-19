@@ -122,10 +122,10 @@ module Dain
         def resolve_property_value(object_value, name, property_schema, stage)
           if property_schema.value?(stage)
             nil
-          elsif object_value.is_a?(Hash) 
+          elsif object_value.is_a?(Hash) || object_value.is_a?(ObjectWrapper)
             value = object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
           else
-            value = object_value.send(name)
+            raise "不应该还有其他类型了，已经在类型转换中将其转换为 Dain::JsonSchema::ObjectWrapper 了"
           end
         end
     end
