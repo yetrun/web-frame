@@ -20,27 +20,25 @@ describe Dain::Application, '.route' do
     include_examples 'matching route', :get, '/posts'
 
     context 'with parameters' do
-      let(:holder) { {} }
-
-      let(:base_app) do
-        the_holder = holder
+      let(:app_capturing_parameters) do
+        @holder = holder = [] 
 
         app = Class.new(Dain::Application)
-
         app.route(path, :get)
-          .do_any { the_holder[:params] = request.params }
-
+          .do_any { holder[0] = request.params }
         app
       end
 
-      let(:app) { base_app }
+      def app
+        app_capturing_parameters 
+      end
 
       before do
         get real_path
       end
 
       subject(:request_params) do
-        holder[:params]
+        @holder[0]
       end 
 
       describe 'single part param' do
@@ -61,8 +59,8 @@ describe Dain::Application, '.route' do
         end
       end
 
-      describe 'glob parts param' do
-        shared_examples 'defining glob params' do
+      describe '通配符参数' do
+        shared_examples '用带前缀的方式验证通配符参数' do
           context 'with name' do
             let(:path) { "#{prefix}/*name" }
 
@@ -100,35 +98,35 @@ describe Dain::Application, '.route' do
           end
         end
 
-        context 'defining in full path' do
+        context '匹配完整的路径' do
           let(:prefix) { '' } # It generates `/*` and `/*name`
 
-          include_examples 'defining glob params'
+          include_examples '用带前缀的方式验证通配符参数'
         end
 
-        context 'defining in remaining path parts' do
+        context '匹配剩余的路径' do
           let(:prefix) { '/prefix' } # It generates '/prefix/*` and `/prefix/*name`
 
-          include_examples 'defining glob params'
+          include_examples '用带前缀的方式验证通配符参数'
         end
 
-        context 'defining in modules' do
+        context '在模块内定义' do
           def app
             app = Class.new(Dain::Application)
-            app.apply base_app
+            app.apply app_capturing_parameters
             app
           end
 
           context 'defining in full path' do
             let(:prefix) { '' } # It generates `/*` and `/*name`
 
-            include_examples 'defining glob params'
+            include_examples '用带前缀的方式验证通配符参数'
           end
 
           context 'defining in remaining path parts' do
             let(:prefix) { '/prefix' } # It generates '/prefix/*` and `/prefix/*name`
 
-            include_examples 'defining glob params'
+            include_examples '用带前缀的方式验证通配符参数'
           end
         end
       end
@@ -141,70 +139,94 @@ describe Dain::Application, '.route' do
   end
 
   describe '嵌套子路由' do
-    def app
-      @holder = []
-      the_holder = @holder
-
-      app = Class.new(Dain::Application)
-      app.route('/books')
-        .do_any { 
-          @resource = 'books'
-        }
-        .nesting do |route|
-          route.method(:get)
-            .do_any { the_holder[0] = 'get ' + @resource }
-
-          route.method(:post)
-            .do_any { the_holder[1] = 'post ' + @resource }
-        end
-      app
-    end
-
-    it '匹配子路由' do
-      get '/books'
-      
-      expect(@holder[0]).to eq('get books')
-    end
-
-    it '不匹配子路由' do
-      expect{ 
-        put '/books' 
-      }.to raise_error(Dain::Errors::NoMatchingRoute)
-    end
-
-    describe '嵌套路由是如何处理参数的' do
+    context '子路由内定义方法' do
       def app
-        holder = @holder = []
+        @holder = []
+        the_holder = @holder
 
         app = Class.new(Dain::Application)
-
-        app.route('/request')
-          .params {
-            param :foo, type: 'string'
-          }
+        app.route('/books')
           .do_any { 
-            # excution 相同
-            holder[0] = params 
+            @resource = 'books'
           }
-          .nesting do |route|
-            route.method(:post)
-              .params {
-                param :bar, type: 'string'
-              }
-              .do_any { 
-                # excution 相同
-                holder[1] = params 
-              }
-            end
+            .nesting do |route|
+              route.method(:get)
+                .do_any { the_holder[0] = 'get ' + @resource }
 
+              route.method(:post)
+                .do_any { the_holder[1] = 'post ' + @resource }
+            end
           app
       end
 
-      it '分别接受两个参数' do
-        post('/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' })
+      it '匹配子路由' do
+        get '/books'
 
-        expect(@holder[0]).to eq({ foo: 'foo' })
-        expect(@holder[1]).to eq({ bar: 'bar' })
+        expect(@holder[0]).to eq('get books')
+      end
+
+      it '不匹配子路由' do
+        expect{ 
+          put '/books' 
+        }.to raise_error(Dain::Errors::NoMatchingRoute)
+      end
+
+      describe '嵌套路由是如何处理参数的' do
+        def app
+          holder = @holder = []
+
+          app = Class.new(Dain::Application)
+
+          app.route('/request')
+            .params {
+              param :foo, type: 'string'
+            }
+              .do_any { 
+                # excution 相同
+                holder[0] = params 
+              }
+                .nesting do |route|
+                  route.method(:post)
+                    .params {
+                      param :bar, type: 'string'
+                    }
+                      .do_any { 
+                        # excution 相同
+                        holder[1] = params 
+                      }
+                end
+
+              app
+        end
+
+        it '分别接受两个参数' do
+          post('/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' })
+
+          expect(@holder[0]).to eq({ foo: 'foo' })
+          expect(@holder[1]).to eq({ bar: 'bar' })
+        end
+      end
+    end
+
+    context '子路由内定义路径' do
+      def app
+        @holder = holder = []
+
+        app = Class.new(Dain::Application)
+        app.route('/foo/*')
+          .do_any { @resource = 'books' }
+          .nesting do |route|
+            route
+              .method(:get, '/foo/bar')
+              .do_any { holder[0] = 'matched' }
+          end
+        app
+      end
+
+      it '匹配父路由加子路由' do
+        get '/foo/bar'
+
+        expect(last_response).to be_ok
       end
     end
   end

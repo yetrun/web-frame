@@ -27,8 +27,8 @@ module Dain
 
       # 定义子路由
       # TODO: 使用构建器
-      def method(method)
-        route = Route::Builder.new(nil, method)
+      def method(method, path = nil)
+        route = Route::Builder.new(path, method)
         @children << route
 
         route
