@@ -4,6 +4,7 @@ module Dain
   module JsonSchema
     module Validators
       @validators = {
+        validate: proc { |value, p| p.call(value) },
         required: proc { |value, options, full_options|
           next if options == false
 

@@ -69,4 +69,16 @@ describe 'schema' do
       expect(schema.filter(arr)).to eq([1, 2, 3])
     end
   end
+
+  describe 'options: 自定义验证器' do
+    let (:schema) do
+      Dain::JsonSchema::BaseSchemaBuilder.build validate: ->(value) { 
+        raise Dain::JsonSchema::ValidationError, "value mustn't be zero"  if value == 0
+      }
+    end
+
+    it '验证失败时抛出异常' do
+      expect { schema.filter(0) }.to raise_error(Dain::JsonSchema::ValidationError)
+    end
+  end
 end
