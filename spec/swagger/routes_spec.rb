@@ -6,7 +6,7 @@ require 'grape-entity'
 describe 'Dain::SwaggerDocUtil.generate' do
   subject { Dain::SwaggerDocUtil.generate(app) }
 
-  describe 'generating route paths part' do
+  describe '生成 paths 部分' do
     context 'singular module' do
       let(:app) do
         app = Class.new(Dain::Application)
@@ -89,7 +89,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
     end
   end
 
-  describe 'generating route description part' do
+  describe '生成 paths.description 部分' do
     let(:app) do
       app = Class.new(Dain::Application)
 
@@ -105,6 +105,26 @@ describe 'Dain::SwaggerDocUtil.generate' do
         summary: '查看用户列表',
         description: '此接口返回用户的列表'
       ) 
+    end
+  end
+
+  describe '体验 nesting 路由的效果' do
+    let(:app) do
+      app = Class.new(Dain::Application)
+      app.route('/books')
+        .do_any { 
+          @resource = 'books'
+        }
+        .nesting do |route|
+          route.method(:get)
+          route.method(:post)
+        end
+      app
+    end
+
+    it 'generates title and description' do
+      expect(subject[:paths]['/books']).to have_key(:get)
+      expect(subject[:paths]['/books']).to have_key(:post)
     end
   end
 end
