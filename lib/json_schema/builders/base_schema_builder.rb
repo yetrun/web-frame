@@ -4,6 +4,7 @@ module Dain
   module JsonSchema
     class BaseSchemaBuilder
       class << self
+        # TODO: 建议将这个方法移动位置
         def build(options = {}, &block)
           if apply_array_schema?(options, block)
             ArraySchemaBuilder.new(options, &block).to_schema

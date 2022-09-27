@@ -3,16 +3,20 @@
 module Dain
   module JsonSchema
     class ObjectSchema < BaseSchema
-      attr_reader :properties, :object_validations
+      attr_reader :properties, :object_validations, :locked_scope
 
-      def initialize(properties = {}, object_validations = {}, options = {})
+      def initialize(properties = {}, object_validations = {}, options = {}, locked_scope = nil)
         super(options)
 
+        @locked_scope = locked_scope
         @properties = properties
         @object_validations = object_validations
       end
 
       def filter(object_value, user_options = {})
+        # 合并 user_options
+        user_options = user_options.merge(scope: locked_scope) if locked_scope
+
         object_value = super(object_value, user_options)
         return nil if object_value.nil?
 
