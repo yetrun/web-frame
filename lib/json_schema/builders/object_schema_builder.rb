@@ -34,7 +34,7 @@ module Dain
           if options[:type] == 'array'
             @properties[name] = ArraySchema.new(scope, options)
           else
-            @properties[name] = ObjectSchema.new(scope.properties, scope.object_validations, options, scope.locked_scope, scope.locked_exclude)
+            @properties[name] = ObjectSchema.new(scope.properties, scope.object_validations, options, scope.locked_options)
           end
         else
           raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_schema` 方法的对象。当前传递：#{block}"
@@ -50,17 +50,26 @@ module Dain
         instance_exec(&proc)
       end
 
-      def to_schema(locked_scope = nil, locked_exclude = nil)
-        ObjectSchema.new(@properties, @validations, @options, locked_scope, locked_exclude)
+      def to_schema(locked_options = nil)
+        ObjectSchema.new(@properties, @validations, @options, locked_options)
       end
 
       # 加入 lock_scope 后，生成文档时属性依然没有过滤
       def lock_scope(scope)
-        Scoped.new(self, scope)
+        lock(:scope, scope)
       end
 
+      # TODO: 使用 method_missing
       def lock_exclude(names)
-        Excluded.new(self, names)
+        lock(:exclude, names)
+      end
+
+      def lock(key, value)
+        locked(key => value)
+      end
+
+      def locked(options)
+        Locked.new(self, options)
       end
 
       private
@@ -73,29 +82,16 @@ module Dain
         (options[:type] == 'object' || block) && (options[:properties] || block)
       end
 
-      class Scoped
-        attr_reader :builder, :scope
+      class Locked
+        attr_reader :builder, :locked_options
 
-        def initialize(builder, scope)
+        def initialize(builder, locked_options)
           @builder = builder
-          @scope = scope
+          @locked_options = locked_options
         end
 
         def to_schema
-          builder.to_schema(scope)
-        end
-      end
-
-      class Excluded
-        attr_reader :builder, :exclude
-
-        def initialize(builder, exclude)
-          @builder = builder
-          @exclude = exclude
-        end
-
-        def to_schema
-          builder.to_schema(nil, exclude)
+          builder.to_schema(locked_options)
         end
       end
     end

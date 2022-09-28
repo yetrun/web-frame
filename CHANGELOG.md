@@ -1,5 +1,13 @@
 # CHANGE LOG
 
+## 为 Dain::Entities::Entity 添加一个 locked 方法
+```ruby
+# 在 using 时调用 scope 方法
+params do
+  param :article, using: ArticleEntity.locked(scope: 'xxx', exclude: [:hidden])
+end
+```
+
 ## 为 Dain::Entities::Entity 添加一个 lock_exclude 方法
 
 ```ruby

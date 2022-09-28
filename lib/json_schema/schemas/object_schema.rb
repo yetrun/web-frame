@@ -3,21 +3,28 @@
 module Dain
   module JsonSchema
     class ObjectSchema < BaseSchema
-      attr_reader :properties, :object_validations, :locked_scope, :locked_exclude
+      attr_reader :properties, :object_validations, :locked_options
 
-      def initialize(properties = {}, object_validations = {}, options = {}, locked_scope = nil, locked_exclude = nil)
+      # TODO: 定义 locked_* 方法
+      def locked_scope
+        locked_options && locked_options[:scope]
+      end
+
+      def locked_exclude
+        locked_options && locked_options[:exclude]
+      end
+
+      def initialize(properties = {}, object_validations = {}, options = {}, locked_options = nil)
         super(options)
 
         @properties = properties
         @object_validations = object_validations
-
-        @locked_scope = locked_scope
-        @locked_exclude = locked_exclude
+        @locked_options = locked_options
       end
 
       def filter(object_value, user_options = {})
         # 合并 user_options
-        user_options = user_options.merge(scope: locked_scope) if locked_scope
+        user_options = user_options.merge(locked_options) if locked_options
 
         object_value = super(object_value, user_options)
         return nil if object_value.nil?
@@ -27,6 +34,7 @@ module Dain
         scope_filter = user_options[:scope] || []
         scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
         stage = user_options[:stage]
+        exclude = user_options.delete(:exclude) # 这里删除 exclude 选项
         filtered_properties = @properties.filter do |name, property_schema|
           # 通过 discard_missing 过滤
           next false if user_options[:discard_missing] && !object_value.key?(name.to_s)
@@ -36,7 +44,7 @@ module Dain
           next false unless property_schema_options
 
           # 通过 locked_exclude 选项过滤
-          next false if locked_exclude && locked_exclude.include?(name)
+          next false if exclude && exclude.include?(name)
 
           # 通过 scope 过滤
           scope_option = property_schema_options[:scope]
