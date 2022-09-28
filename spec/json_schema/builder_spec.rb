@@ -16,6 +16,7 @@ describe 'Schema Builders' do
     expect(array_schema.render_options.include?(:value)).to be true
   end
 
+  # TODO: 组织测试结构
   it '使用 scope 约束 Schema' do
     builder = Dain::JsonSchema::ObjectSchemaBuilder.new do
       property :xxx, scope: 'xxx'
@@ -53,5 +54,17 @@ describe 'Schema Builders' do
         xx: nil
       }
     }) # 相当于自动传递 scope: 'xxx'
+  end
+
+  it '使用 exclude 约束 Schema' do
+    builder = Dain::JsonSchema::ObjectSchemaBuilder.new do
+      property :xxx
+      property :yyy
+    end
+
+    schema = builder.lock_exclude([:yyy]).to_schema
+
+    value = schema.filter({})
+    expect(value.keys).to eq([:xxx])
   end
 end

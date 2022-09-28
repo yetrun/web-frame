@@ -34,7 +34,7 @@ module Dain
           if options[:type] == 'array'
             @properties[name] = ArraySchema.new(scope, options)
           else
-            @properties[name] = ObjectSchema.new(scope.properties, scope.object_validations, options, scope.locked_scope)
+            @properties[name] = ObjectSchema.new(scope.properties, scope.object_validations, options, scope.locked_scope, scope.locked_exclude)
           end
         else
           raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_schema` 方法的对象。当前传递：#{block}"
@@ -50,13 +50,17 @@ module Dain
         instance_exec(&proc)
       end
 
-      def to_schema(locked_scope = nil)
-        ObjectSchema.new(@properties, @validations, @options, locked_scope)
+      def to_schema(locked_scope = nil, locked_exclude = nil)
+        ObjectSchema.new(@properties, @validations, @options, locked_scope, locked_exclude)
       end
 
       # 加入 lock_scope 后，生成文档时属性依然没有过滤
       def lock_scope(scope)
         Scoped.new(self, scope)
+      end
+
+      def lock_exclude(names)
+        Excluded.new(self, names)
       end
 
       private
@@ -79,6 +83,19 @@ module Dain
 
         def to_schema
           builder.to_schema(scope)
+        end
+      end
+
+      class Excluded
+        attr_reader :builder, :exclude
+
+        def initialize(builder, exclude)
+          @builder = builder
+          @exclude = exclude
+        end
+
+        def to_schema
+          builder.to_schema(nil, exclude)
         end
       end
     end

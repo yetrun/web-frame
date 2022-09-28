@@ -3,14 +3,16 @@
 module Dain
   module JsonSchema
     class ObjectSchema < BaseSchema
-      attr_reader :properties, :object_validations, :locked_scope
+      attr_reader :properties, :object_validations, :locked_scope, :locked_exclude
 
-      def initialize(properties = {}, object_validations = {}, options = {}, locked_scope = nil)
+      def initialize(properties = {}, object_validations = {}, options = {}, locked_scope = nil, locked_exclude = nil)
         super(options)
 
-        @locked_scope = locked_scope
         @properties = properties
         @object_validations = object_validations
+
+        @locked_scope = locked_scope
+        @locked_exclude = locked_exclude
       end
 
       def filter(object_value, user_options = {})
@@ -32,6 +34,9 @@ module Dain
           # 通过 stage 过滤。
           property_schema_options = property_schema.options(stage)
           next false unless property_schema_options
+
+          # 通过 locked_exclude 选项过滤
+          next false if locked_exclude && locked_exclude.include?(name)
 
           # 通过 scope 过滤
           scope_option = property_schema_options[:scope]

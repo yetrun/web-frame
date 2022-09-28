@@ -26,6 +26,7 @@ module Dain
         def_delegator :scope_builder, :use
         def_delegator :scope_builder, :to_schema
         def_delegator :scope_builder, :lock_scope
+        def_delegator :scope_builder, :lock_exclude
       end
     end
   end
