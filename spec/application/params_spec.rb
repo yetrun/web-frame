@@ -871,6 +871,7 @@ describe Dain::Application, '.param' do
         end
       end
 
+      # TODO: 描述有误
       context 'using: ObjectScope' do
         def app
           @holder = {}
@@ -1000,6 +1001,56 @@ describe Dain::Application, '.param' do
           it '正确解析参数' do
             post('/users', JSON.generate(user: [{ name: 'Jim', age: 18 }]), { 'CONTENT_TYPE' => 'application/json' })
             expect(@holder[:params]).to eq(user: [{ name: 'Jim', age: 18 }])
+          end
+        end
+
+        context '使用 scope 约束' do
+          def app
+            @holder = {}
+            the_holder = @holder
+
+            the_entity = Class.new(Dain::Entities::Entity) do
+              param :name, scope: 'name'
+              param :age, scope: 'age'
+            end
+
+            app = Class.new(Dain::Application)
+            app.route('/users', :post)
+              .params {
+                param :user, type: 'object', using: the_entity.lock_scope('name')
+              }
+              .do_any { the_holder[:params] = params }
+            app
+          end
+
+          it '正确处理参数' do
+            post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+            expect(@holder[:params]).to eq(user: { name: 'Jim' })
+          end
+        end
+
+        context '使用 exclude 约束' do
+          def app
+            @holder = {}
+            the_holder = @holder
+
+            the_entity = Class.new(Dain::Entities::Entity) do
+              param :name
+              param :age
+            end
+
+            app = Class.new(Dain::Application)
+            app.route('/users', :post)
+              .params {
+                param :user, type: 'object', using: the_entity.lock_exclude([:age])
+              }
+              .do_any { the_holder[:params] = params }
+            app
+          end
+
+          it '正确处理参数' do
+            post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
+            expect(@holder[:params]).to eq(user: { name: 'Jim' })
           end
         end
       end
