@@ -12,7 +12,7 @@ module Dain
       @path = options[:path] || :all
       @method = options[:method] || :all
       @meta = options[:meta] || {}
-      @blocks = options[:blocks] || []
+      @action = options[:action]
       @children = options[:children] || []
     end
 
@@ -41,9 +41,9 @@ module Dain
 
       # 依次执行这个环境
       begin
-        @blocks.each do |b|
-          execution.instance_eval(&b)
-        end
+        execution.parse_params(@meta[:params_schema]) if @meta[:params_schema]
+        execution.instance_exec(&@action) if @action
+        render_entity(execution) if @meta[:responses]
       rescue Execution::Abort
         execution
       end
@@ -64,6 +64,16 @@ module Dain
         .gsub(/:(\w+)/, '(?<\1>[^/]+)').gsub(/\*(\w+)/, '(?<\1>.+)')
         .gsub(/:/, '[^/]+').gsub('*', '.+')
       Regexp.new("^#{raw_regex}$")
+    end
+
+    def render_entity(execution)
+      responses = @meta[:responses]
+      status = execution.response.status
+      codes = responses.keys
+      return unless codes.include?(status)
+
+      entity_schema = responses[status]
+      execution.render_entity(entity_schema)
     end
   end
 end

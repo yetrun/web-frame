@@ -42,7 +42,6 @@ describe Dain::Application, '.exposures' do
           expose :name, type: 'string', convert: proc { |value| value.upcase }
           expose :age, type: 'integer', convert: proc { |value| value + 1 }
         }
-
       app
     end
 

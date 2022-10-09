@@ -178,25 +178,25 @@ describe Dain::Application, '.route' do
           app = Class.new(Dain::Application)
 
           app.route('/request')
-            .params {
-              param :foo, type: 'string'
+             .params {
+               param :foo, type: 'string'
+             }
+             .do_any {
+               # excution 相同
+               holder[0] = params
+             }
+            .nesting { |route|
+              route.method(:post)
+                   .params {
+                     param :bar, type: 'string'
+                   }
+                   .do_any {
+                     # excution 相同
+                     holder[1] = params
+                   }
             }
-              .do_any { 
-                # excution 相同
-                holder[0] = params 
-              }
-                .nesting do |route|
-                  route.method(:post)
-                    .params {
-                      param :bar, type: 'string'
-                    }
-                      .do_any { 
-                        # excution 相同
-                        holder[1] = params 
-                      }
-                end
 
-              app
+          app
         end
 
         it '分别接受两个参数' do

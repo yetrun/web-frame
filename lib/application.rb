@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'chain_dsl/route_builder'
-require_relative 'chain_dsl/application_builder'
+require_relative 'route_dsl/route_builder'
+require_relative 'route_dsl/application_builder'
 require_relative 'application/application'
 
 # 结构组织如下：
 # - lib/application.rb: 模块实例
-# - chain_dsl/application_builder.rb: DSL 语法的 Builder
+# - route_dsl/application_builder.rb: DSL 语法的 Builder
 # - application.rb(本类): 综合以上两个类q的方法到一个类当中
 module Dain
   class Application
@@ -20,7 +20,7 @@ module Dain
       def inherited(mod)
         super
 
-        mod.instance_eval { @builder = ApplicationBuilder.new }
+        mod.instance_eval { @builder = RouteDSL::ApplicationBuilder.new }
       end
 
       # 读取应用的元信息
