@@ -31,5 +31,20 @@ module Dain
 
     class Abort < StandardError
     end
+
+    # 使得能够处理 Execution 的类作为 Rack 中间件
+    module MakeToRackMiddleware
+      def call(env)
+        # 初始化一个执行环境
+        request = Rack::Request.new(env)
+        execution = Execution.new(request)
+
+        execute(execution)
+
+        response = execution.response
+        response.content_type = 'application/json' unless response.no_content?
+        response.to_a
+      end
+    end
   end
 end

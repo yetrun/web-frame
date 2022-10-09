@@ -1,90 +1,45 @@
 # frozen_string_literal: true
 
-require_relative 'application/class_methods'
-require_relative 'route/builder'
+require_relative 'chain_dsl/route_builder'
+require_relative 'chain_dsl/application_builder'
+require_relative 'application/application'
 
+# 结构组织如下：
+# - lib/application.rb: 模块实例
+# - chain_dsl/application_builder.rb: DSL 语法的 Builder
+# - application.rb(本类): 综合以上两个类q的方法到一个类当中
 module Dain
   class Application
-    attr_reader :chain, :before_callbacks, :after_callbacks, :error_guards
+    class << self
+      extend Forwardable
 
-    def initialize
-      @chain_builder = [] # TODO: 将 Application 的构建和执行也分成两个类
+      include Execution::MakeToRackMiddleware
 
-      @chain = []
-      @before_callbacks = []
-      @after_callbacks = []
-      @error_guards = []
-    end
+      attr_reader :builder
 
-    # 所有主函数分两个区，第一个是构建区，类似于 Builder；第二个是执行区，是在构建完成以后作为不可变对象运行。
+      def inherited(mod)
+        super
 
-    ## 执行区
-
-    def execute(execution)
-      build
-
-      before_callbacks.each { |b| execution.instance_eval(&b) }
-
-      mod = chain.find { |mod| mod.match?(execution) }
-      if mod
-        mod.execute(execution)
-      else
-        request = execution.request
-        raise Errors::NoMatchingRoute, "未能发现匹配的路由：#{request.request_method} #{request.path}"
+        mod.instance_eval { @builder = ApplicationBuilder.new }
       end
 
-      after_callbacks.each { |b| execution.instance_eval(&b) }
-    rescue StandardError => e
-      guard = error_guards.find { |g| e.is_a?(g[:error_class]) }
-      raise unless guard
+      # 读取应用的元信息
+      def_delegator :app, :routes
+      def_delegator :app, :applications
+      def_delegator :app, :execute
 
-      execution.instance_exec(e, &guard[:caller])
-    end
+      # DSL 调用委托给内部 Builder
+      def_delegator :builder, :route
+      def_delegator :builder, :before
+      def_delegator :builder, :after
+      def_delegator :builder, :rescue_error
+      def_delegator :builder, :apply
 
-    def match?(execution)
-      chain.any? { |mod| mod.match?(execution) }
-    end
+      def app
+        @app || @app = builder.build
+      end
 
-    def applications
-      build and chain.filter { |r| r.is_a?(Application) }
-    end
-
-    def routes
-      build and chain.filter { |r| r.is_a?(Route) }
-    end
-
-    # 定义与 Route 类似的 build 方法
-    def build
-      return self unless @chain_builder
-
-      @chain = @chain_builder.map(&:build)
-      @chain_builder = false
-
-      self
-    end
-
-    ## 构建区
-
-    def route(path, method = nil)
-      route = Route::Builder.new(path, method)
-      @chain_builder << route
-      route
-    end
-
-    def before(&block)
-      before_callbacks << block
-    end
-
-    def after(&block)
-      after_callbacks << block
-    end
-
-    def rescue_error(error_class, &block)
-      error_guards << { error_class: error_class, caller: block }
-    end
-
-    def apply(mod)
-      @chain_builder << mod
+      alias :build :app
     end
   end
 end
