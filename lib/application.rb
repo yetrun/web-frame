@@ -34,6 +34,7 @@ module Dain
       def_delegator :builder, :after
       def_delegator :builder, :rescue_error
       def_delegator :builder, :apply
+      def_delegator :builder, :namespace
 
       def app
         @app || @app = builder.build

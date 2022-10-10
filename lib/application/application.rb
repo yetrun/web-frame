@@ -4,19 +4,20 @@ module Dain
   class Application
     include Execution::MakeToRackMiddleware
 
-    attr_reader :chain, :before_callbacks, :after_callbacks, :error_guards
+    attr_reader :prefix, :mods, :before_callbacks, :after_callbacks, :error_guards
 
-    def initialize(chain, before_callbacks, after_callbacks, error_guards)
-      @chain = chain
-      @before_callbacks = before_callbacks
-      @after_callbacks = after_callbacks
-      @error_guards = error_guards
+    def initialize(options)
+      @prefix = options[:prefix] || nil
+      @mods = options[:mods] || []
+      @before_callbacks = options[:before_callbacks] || []
+      @after_callbacks = options[:after_callbacks] || []
+      @error_guards = options[:error_guards] || []
     end
 
     def execute(execution)
       before_callbacks.each { |b| execution.instance_eval(&b) }
 
-      mod = chain.find { |mod| mod.match?(execution) }
+      mod = mods.find { |mod| mod.match?(execution) }
       if mod
         mod.execute(execution)
       else
@@ -33,15 +34,17 @@ module Dain
     end
 
     def match?(execution)
-      chain.any? { |mod| mod.match?(execution) }
+      return false unless prefix.nil? || execution.request.path.start_with?(prefix)
+
+      mods.any? { |mod| mod.match?(execution) }
     end
 
     def applications
-      chain.filter { |r| r.is_a?(Application) }
+      mods.filter { |r| r.is_a?(Application) }
     end
 
     def routes
-      chain.filter { |r| r.is_a?(Route) }
+      mods.filter { |r| r.is_a?(Route) }
     end
   end
 end

@@ -43,6 +43,12 @@ module Dain
         route
       end
 
+      def route(path = :all, method = :all, &block)
+        route = RouteBuilder.new(path, method, &block)
+        @children << route
+        route
+      end
+
       def nesting(&block)
         instance_eval(&block)
 
