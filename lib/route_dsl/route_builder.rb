@@ -5,18 +5,21 @@ require_relative '../entity'
 require_relative '../application/route'
 require_relative 'chain_builder'
 require_relative 'action_builder'
+require_relative 'meta_builder'
 
 module Dain
   module RouteDSL
     class RouteBuilder
-      extend Forwardable
+      include MetaBuilder::Delegator
 
-      def initialize(path = :all, method = :all, &block)
+      alias :if_status :status
+
+      def initialize(path = :all, method = :all, meta = {}, &block)
         @path = path || :all
         @method = method || :all
-        @meta = {}
         @children = []
         @action_builder = nil
+        @meta_builder = MetaBuilder.new(clone_meta(meta))
 
         instance_exec &block if block_given?
       end
@@ -24,11 +27,12 @@ module Dain
       def build
         children = @children.map { |builder| builder.build }
         action = @action_builder&.build
+        meta = @meta_builder.build
 
         Route.new(
           path: @path,
           method: @method,
-          meta: @meta,
+          meta: meta,
           action: action,
           children: children
         )
@@ -63,37 +67,20 @@ module Dain
         @action_builder = ActionBuilder.new(&block)
       end
 
-      def params(options = {}, &block)
-        @meta[:params_schema] = JsonSchema::BaseSchemaBuilder.build(options, &block)
-
-        self
-      end
-
-      def status(code, *other_codes, &block)
-        codes = [code, *other_codes]
-        entity_schema = JsonSchema::BaseSchemaBuilder.build(&block).to_schema
-        @meta[:responses] = @meta[:responses] || {}
-        codes.each { |code| @meta[:responses][code] = entity_schema }
-
-        self
-      end
-
-      alias :if_status :status
-
-      # 定义 meta 元信息设置的方法
-      [:tags, :title, :description].each do |method_name|
-        define_method(method_name) do |value|
-          @meta[method_name] = value
-          self
-        end
-      end
-
       # 将 chain 的方法转交给 ChainBuilder
       [:do_any, :resource, :authorize, :set_status].each do |method_name|
         define_method(method_name) do |&block|
           chain.send(method_name, &block)
           self
         end
+      end
+
+      private
+
+      def clone_meta(meta)
+        meta = meta.clone
+        meta[:responses] = meta[:responses].clone if meta[:responses]
+        meta
       end
     end
   end

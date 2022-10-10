@@ -40,30 +40,90 @@ describe 'Route DSL' do
   end
 
   describe '嵌套路由' do
-    def app
-      Class.new(Dain::Application) do
-        namespace '/nesting' do
-          route '/foo', :get do
-            action do
-              response.body = ['foo']
+    describe '简单的嵌套路由' do
+      def app
+        Class.new(Dain::Application) do
+          namespace '/nesting' do
+            route '/foo', :get do
+              action do
+                response.body = ['foo']
+              end
             end
-          end
 
-          route '/bar', :get do
-            action do
-              response.body = ['bar']
+            route '/bar', :get do
+              action do
+                response.body = ['bar']
+              end
             end
           end
         end
       end
+
+      specify do
+        get '/nesting/foo'
+        expect(last_response.body).to eq('foo')
+
+        get '/nesting/bar'
+        expect(last_response.body).to eq('bar')
+      end
     end
 
-    specify do
-      get '/nesting/foo'
-      expect(last_response.body).to eq('foo')
+    describe '带有共同 meta 元素的嵌套路由' do
+      describe '带有共同参数的嵌套路由' do
+        def app
+          Class.new(Dain::Application) do
+            namespace '/nesting' do
+              params { param :foo }
 
-      get '/nesting/bar'
-      expect(last_response.body).to eq('bar')
+              route '/foo', :post do
+                action { response.body = [params.to_json] }
+              end
+
+              route '/bar', :post do
+                params { param :bar }
+                action { response.body = [params.to_json] }
+              end
+            end
+          end
+        end
+
+        specify do
+          post '/nesting/foo', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+          expect(JSON.parse(last_response.body)).to eq('foo' => 'foo')
+
+          post '/nesting/bar', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+          expect(JSON.parse(last_response.body)).to eq('bar' => 'bar')
+        end
+      end
+
+      describe '带有共同响应元素的嵌套路由' do
+        def app
+          Class.new(Dain::Application) do
+            namespace '/nesting' do
+              status(200, 201) { expose :foo }
+
+              route '/foo', :post do
+                action { render('foo' => 'foo', 'bar' => 'bar') }
+              end
+
+              route '/bar', :post do
+                status(200, 201) { expose :bar }
+                action { render('foo' => 'foo', 'bar' => 'bar') }
+              end
+            end
+          end
+        end
+
+        specify do
+          post '/nesting/foo', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+          expect(JSON.parse(last_response.body)).to eq('foo' => 'foo')
+
+          post '/nesting/bar', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+          expect(JSON.parse(last_response.body)).to eq('bar' => 'bar')
+        end
+      end
+
+      # 其他的诸如 tags、title、description 与上两个同，不再测试
     end
   end
 end

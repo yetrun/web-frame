@@ -24,17 +24,10 @@ module Dain
       end
 
       # 读取应用的元信息
-      def_delegator :app, :routes
-      def_delegator :app, :applications
-      def_delegator :app, :execute
+      def_delegators :app, :routes, :applications, :execute
 
       # DSL 调用委托给内部 Builder
-      def_delegator :builder, :route
-      def_delegator :builder, :before
-      def_delegator :builder, :after
-      def_delegator :builder, :rescue_error
-      def_delegator :builder, :apply
-      def_delegator :builder, :namespace
+      def_delegators :builder, :before, :after, :rescue_error, :route, :apply, :namespace
 
       def app
         @app || @app = builder.build
