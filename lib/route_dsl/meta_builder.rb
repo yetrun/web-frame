@@ -3,8 +3,9 @@
 module Dain
   module RouteDSL
     class MetaBuilder
-      def initialize(meta = {}, &block)
-        @meta = meta
+      # TODO: meta 参数没必要了
+      def initialize(&block)
+        @meta = {}
 
         instance_exec &block if block_given?
       end

@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require_relative '../../lib/route_dsl/application_builder'
+require_relative '../../lib/swagger_doc'
 
 describe 'Route DSL' do
   include Rack::Test::Methods
@@ -124,6 +125,46 @@ describe 'Route DSL' do
       end
 
       # 其他的诸如 tags、title、description 与上两个同，不再测试
+    end
+  end
+
+  describe '应用其他模块' do
+    def app
+      foo = Class.new(Dain::Application) do
+        route '/foo', :get do
+          action do
+            response.body = ['foo']
+          end
+        end
+      end
+
+      bar = Class.new(Dain::Application) do
+        route '/bar', :get do
+          action do
+            response.body = ['bar']
+          end
+        end
+      end
+
+      Class.new(Dain::Application) do
+        apply foo, tags: ['Foo']
+        apply bar, tags: ['Bar']
+      end
+    end
+
+    it '响应请求' do
+      get '/foo'
+      expect(last_response.body).to eq('foo')
+
+      get '/bar'
+      expect(last_response.body).to eq('bar')
+    end
+
+    it '生成对应 tags 的文档' do
+      doc = Dain::SwaggerDocUtil.generate(app)
+
+      expect(doc[:paths]['/foo'][:get][:tags]).to eq(['Foo'])
+      expect(doc[:paths]['/bar'][:get][:tags]).to eq(['Bar'])
     end
   end
 end

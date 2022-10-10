@@ -30,10 +30,12 @@ module Dain
       def_delegators :builder, :before, :after, :rescue_error, :route, :apply, :namespace
 
       def app
-        @app || @app = builder.build
+        @app || @app = builder.build({})
       end
 
-      alias :build :app
+      def build(meta)
+        @app = builder.build(meta)
+      end
     end
   end
 end

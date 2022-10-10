@@ -14,20 +14,20 @@ module Dain
 
       alias :if_status :status
 
-      def initialize(path = :all, method = :all, meta = {}, &block)
+      def initialize(path = :all, method = :all, &block)
         @path = path || :all
         @method = method || :all
         @children = []
         @action_builder = nil
-        @meta_builder = MetaBuilder.new(clone_meta(meta))
+        @meta_builder = MetaBuilder.new
 
         instance_exec &block if block_given?
       end
 
-      def build
-        children = @children.map { |builder| builder.build }
+      def build(meta)
+        children = @children.map { |builder| builder.build(meta) }
         action = @action_builder&.build
-        meta = @meta_builder.build
+        meta = (meta || {}).merge(@meta_builder.build)
 
         Route.new(
           path: @path,
@@ -43,7 +43,6 @@ module Dain
       def method(method, path = nil)
         route = RouteBuilder.new(path, method)
         @children << route
-
         route
       end
 
