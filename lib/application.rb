@@ -24,7 +24,7 @@ module Dain
       end
 
       # 读取应用的元信息
-      def_delegators :app, :routes, :applications, :execute
+      def_delegators :app, :prefix, :routes, :applications, :execute
 
       # DSL 调用委托给内部 Builder
       def_delegators :builder, :before, :after, :rescue_error, :route, :apply, :namespace
@@ -33,8 +33,8 @@ module Dain
         @app || @app = builder.build({})
       end
 
-      def build(meta)
-        @app = builder.build(meta)
+      def build(*args)
+        @app = builder.build(*args)
       end
     end
   end

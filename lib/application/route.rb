@@ -16,26 +16,10 @@ module Dain
       @children = options[:children] || []
     end
 
-    def execute(execution)
-      execute_in_current(execution)
-
-      route = children.find { |route| route.match?(execution) }
-      route.execute(execution) if route
-    end
-
-    def match?(execution)
-      return false unless match_to_current?(execution)
-      return children.any? { |route| route.match?(execution) } unless children.empty?
-
-      return true
-    end
-
-    private
-
-    def execute_in_current(execution)
+    def execute(execution, remaining_path)
       # 将 path params 合并到 request 中
       unless @path == :all
-        path_params = path_matching_regex.match(execution.request.path).named_captures
+        path_params = path_matching_regex.match(remaining_path).named_captures
         path_params.each { |name, value| execution.request.update_param(name, value) }
       end
 
@@ -49,15 +33,17 @@ module Dain
       end
     end
 
-    def match_to_current?(execution)
+    def match?(execution, remaining_path)
       request = execution.request
-      path = request.path
+      path = remaining_path
       method = request.request_method
 
       return false unless @path == :all || path_matching_regex.match?(path)
       return false unless @method == :all || @method.to_s.upcase == method
       return true
     end
+
+    private
 
     def path_matching_regex
       raw_regex = @path

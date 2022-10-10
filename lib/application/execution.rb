@@ -127,7 +127,8 @@ module Dain
         request = Rack::Request.new(env)
         execution = Execution.new(request)
 
-        execute(execution)
+        # TODO: 为啥直接执行了，而不是先 match 再执行？
+        execute(execution, request.path)
 
         response = execution.response
         response.content_type = 'application/json' unless response.no_content?

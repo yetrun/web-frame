@@ -9,22 +9,24 @@ module Dain
       include MetaBuilder::Delegator
 
       def initialize(prefix = nil, &block)
-        @prefix = prefix
-        @chain_builder = [] # TODO: 将 Application 的构建和执行也分成两个类
+        @mod_prefix = prefix
         @before_callbacks = []
         @after_callbacks = []
         @error_guards = []
         @meta_builder = MetaBuilder.new
+        @mod_builders = [] # TODO: 将 Application 的构建和执行也分成两个类
 
         instance_exec &block if block_given?
       end
 
       def build(meta)
+        # TODO: 感知这里面 meta 和 prefix 的构建逻辑挺乱的
         meta = (meta || {}).merge(@meta_builder.build)
-        @chain = @chain_builder.map { |builder| builder.build(meta) }
+        mods = @mod_builders.map { |builder| builder.build(meta) }
+
         Application.new(
-          prefix: @prefix,
-          mods: @chain,
+          prefix: @mod_prefix,
+          mods: mods,
           before_callbacks: @before_callbacks,
           after_callbacks: @after_callbacks,
           error_guards: @error_guards
@@ -33,16 +35,14 @@ module Dain
 
       # 定义路由块
       def route(path, method = nil, &block)
-        path = join_path(@prefix, path)
         route_builder = RouteDSL::RouteBuilder.new(path, method, &block)
-        @chain_builder << route_builder
+        @mod_builders << route_builder
         route_builder
       end
 
       # 定义子模块
       def namespace(path, &block)
-        path = join_path(@prefix, path)
-        @chain_builder << ApplicationBuilder.new(path, &block)
+        @mod_builders << ApplicationBuilder.new(path, &block)
       end
 
       # 应用另一个模块
@@ -50,9 +50,9 @@ module Dain
         tags = options[:tags]
         if tags
           builder = BindingTags.new(builder, tags)
-          @chain_builder << builder
+          @mod_builders << builder
         else
-          @chain_builder << builder
+          @mod_builders << builder
         end
       end
 
@@ -74,14 +74,6 @@ module Dain
         @meta_builder.instance_exec &block
       end
 
-      private
-
-      def join_path(*parts)
-        parts = parts.filter { |p| p }
-        parts = parts.map { |p| p.delete_prefix('/').delete_suffix('/') }
-        '/' + parts.join('/')
-      end
-
       class BindingTags
         def initialize(builder, tags)
           @builder = builder
@@ -89,7 +81,7 @@ module Dain
         end
 
         def build(_meta)
-          @builder.build(tags: @tags)
+          @builder.build({ tags: @tags })
         end
       end
     end

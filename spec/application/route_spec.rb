@@ -139,6 +139,8 @@ describe Dain::Application, '.route' do
   end
 
   describe '嵌套子路由' do
+    before { skip('不再支持链式语法的 nesting 语句') }
+
     context '子路由内定义方法' do
       def app
         @holder = []
@@ -213,11 +215,11 @@ describe Dain::Application, '.route' do
         @holder = holder = []
 
         app = Class.new(Dain::Application)
-        app.route('/foo/*')
+        app.route('/foo')
           .do_any { @resource = 'books' }
           .nesting do |route|
             route
-              .method(:get, '/foo/bar')
+              .method(:get, '/bar')
               .do_any { holder[0] = 'matched' }
           end
         app

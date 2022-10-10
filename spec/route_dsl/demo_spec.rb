@@ -167,4 +167,46 @@ describe 'Route DSL' do
       expect(doc[:paths]['/bar'][:get][:tags]).to eq(['Bar'])
     end
   end
+
+  describe 'namespace 和 apply 结合使用' do
+    def app
+      foo = Class.new(Dain::Application) do
+        route '/foo', :get do
+          action do
+            response.body = ['foo']
+          end
+        end
+      end
+
+      bar = Class.new(Dain::Application) do
+        route '/bar', :get do
+          action do
+            response.body = ['bar']
+          end
+        end
+      end
+
+      Class.new(Dain::Application) do
+        namespace '/nesting' do
+          apply foo, tags: ['Foo']
+          apply bar, tags: ['Bar']
+        end
+      end
+    end
+
+    it '响应请求' do
+      get '/nesting/foo'
+      expect(last_response.body).to eq('foo')
+
+      get '/nesting/bar'
+      expect(last_response.body).to eq('bar')
+    end
+
+    it '生成对应 tags 的文档' do
+      doc = Dain::SwaggerDocUtil.generate(app)
+
+      expect(doc[:paths]['/nesting/foo'][:get][:tags]).to eq(['Foo'])
+      expect(doc[:paths]['/nesting/bar'][:get][:tags]).to eq(['Bar'])
+    end
+  end
 end

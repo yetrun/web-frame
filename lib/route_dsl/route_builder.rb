@@ -3,6 +3,7 @@
 require 'json'
 require_relative '../entity'
 require_relative '../application/route'
+require_relative 'helpers'
 require_relative 'chain_builder'
 require_relative 'action_builder'
 require_relative 'meta_builder'

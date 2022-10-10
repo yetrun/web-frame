@@ -14,12 +14,13 @@ module Dain
       @error_guards = options[:error_guards] || []
     end
 
-    def execute(execution)
+    def execute(execution, remaining_path = '')
       before_callbacks.each { |b| execution.instance_eval(&b) }
 
-      mod = mods.find { |mod| mod.match?(execution) }
+      remaining_path_according_to_children = prefix ? remaining_path.delete_prefix(prefix) : remaining_path
+      mod = find_child_mod(execution, remaining_path_according_to_children)
       if mod
-        mod.execute(execution)
+        mod.execute(execution, remaining_path_according_to_children)
       else
         request = execution.request
         raise Errors::NoMatchingRoute, "未能发现匹配的路由：#{request.request_method} #{request.path}"
@@ -33,10 +34,15 @@ module Dain
       execution.instance_exec(e, &guard[:caller])
     end
 
-    def match?(execution)
-      return false unless prefix.nil? || execution.request.path.start_with?(prefix)
+    def match?(execution, remaining_path)
+      # TODO: prefix 不能包含参数了吗？
+      if prefix
+        return false unless remaining_path.start_with?(prefix)
+      end
 
-      mods.any? { |mod| mod.match?(execution) }
+      # TODO: 让 prefix = '' 可好？
+      remaining_path_according_to_children = prefix ? remaining_path.delete_prefix(prefix) : remaining_path
+      find_child_mod(execution, remaining_path_according_to_children) != nil
     end
 
     def applications
@@ -45,6 +51,12 @@ module Dain
 
     def routes
       mods.filter { |r| r.is_a?(Route) }
+    end
+
+    private
+
+    def find_child_mod(execution, remaining_path_according_to_children)
+      mods.find { |mod| mod.match?(execution, remaining_path_according_to_children) }
     end
   end
 end

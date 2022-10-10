@@ -72,16 +72,15 @@ module Dain
       #       ['/bar', route3],
       #       ['/bar', route4],
       #     ]
-      #
-      # 参数 path 是对应 application 的路径
-      def get_paths_and_routes!(application, path = Path.new, store_routes = [])
+      def get_paths_and_routes!(application, prefix = '', store_routes = [])
         if (application.is_a?(Class) && application < Application) || application.is_a?(Application)
-          (application.routes + application.applications).each do |app|
-            get_paths_and_routes!(app, path, store_routes)
+          prefix = RouteDSL::Helpers.join_path(prefix, application.prefix)
+          (application.routes + application.applications).each do |mod|
+            get_paths_and_routes!(mod, prefix, store_routes)
           end
         elsif application.is_a?(Route)
           route = application
-          route_path = route.path == :all ? path.to_s : path.append(route.path).to_s
+          route_path = route.path == :all ? prefix : RouteDSL::Helpers.join_path(prefix, route.path)
           store_routes << [route_path, route] unless route.method == :all
           route.children.each do |child|
             get_paths_and_routes!(child, route_path, store_routes)
