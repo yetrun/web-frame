@@ -27,7 +27,7 @@ module Dain
       def_delegators :app, :prefix, :routes, :applications, :execute
 
       # DSL 调用委托给内部 Builder
-      def_delegators :builder, :before, :after, :rescue_error, :route, :apply, :namespace
+      def_delegators :builder, :shared, :before, :after, :rescue_error, :route, :apply, :namespace
 
       def app
         @app || @app = builder.build({})

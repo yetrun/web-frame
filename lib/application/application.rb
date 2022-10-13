@@ -9,12 +9,15 @@ module Dain
     def initialize(options)
       @prefix = options[:prefix] || nil
       @mods = options[:mods] || []
+      @shared_mods = options[:shared_mods] || []
       @before_callbacks = options[:before_callbacks] || []
       @after_callbacks = options[:after_callbacks] || []
       @error_guards = options[:error_guards] || []
     end
 
     def execute(execution, remaining_path = '')
+      @shared_mods.each { |mod| execution.singleton_class.include(mod) }
+
       before_callbacks.each { |b| execution.instance_eval(&b) }
 
       remaining_path_according_to_children = prefix ? remaining_path.delete_prefix(prefix) : remaining_path

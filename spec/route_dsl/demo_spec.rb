@@ -209,4 +209,31 @@ describe 'Route DSL' do
       expect(doc[:paths]['/nesting/bar'][:get][:tags]).to eq(['Bar'])
     end
   end
+
+  describe '引入模块' do
+    def app
+      mod_foo = Module.new do
+        def foo; 'foo' end
+      end
+      mod_bar = Module.new do
+        def bar; 'bar' end
+      end
+
+      Class.new(Dain::Application) do
+        shared mod_foo, mod_bar do
+          def ok; 'ok' end
+        end
+
+        route '/foo', :get do
+          action do
+            foo; bar; ok
+          end
+        end
+      end
+    end
+
+    it '调用被引入模块内的方法' do
+      expect { get '/foo' }.not_to raise_error
+    end
+  end
 end

@@ -15,6 +15,7 @@ module Dain
         @error_guards = []
         @meta_builder = MetaBuilder.new
         @mod_builders = [] # TODO: 将 Application 的构建和执行也分成两个类
+        @shared_mods = []
 
         instance_exec &block if block_given?
       end
@@ -27,10 +28,16 @@ module Dain
         Application.new(
           prefix: @mod_prefix,
           mods: mods,
+          shared_mods: @shared_mods,
           before_callbacks: @before_callbacks,
           after_callbacks: @after_callbacks,
           error_guards: @error_guards
         )
+      end
+
+      def shared(*mods, &block)
+        @shared_mods += mods
+        @shared_mods << Module.new(&block) if block_given?
       end
 
       # 定义路由块
