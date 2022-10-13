@@ -1,1 +1,1 @@
--Ispec
+-Ispec -P'spec/**/{*_,}spec.rb'

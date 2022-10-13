@@ -1,5 +1,76 @@
 # CHANGE LOG
 
+## 重构嵌套路由的逻辑
+
+1. 添加了 `namespace` 宏，它与 Application 基本表现一致
+2. `apply` 方法接受 `tags` 选项
+3. 删除链式语法中 `route.nesting` 的使用
+
+## 在描述性语法中支持 meta 宏定义
+
+既可以使用
+
+```ruby
+meta do
+  title 'xxx'
+  tags ['xxx']
+  description 'xxx'
+  params do ... end
+  status 200 do ... end
+end
+```
+
+也可以使用
+
+```ruby
+title 'xxx'
+tags ['xxx']
+description 'xxx'
+params do ... end
+status 200 do ... end
+```
+
+## 使用描述性语法替代链式语法
+
+旧的链式语法形如：
+
+```ruby
+route('/articles/:id', :put)
+  .title('更新一篇新的文章')
+  .params {
+    param :article, using: ArticleEntity
+  }
+  .resource { Article.find(params[:id]) }
+  .authorize { resource.author == @current_user }
+  .do_any {
+    resource.update!(params[:article])
+  }
+  .if_status(200) {
+    expose :article, using: ArticleEntity
+  }
+```
+
+然而新的描述性语法形如
+
+```ruby
+route('/articles/:id', :post) do
+  title '更新一篇新的文章'
+  params do
+    param :article, using: ArticleEntity
+  end
+  status(200) do
+    expose :article, using: ArticleEntity
+  end
+  action do
+    article = Article.find(params[:id])
+    authorize article, :update
+    article.update!(params[:article])
+  end
+end
+```
+
+仔细感受一下它们的区别。
+
 ## 为 Dain::Entities::Entity 添加一个 locked 方法
 ```ruby
 # 在 using 时调用 scope 方法

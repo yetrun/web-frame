@@ -40,8 +40,8 @@ describe 'Route DSL' do
     end
   end
 
-  describe '嵌套路由' do
-    describe '简单的嵌套路由' do
+  describe 'namespace' do
+    context '简单调用' do
       def app
         Class.new(Dain::Application) do
           namespace '/nesting' do
@@ -69,8 +69,8 @@ describe 'Route DSL' do
       end
     end
 
-    describe '带有共同 meta 元素的嵌套路由' do
-      describe '带有共同参数的嵌套路由' do
+    describe '定义共同 meta' do
+      context '定义共同参数' do
         def app
           Class.new(Dain::Application) do
             namespace '/nesting' do
@@ -97,7 +97,7 @@ describe 'Route DSL' do
         end
       end
 
-      describe '带有共同响应元素的嵌套路由' do
+      context '定义共同响应值' do
         def app
           Class.new(Dain::Application) do
             namespace '/nesting' do
@@ -128,7 +128,7 @@ describe 'Route DSL' do
     end
   end
 
-  describe '应用其他模块' do
+  describe 'apply' do
     def app
       foo = Class.new(Dain::Application) do
         route '/foo', :get do
@@ -168,7 +168,7 @@ describe 'Route DSL' do
     end
   end
 
-  describe 'namespace 和 apply 结合使用' do
+  describe 'namespace 和 apply 结合' do
     def app
       foo = Class.new(Dain::Application) do
         route '/foo', :get do
@@ -210,7 +210,7 @@ describe 'Route DSL' do
     end
   end
 
-  describe '引入模块' do
+  describe '共享模块' do
     def app
       mod_foo = Module.new do
         def foo; 'foo' end
@@ -232,7 +232,7 @@ describe 'Route DSL' do
       end
     end
 
-    it '调用被引入模块内的方法' do
+    it '模块内的方法被成功引入' do
       expect { get '/foo' }.not_to raise_error
     end
   end

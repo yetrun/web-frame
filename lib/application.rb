@@ -20,14 +20,15 @@ module Dain
       def inherited(mod)
         super
 
-        mod.instance_eval { @builder = RouteDSL::ApplicationBuilder.new }
+        mod.instance_variable_set(:@builder, RouteDSL::ApplicationBuilder.new)
       end
 
       # 读取应用的元信息
       def_delegators :app, :prefix, :routes, :applications, :execute
 
       # DSL 调用委托给内部 Builder
-      def_delegators :builder, :shared, :before, :after, :rescue_error, :route, :apply, :namespace
+      builder_methods = (RouteDSL::ApplicationBuilder.public_instance_methods(false) - ['build'])
+      def_delegators :builder, *builder_methods
 
       def app
         @app || @app = builder.build({})
