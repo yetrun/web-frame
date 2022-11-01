@@ -101,5 +101,17 @@ describe 'schema' do
         expect { schema.filter('foo' => obj) }.not_to raise_error
       end
     end
+
+    describe 'render: false' do
+      it '不过滤 render 选项为 false 的属性' do
+        schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+          property :foo
+          property :bar, render: false
+        end
+
+        value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' }, stage: :render)
+        expect(value.keys).to eq([:foo])
+      end
+    end
   end
 end
