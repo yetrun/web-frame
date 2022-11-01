@@ -52,9 +52,6 @@ module Dain
       remove_instance_variable(:@_raw_params) if instance_variable_defined?(:@_raw_params)
       remove_instance_variable(:@_modified_params) if instance_variable_defined?(:@_modified_params)
       remove_instance_variable(:@_replaced_params) if instance_variable_defined?(:@_replaced_params)
-
-      # 激活一遍 params
-      params
     end
 
     def render_entity(entity_schema)

@@ -8,6 +8,32 @@ describe 'Meta Builder' do
   include Rack::Test::Methods
 
   describe 'params & status' do
+    context '遇到 `required: true` 时' do
+      def app
+        entity = Class.new(Dain::Entities::Entity) do
+          expose :foo
+          expose :bar, required: true
+        end
+
+        Class.new(Dain::Application) do
+          route '/request', :post do
+            params do
+              param :nested, using: entity
+            end
+            action do
+              params(:discard_missing)
+            end
+          end
+        end
+      end
+
+      it '调用 `params(:discard_missing)` 时不报错' do
+        expect {
+          post '/request', { 'nested' => { 'foo' => 'foo' } }.to_json, { 'CONTENT_TYPE' => 'application/json'}
+        }.not_to raise_error
+      end
+    end
+
     describe 'render: false' do
       def app
         entity = Class.new(Dain::Entities::Entity) do

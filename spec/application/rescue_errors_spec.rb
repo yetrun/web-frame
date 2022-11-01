@@ -226,42 +226,4 @@ describe Dain::Application, '.rescue_error' do
       end
     end
   end
-
-  context '捕获参数异常' do
-    def app
-      app = Class.new(Dain::Application)
-      app.route('/users', :post)
-        .params {
-          param :user, required: true do
-            param :name, type: 'string', required: true
-            param :age, type: 'integer'
-            param :date, type: 'string', format: /\d{4}-\d{2}-\d{2}/
-          end
-        }
-      app
-    end
-
-    it '报告所有内部参数的异常' do
-      expect {
-        post('/users', JSON.generate(user: {
-          age: 'a18',
-          date: '1234'
-        }), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
-        expect(e.errors).to match(
-          'user.name' => '未提供',
-          'user.age' => a_string_including('类型转化失败'),
-          'user.date' => '格式不正确'
-        )
-      }
-    end
-
-    it '报告外部参数的异常' do
-      expect {
-        post('/users', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
-      }.to raise_error(Dain::Errors::ParameterInvalid) { |e|
-        expect(e.errors).to eq('user' => '未提供')
-      }
-    end
-  end
 end
