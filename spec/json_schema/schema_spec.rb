@@ -70,15 +70,36 @@ describe 'schema' do
     end
   end
 
-  describe 'options: 自定义验证器' do
-    let (:schema) do
-      Dain::JsonSchema::BaseSchemaBuilder.build validate: ->(value) { 
-        raise Dain::JsonSchema::ValidationError, "value mustn't be zero"  if value == 0
-      }
+  describe 'filter options' do
+    describe '自定义验证器' do
+      let (:schema) do
+        Dain::JsonSchema::BaseSchemaBuilder.build validate: ->(value) {
+          raise Dain::JsonSchema::ValidationError, "value mustn't be zero"  if value == 0
+        }
+      end
+
+      it '验证失败时抛出异常' do
+        expect { schema.filter(0) }.to raise_error(Dain::JsonSchema::ValidationError)
+      end
     end
 
-    it '验证失败时抛出异常' do
-      expect { schema.filter(0) }.to raise_error(Dain::JsonSchema::ValidationError)
+    describe 'using entity' do
+      it '成功使用外部 Entity 类' do
+        entity_class = Class.new(Dain::Entities::Entity) do
+          property :a
+          property :b
+        end
+
+        schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+          property :foo, required: true, using: entity_class
+        end
+
+        obj = Object.new
+        def obj.a; 'a' end
+        def obj.b; 'b' end
+
+        expect { schema.filter('foo' => obj) }.not_to raise_error
+      end
     end
   end
 end
