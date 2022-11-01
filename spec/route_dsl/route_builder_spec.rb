@@ -4,7 +4,7 @@ require 'spec_helper'
 require_relative '../../lib/route_dsl/application_builder'
 require_relative '../../lib/swagger_doc'
 
-describe 'Route DSL' do
+describe 'Route Builder' do
   include Rack::Test::Methods
 
   describe '一个带有所有基本要素的 DSL 实例' do

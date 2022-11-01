@@ -84,7 +84,7 @@ module Dain
           schema = entity_schema.properties[key]
           raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" if schema.nil?
 
-          [key, schema.filter(render_content[:value], render_content[:options])]
+          [key, schema.filter(render_content[:value], { stage: :render, **render_content[:options] })]
         end.to_h
         response.body = [JSON.generate(new_hash)]
       end
