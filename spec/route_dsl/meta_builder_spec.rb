@@ -58,5 +58,30 @@ describe 'Meta Builder' do
         expect(JSON.parse(last_response.body)['nested'].keys).to eq(['foo'])
       end
     end
+
+    describe 'value 中使用 Execution 环境' do
+      def app
+        entity = Class.new(Dain::Entities::Entity) do
+          expose :foo, value: lambda { resolve_method }
+        end
+
+        Class.new(Dain::Application) do
+          route '/request', :post do
+            status 200 do
+              expose :nested, using: entity
+            end
+            action do
+              def self.resolve_method; 'resolved method' end
+              render :'nested', {}
+            end
+          end
+        end
+      end
+
+      it '成功调用 Execution 环境中的方法' do
+        post '/request'
+        expect(JSON.parse(last_response.body)).to eq('nested' => { 'foo' => 'resolved method' })
+      end
+    end
   end
 end
