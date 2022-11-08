@@ -4,7 +4,7 @@ require 'json'
 require 'grape-entity'
 
 describe 'Dain::SwaggerDocUtil.generate' do
-  subject { Dain::SwaggerDocUtil.generate(app) }
+  subject { app.to_swagger_doc }
 
   let(:app) do
     app = Class.new(Dain::Application)

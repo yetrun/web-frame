@@ -24,7 +24,7 @@ module Dain
       end
 
       # 读取应用的元信息
-      def_delegators :app, :prefix, :routes, :applications, :execute
+      def_delegators :app, :prefix, :routes, :applications, :execute, :to_swagger_doc
 
       # DSL 调用委托给内部 Builder
       builder_methods = (RouteDSL::ApplicationBuilder.public_instance_methods(false) - ['build'])

@@ -56,6 +56,10 @@ module Dain
       mods.filter { |r| r.is_a?(Route) }
     end
 
+    def to_swagger_doc
+      SwaggerDocUtil.generate(self)
+    end
+
     private
 
     def find_child_mod(execution, remaining_path_according_to_children)
