@@ -54,16 +54,7 @@ module Dain
         ObjectSchema.new(@properties, @validations, @options, locked_options)
       end
 
-      # 加入 lock_scope 后，生成文档时属性依然没有过滤
-      def lock_scope(scope)
-        lock(:scope, scope)
-      end
-
-      # TODO: 使用 method_missing
-      def lock_exclude(names)
-        lock(:exclude, names)
-      end
-
+      # TODO: 设置 lock_scope 后，生成文档时属性依然没有过滤
       def lock(key, value)
         locked(key => value)
       end
@@ -80,6 +71,15 @@ module Dain
 
       def apply_object_scope?(options, block)
         (options[:type] == 'object' || block) && (options[:properties] || block)
+      end
+
+      def method_missing(method, *args)
+        if method =~ /^lock_(\w+)$/
+          key = Regexp.last_match(1)
+          lock(key.to_sym, *args)
+        else
+          super
+        end
       end
 
       class Locked

@@ -5,15 +5,6 @@ module Dain
     class ObjectSchema < BaseSchema
       attr_reader :properties, :object_validations, :locked_options
 
-      # TODO: 定义 locked_* 方法
-      def locked_scope
-        locked_options && locked_options[:scope]
-      end
-
-      def locked_exclude
-        locked_options && locked_options[:exclude]
-      end
-
       def initialize(properties = {}, object_validations = {}, options = {}, locked_options = nil)
         super(options)
 
@@ -132,6 +123,14 @@ module Dain
         end
 
         doc
+      end
+
+      def locked_scope
+        locked_options && locked_options[:scope]
+      end
+
+      def locked_exclude
+        locked_options && locked_options[:exclude]
       end
 
       private

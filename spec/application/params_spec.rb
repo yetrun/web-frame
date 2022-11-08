@@ -871,8 +871,7 @@ describe Dain::Application, '.param' do
         end
       end
 
-      # TODO: 描述有误
-      context 'using: ObjectScope' do
+      context 'using: Schema' do
         def app
           @holder = {}
           the_holder = @holder

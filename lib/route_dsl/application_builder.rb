@@ -14,14 +14,13 @@ module Dain
         @after_callbacks = []
         @error_guards = []
         @meta_builder = MetaBuilder.new
-        @mod_builders = [] # TODO: 将 Application 的构建和执行也分成两个类
+        @mod_builders = []
         @shared_mods = []
 
         instance_exec &block if block_given?
       end
 
       def build(meta)
-        # TODO: 感知这里面 meta 和 prefix 的构建逻辑挺乱的
         meta = (meta || {}).merge(@meta_builder.build)
         mods = @mod_builders.map { |builder| builder.build(meta) }
 

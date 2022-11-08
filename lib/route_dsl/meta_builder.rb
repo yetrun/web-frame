@@ -3,7 +3,6 @@
 module Dain
   module RouteDSL
     class MetaBuilder
-      # TODO: meta 参数没必要了
       def initialize(&block)
         @meta = {}
 

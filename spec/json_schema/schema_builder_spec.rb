@@ -16,7 +16,6 @@ describe 'Schema Builders' do
     expect(array_schema.render_options.include?(:value)).to be true
   end
 
-  # TODO: 组织测试结构
   it '使用 scope 约束 Schema' do
     builder = Dain::JsonSchema::ObjectSchemaBuilder.new do
       property :xxx, scope: 'xxx'
@@ -24,7 +23,6 @@ describe 'Schema Builders' do
       property :zzz
     end
 
-    # TODO: 是不是应该限制为仅 Dain::Entity 拥有
     schema = builder.lock_scope('xxx').to_schema
 
     value = schema.filter({})
@@ -44,7 +42,6 @@ describe 'Schema Builders' do
       end
     end
 
-    # TODO: 是不是应该限制为仅 Dain::Entity 拥有
     schema = builder.lock_scope('xxx').to_schema
 
     value = schema.filter({ 'zzz' => {} })
