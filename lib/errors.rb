@@ -23,5 +23,7 @@ module Dain
     class NotAuthorized < StandardError; end
 
     class NotFound < StandardError; end
+
+    class UnsupportedContentType < StandardError; end
   end
 end

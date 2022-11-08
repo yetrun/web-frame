@@ -92,7 +92,13 @@ module Dain
 
     def parse_raw_params
       request_body = request.body.read
-      json = request_body.empty? ? {} : JSON.parse(request_body)
+      if request_body.empty?
+        json = {}
+      elsif !request.content_type.start_with?('application/json')
+        raise Errors::UnsupportedContentType, "只接受 Content-Type 为 application/json 的请求参数"
+      else
+        json = JSON.parse(request_body)
+      end
       json.merge!(request.params) if json.is_a?(Hash) # TODO: 如果参数模式不是对象，就无法合并 query 和 path 里的参数
 
       request.body.rewind
