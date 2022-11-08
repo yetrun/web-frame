@@ -85,7 +85,7 @@ describe 'schema' do
 
     describe 'using entity' do
       it '成功使用外部 Entity 类' do
-        entity_class = Class.new(Dain::Entities::Entity) do
+        entity_class = Class.new(Dain::Entity) do
           property :a
           property :b
         end

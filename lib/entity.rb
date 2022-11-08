@@ -5,8 +5,6 @@ require_relative 'json_schema/schemas'
 
 # 我们仅把具有内部结构的元素视为 ArrayScope 或 ObjectScope，哪怕它们的 type 是 object 或 array.
 module Dain
-  module Entities
-    # TODO: 更名为 Dain::Entity
     class Entity
       class << self
         extend Forwardable
@@ -29,5 +27,4 @@ module Dain
         def_delegator :scope_builder, :lock_exclude
       end
     end
-  end
 end

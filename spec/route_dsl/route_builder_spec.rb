@@ -9,7 +9,7 @@ describe 'Route Builder' do
 
   describe '一个带有所有基本要素的 DSL 实例' do
     def app
-      article_entity = Class.new(Dain::Entities::Entity) do
+      article_entity = Class.new(Dain::Entity) do
         property :title
         property :content
       end

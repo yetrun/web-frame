@@ -931,7 +931,7 @@ describe Dain::Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            the_entity = Class.new(Dain::Entities::Entity) do
+            the_entity = Class.new(Dain::Entity) do
               param :name
               param :age
             end
@@ -956,11 +956,11 @@ describe Dain::Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            address_entity = Class.new(Dain::Entities::Entity) do
+            address_entity = Class.new(Dain::Entity) do
               param :city
               param :street
             end
-            user_entity = Class.new(Dain::Entities::Entity) do
+            user_entity = Class.new(Dain::Entity) do
               param :address, type: 'object', using: address_entity
             end
 
@@ -984,7 +984,7 @@ describe Dain::Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            the_entity = Class.new(Dain::Entities::Entity) do
+            the_entity = Class.new(Dain::Entity) do
               param :name
               param :age
             end
@@ -1009,7 +1009,7 @@ describe Dain::Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            the_entity = Class.new(Dain::Entities::Entity) do
+            the_entity = Class.new(Dain::Entity) do
               param :name, scope: 'name'
               param :age, scope: 'age'
             end
@@ -1034,7 +1034,7 @@ describe Dain::Application, '.param' do
             @holder = {}
             the_holder = @holder
 
-            the_entity = Class.new(Dain::Entities::Entity) do
+            the_entity = Class.new(Dain::Entity) do
               param :name
               param :age
             end
@@ -1239,7 +1239,7 @@ describe Dain::Application, '.param' do
         @holder = {}
         the_holder = @holder
 
-        the_entity = Class.new(Dain::Entities::Entity) do
+        the_entity = Class.new(Dain::Entity) do
           property :name
           property :age
         end

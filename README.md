@@ -91,7 +91,7 @@ end
 以上示例看到有用到 `NoteEntity`，它是一个预先定义的实体：
 
 ```ruby
-class NoteEntity < Dain::Entities::Entity
+class NoteEntity < Dain::Entity
   property :id, type: 'integer', param: false
   property :title, type: 'string'
   property :content, type: 'string', render: { scope: 'full' }

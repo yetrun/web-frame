@@ -10,7 +10,7 @@ describe 'Meta Builder' do
   describe 'params & status' do
     context '遇到 `required: true` 时' do
       def app
-        entity = Class.new(Dain::Entities::Entity) do
+        entity = Class.new(Dain::Entity) do
           expose :foo
           expose :bar, required: true
         end
@@ -36,7 +36,7 @@ describe 'Meta Builder' do
 
     describe 'render: false' do
       def app
-        entity = Class.new(Dain::Entities::Entity) do
+        entity = Class.new(Dain::Entity) do
           expose :foo
           expose :bar, render: false
         end
@@ -61,7 +61,7 @@ describe 'Meta Builder' do
 
     describe 'value 中使用 Execution 环境' do
       def app
-        entity = Class.new(Dain::Entities::Entity) do
+        entity = Class.new(Dain::Entity) do
           expose :foo, value: lambda { resolve_method }
         end
 

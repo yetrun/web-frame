@@ -71,7 +71,7 @@ end
 
 仔细感受一下它们的区别。
 
-## 为 Dain::Entities::Entity 添加一个 locked 方法
+## 为 Dain::Entity 添加一个 locked 方法
 ```ruby
 # 在 using 时调用 scope 方法
 params do
@@ -79,11 +79,11 @@ params do
 end
 ```
 
-## 为 Dain::Entities::Entity 添加一个 lock_exclude 方法
+## 为 Dain::Entity 添加一个 lock_exclude 方法
 
 ```ruby
 # 如下定义一个 Entity
-class ArticleEntity < Dain::Entities::Entity
+class ArticleEntity < Dain::Entity
   param :title, type: 'string'
   param :content, type: 'string'
   param :hidden, type: 'boolean'
@@ -97,11 +97,11 @@ end
 
 以上设置后，参数解析时会自动消除掉 `hidden` 参数。
 
-## 为 Dain::Entities::Entity 添加一个 lock_scope 方法
+## 为 Dain::Entity 添加一个 lock_scope 方法
 
 ```ruby
 # 如下定义一个 Entity
-class ArticleEntity < Dain::Entities::Entity
+class ArticleEntity < Dain::Entity
   param :title, type: 'string', scope: 'normal'
   param :content, type: 'string', scope: 'normal'
   param :hidden, type: 'boolean', scope: 'super'

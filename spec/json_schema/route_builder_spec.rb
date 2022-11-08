@@ -8,7 +8,7 @@ require_relative '../../lib/entity'
 describe 'Schema Builders' do
   it '属于数组的属性要保留' do
     schema = Dain::JsonSchema::BaseSchemaBuilder.build do
-      property :array_value, type: 'array', using: Class.new(Dain::Entities::Entity), value: proc { |board| [] }
+      property :array_value, type: 'array', using: Class.new(Dain::Entity), value: proc { |board| [] }
     end.to_schema
 
     array_schema = schema.properties[:array_value]
@@ -24,7 +24,7 @@ describe 'Schema Builders' do
       property :zzz
     end
 
-    # TODO: 是不是应该限制为仅 Dain::Entities::Entity 拥有
+    # TODO: 是不是应该限制为仅 Dain::Entity 拥有
     schema = builder.lock_scope('xxx').to_schema
 
     value = schema.filter({})
@@ -44,7 +44,7 @@ describe 'Schema Builders' do
       end
     end
 
-    # TODO: 是不是应该限制为仅 Dain::Entities::Entity 拥有
+    # TODO: 是不是应该限制为仅 Dain::Entity 拥有
     schema = builder.lock_scope('xxx').to_schema
 
     value = schema.filter({ 'zzz' => {} })
