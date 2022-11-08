@@ -36,6 +36,13 @@ module Dain
           # 只要 options 中设置为 nil 的选项没有明确的意义，则下行代码是永远有效的
           options = (@default_options.compact).merge(options.compact)
           options[:scope] = [options[:scope]] unless options[:scope].is_a?(Array)
+          if options[:using]
+            if options[:type].nil?
+              options[:type] = 'object'
+            elsif options[:type] != 'object' && options[:type] != 'array'
+              raise "当使用 using 时，type 必须声明为 object 或 array"
+            end
+          end
 
           # 处理 validators
           unknown_validators = options.keys - @allowable_options

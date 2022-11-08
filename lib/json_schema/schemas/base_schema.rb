@@ -52,7 +52,6 @@ module Dain
 
         # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
         type = stage_options[:type]
-        type = 'object' if type.nil? && stage_options[:using]
         unless type.nil? || value.nil?
           begin
             value = JsonSchema::TypeConverter.convert_value(value, type)
