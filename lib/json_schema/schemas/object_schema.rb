@@ -140,7 +140,7 @@ module Dain
           if property_schema.value?(stage)
             nil
           elsif object_value.is_a?(Hash) || object_value.is_a?(ObjectWrapper)
-            value = object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
+            object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
           else
             raise "不应该还有其他类型了，已经在类型转换中将其转换为 Dain::JsonSchema::ObjectWrapper 了"
           end

@@ -49,10 +49,12 @@ module Dain
         value = JsonSchema::Presenters.present(stage_options[:presenter], value) if stage_options[:presenter]
         value = stage_options[:default] if value.nil? && stage_options[:default]
         value = stage_options[:convert].call(value) if stage_options[:convert]
+
         # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
-        if stage_options.key?(:type) && !value.nil?
+        type = stage_options[:type]
+        unless type.nil? || value.nil?
           begin
-            value = JsonSchema::TypeConverter.convert_value(value, stage_options[:type])
+            value = JsonSchema::TypeConverter.convert_value(value, type)
           rescue JsonSchema::TypeConvertError => e
             raise JsonSchema::ValidationError.new(e.message)
           end
