@@ -75,6 +75,13 @@ module Dain
         end
       end
 
+      # 添加 get、post、put、patch、delete 路由方法
+      [:get, :post, :put, :patch, :delete].each do |method|
+        define_method(method) do |path, &block|
+          route(path, method, &block)
+        end
+      end
+
       private
 
       def clone_meta(meta)
