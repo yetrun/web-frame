@@ -7,7 +7,7 @@ require_relative '../../lib/entity'
 
 describe 'Schema Builders' do
   it '属于数组的属性要保留' do
-    schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+    schema = Dain::JsonSchema::SchemaBuilderTool.build do
       property :array_value, type: 'array', using: Class.new(Dain::Entity), value: proc { |board| [] }
     end.to_schema
 

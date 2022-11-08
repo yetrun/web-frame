@@ -14,12 +14,12 @@ module Dain
       end
 
       def params(options = {}, &block)
-        @meta[:params_schema] = JsonSchema::BaseSchemaBuilder.build(options, &block)
+        @meta[:params_schema] = JsonSchema::SchemaBuilderTool.build(options, &block)
       end
 
       def status(code, *other_codes, &block)
         codes = [code, *other_codes]
-        entity_schema = JsonSchema::BaseSchemaBuilder.build(&block)
+        entity_schema = JsonSchema::SchemaBuilderTool.build(&block)
         @meta[:responses] = @meta[:responses] || {}
         codes.each { |code| @meta[:responses][code] = entity_schema }
       end

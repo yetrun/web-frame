@@ -5,7 +5,7 @@ require_relative '../../lib/json_schema/schemas'
 
 describe 'openapi' do
   it '生成对象 Schema 的文档' do
-    schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+    schema = Dain::JsonSchema::SchemaBuilderTool.build do
       param :user, description: '用户' do
         param :name
         param :age

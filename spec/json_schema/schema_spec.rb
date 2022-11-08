@@ -6,7 +6,7 @@ require_relative '../../lib/json_schema/schemas'
 describe 'schema' do
   context 'discard_missing' do
     it '丢弃缺失的参数' do
-      schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+      schema = Dain::JsonSchema::SchemaBuilderTool.build do
         param :foo, type: 'string'
         param :bar, type: 'string'
       end.to_schema
@@ -25,7 +25,7 @@ describe 'schema' do
 
     context '定义标量数组' do
       let(:schema) do
-        Dain::JsonSchema::BaseSchemaBuilder.build type: 'array'
+        Dain::JsonSchema::SchemaBuilderTool.build type: 'array'
       end
 
       include_examples '过滤 nil 得到 nil'
@@ -33,7 +33,7 @@ describe 'schema' do
 
     context '定义对象数组' do
       let(:schema) do
-        Dain::JsonSchema::BaseSchemaBuilder.build type: 'array' do
+        Dain::JsonSchema::SchemaBuilderTool.build type: 'array' do
           property :foo
           property :bar
         end
@@ -48,7 +48,7 @@ describe 'schema' do
     # 对于对象，obj[:foo] 会调用 obj.foo 方法；对于数组，arr[index]、arr.length 和
     # arr.each 都会对应地调用
     it 'render 对象时，调用对象的方法' do
-      schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+      schema = Dain::JsonSchema::SchemaBuilderTool.build do
         property :foo
         property :bar
       end
@@ -61,7 +61,7 @@ describe 'schema' do
     end
 
     it 'render 数组时，首先调用数组的 `to_a` 方法' do
-      schema = Dain::JsonSchema::BaseSchemaBuilder.build type: 'array'
+      schema = Dain::JsonSchema::SchemaBuilderTool.build type: 'array'
 
       arr = Object.new
       def arr.to_a; [1, 2, 3] end
@@ -73,7 +73,7 @@ describe 'schema' do
   describe 'filter options' do
     describe '自定义验证器' do
       let (:schema) do
-        Dain::JsonSchema::BaseSchemaBuilder.build validate: ->(value) {
+        Dain::JsonSchema::SchemaBuilderTool.build validate: ->(value) {
           raise Dain::JsonSchema::ValidationError, "value mustn't be zero"  if value == 0
         }
       end
@@ -90,7 +90,7 @@ describe 'schema' do
           property :b
         end
 
-        schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+        schema = Dain::JsonSchema::SchemaBuilderTool.build do
           property :foo, required: true, using: entity_class
         end
 
@@ -104,7 +104,7 @@ describe 'schema' do
 
     describe 'render: false' do
       it '不过滤 render 选项为 false 的属性' do
-        schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+        schema = Dain::JsonSchema::SchemaBuilderTool.build do
           property :foo
           property :bar, render: false
         end
