@@ -3,6 +3,7 @@
 module Dain
   class Application
     include Execution::MakeToRackMiddleware
+    include PathMatchingMod.new(path_method: :prefix, matching_mode: :prefix)
 
     attr_reader :prefix, :mods, :before_callbacks, :after_callbacks, :error_guards
 
@@ -16,11 +17,12 @@ module Dain
     end
 
     def execute(execution, remaining_path = '')
+      remaining_path_for_children = path_matching.merge_path_params(remaining_path, execution.request)
+
       @shared_mods.each { |mod| execution.singleton_class.include(mod) }
 
       before_callbacks.each { |b| execution.instance_eval(&b) }
 
-      remaining_path_for_children = prefix ? remaining_path.delete_prefix(prefix) : remaining_path
       mod = find_child_mod(execution, remaining_path_for_children)
       if mod
         mod.execute(execution, remaining_path_for_children)
@@ -38,12 +40,9 @@ module Dain
     end
 
     def match?(execution, remaining_path)
-      # TODO: prefix 不能包含参数了吗？
-      if prefix
-        return false unless remaining_path.start_with?(prefix)
-      end
+      return false unless path_matching.match?(remaining_path)
 
-      remaining_path_for_children = remaining_path.delete_prefix(prefix)
+      remaining_path_for_children = path_matching.capture_remaining_part(remaining_path)
       find_child_mod(execution, remaining_path_for_children) != nil
     end
 

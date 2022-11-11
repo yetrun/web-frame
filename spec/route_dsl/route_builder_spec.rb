@@ -69,6 +69,41 @@ describe 'Route Builder' do
       end
     end
 
+    context '带路径参数' do
+      def app
+        Class.new(Dain::Application) do
+          namespace '/nesting/:key' do
+            before do
+              @key = request.params['key']
+            end
+
+            params do
+              param :key, type: 'string'
+            end
+
+            route '/foo', :get do
+              action do
+                response.body = "foo: #{@key}"
+              end
+            end
+
+            route '/bar', :get do
+              action do
+                response.body = "bar: #{@key}"
+              end
+            end
+          end
+        end
+      end
+
+      specify do
+        get '/nesting/one/foo'
+        expect(last_response.body).to eq('foo: one')
+
+        get '/nesting/two/bar'
+        expect(last_response.body).to eq('bar: two')
+      end
+    end
     describe '定义共同 meta' do
       context '定义共同参数' do
         def app

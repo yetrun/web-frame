@@ -3,13 +3,16 @@
 # 每个块都是在 execution 环境下执行的
 
 require_relative 'execution'
+require_relative 'path_matching_mod'
 
 module Dain
   class Route
+    include PathMatchingMod.new(path_method: :path, matching_mode: :full)
+
     attr_reader :path, :method, :meta, :children
 
     def initialize(options)
-      @path = options[:path] || :all
+      @path = options[:path] || ''
       @method = options[:method] || :all
       @meta = options[:meta] || {}
       @action = options[:action]
@@ -17,11 +20,7 @@ module Dain
     end
 
     def execute(execution, remaining_path)
-      # 将 path params 合并到 request 中
-      unless @path == :all
-        path_params = path_matching_regex.match(remaining_path).named_captures
-        path_params.each { |name, value| execution.request.update_param(name, value) }
-      end
+      path_matching.merge_path_params(remaining_path, execution.request)
 
       # 依次执行这个环境
       begin
@@ -38,19 +37,12 @@ module Dain
       path = remaining_path
       method = request.request_method
 
-      return false unless @path == :all || path_matching_regex.match?(path)
+      return false unless path_matching.match?(path)
       return false unless @method == :all || @method.to_s.upcase == method
       return true
     end
 
     private
-
-    def path_matching_regex
-      raw_regex = @path
-        .gsub(/:(\w+)/, '(?<\1>[^/]+)').gsub(/\*(\w+)/, '(?<\1>.+)')
-        .gsub(/:/, '[^/]+').gsub('*', '.+')
-      Regexp.new("^#{raw_regex}$")
-    end
 
     def render_entity(execution)
       responses = @meta[:responses]
