@@ -20,69 +20,68 @@ gem 'dain', git: 'https://github.com/yetrun/web-frame'
 require 'dain'
 
 class NotesAPI < Dain::Application
-  route('/api_spec', :get)
-    .title('返回 API 规格文档')
-    .do_any { 
-      doc = Dain::SwaggerDocUtil.generate(NoteApp)
-      response.body = [JSON.generate(doc)] 
-    }
-
-  route('/notes', :get)
-    .title('查看笔记列表')
-    .do_any {
-      render('notes' => Note.all) 
-    }
-    .if_status(200) {
+  get '/notes' do
+    title '查看笔记列表'
+    status 200 do
       expose :notes, type: 'array', using: NoteEntity
-    }
+    end
+    action do
+      render :notes, Note.all
+    end
+  end
 
-  route('/notes', :post)
-    .title('创建新的笔记')
-    .params {
+  post '/notes' do
+    title '创建新的笔记'
+    params do
       param :note, type: 'object', using: NoteEntity
-    }
-    .do_any {
+    end
+    status 201 do
+      expose :note, type: 'object', using: NoteEntity
+    end
+    action do
       note = Note.create!(params[:note])
-      render({ 'note' => note }, { scope: 'full' })
-    }
-    .if_status(201) {
-      expose :note, type: 'object', using: NoteEntity
-    }
+      response.status = 201
+      render :note, note, scope: 'full'
+    end
+  end
 
-  route('/notes/:id', :get)
-    .title('查看笔记')
-    .params {
+  get '/notes/:id' do
+    title '查看笔记'
+    params do
       param :id, type: 'integer'
-    }
-    .do_any {
-      note = Note.find(params[:id])
-      render({ 'note' => note }, { scope: 'full' })
-    }
-    .if_status(200) {
+    end
+    status 200 do
       expose :note, type: 'object', using: NoteEntity
-    }
+    end
+    action do
+      note = Note.find(params[:id])
+      render :note, note, scope: 'full'
+    end
+  end
 
-  route('/notes/:id', :put)
-    .title('更新笔记')
-    .params {
+  put '/notes/:id' do
+    title '更新笔记'
+    params do
       param :note, type: 'object', using: NoteEntity
-    }
-    .do_any {
+    end
+    status 200 do
+      expose :note, type: 'object', using: NoteEntity
+    end
+    action do
       note = Note.find(params[:id])
       note.update!(params[:note])
-      render({ 'note' => note }, { scope: 'full' })
-    }
-    .if_status(200) {
-      expose :note, type: 'object', using: NoteEntity
-    }
+      render :note, note, scope: 'full'
+    end
+  end
 
-  route('/notes/:id', :delete)
-    .title('删除笔记')
-    .do_any {
+  delete '/notes/:id' do
+    title '删除笔记'
+    action do
       note = Note.find(params[:id])
       note.destroy!
-      note.status = 204
-    }
+      response.status = 204
+    end
+  end
 end
 ```
 
@@ -104,6 +103,14 @@ end
 
 - 标记 `content` 在 `render` 下的 `scope`，当且仅当显示传递 `scope` 为 `false` 时才会渲染此字段。（对比 *查看笔记列表* 和 *查看笔记* 接口）
 
+### 生成 API 文档
+
+通过主动调用以下的方法可以生成 OpenAPI 的规格文档（JSON 文档）：
+
+```ruby
+NoteAPI.to_swagger_doc
+```
+
 ### 将模块挂载在 Rack 下运行
 
 API 模块同时也是一个 Rack 中间件，它可以挂载在 Rack 下运行：
@@ -116,8 +123,9 @@ run NotesAPI
 
 ## 文档
 
-- [使用教程](docs/使用教程.md)
+- [教程](docs/教程.md)
+- [索引](docs/索引.md)
 
 ## License
 
-内测阶段，暂不开放。
+LGPL v2
