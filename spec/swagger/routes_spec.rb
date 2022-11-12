@@ -107,24 +107,4 @@ describe 'Dain::SwaggerDocUtil.generate' do
       ) 
     end
   end
-
-  describe '体验 nesting 路由的效果' do
-    let(:app) do
-      app = Class.new(Dain::Application)
-      app.route('/books')
-        .do_any { 
-          @resource = 'books'
-        }
-        .nesting do |route|
-          route.method(:get)
-          route.method(:post)
-        end
-      app
-    end
-
-    it 'generates title and description' do
-      expect(subject[:paths]['/books']).to have_key(:get)
-      expect(subject[:paths]['/books']).to have_key(:post)
-    end
-  end
 end

@@ -15,8 +15,8 @@ module Dain
 
       alias :if_status :status
 
-      def initialize(path = :all, method = :all, &block)
-        @path = path || :all
+      def initialize(path = '', method = :all, &block)
+        @path = path || ''
         @method = method || :all
         @children = []
         @action_builder = nil
@@ -39,26 +39,6 @@ module Dain
         )
       end
 
-      # 定义子路由
-      # TODO: 使用构建器
-      def method(method, path = nil)
-        route = RouteBuilder.new(path, method)
-        @children << route
-        route
-      end
-
-      def route(path = :all, method = :all, &block)
-        route = RouteBuilder.new(path, method, &block)
-        @children << route
-        route
-      end
-
-      def nesting(&block)
-        instance_eval(&block)
-
-        nil
-      end
-
       def chain
         @action_builder || @action_builder = ChainBuilder.new
       end
@@ -72,13 +52,6 @@ module Dain
         define_method(method_name) do |&block|
           chain.send(method_name, &block)
           self
-        end
-      end
-
-      # 添加 get、post、put、patch、delete 路由方法
-      [:get, :post, :put, :patch, :delete].each do |method|
-        define_method(method) do |path, &block|
-          route(path, method, &block)
         end
       end
 

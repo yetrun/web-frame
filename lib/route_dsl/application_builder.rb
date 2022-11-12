@@ -80,6 +80,13 @@ module Dain
         @meta_builder.instance_exec &block
       end
 
+      # 添加 get、post、put、patch、delete 路由方法
+      [:get, :post, :put, :patch, :delete].each do |method|
+        define_method(method) do |path = '', &block|
+          route(path, method, &block)
+        end
+      end
+
       class BindingTags
         def initialize(builder, tags)
           @builder = builder

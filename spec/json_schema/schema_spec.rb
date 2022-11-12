@@ -117,7 +117,7 @@ describe 'schema' do
 
   describe 'default: 默认值' do
     it '生成 boolean 类型的默认值' do
-      schema = Dain::JsonSchema::BaseSchemaBuilder.build do
+      schema = Dain::JsonSchema::SchemaBuilderTool.build do
         property :flag, type: 'boolean', default: false
       end
 
