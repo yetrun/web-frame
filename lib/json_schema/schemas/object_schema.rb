@@ -79,10 +79,14 @@ module Dain
         stage_options = options(stage)
 
         properties = @properties.filter do |name, property_schema|
-          # 首先要通过 stage 过滤
-          next false unless property_schema.options(:param)
-          # 然后过滤掉非 body 参数
-          next false unless property_schema.options(:param, :in) == 'body'
+          if stage == :param
+            # 首先要通过 stage 过滤
+            next false unless property_schema.options(:param)
+            # 然后过滤掉非 body 参数
+            next false unless property_schema.options(:param, :in) == 'body'
+          elsif stage == :render
+            next false unless property_schema.options(:render)
+          end
 
           true
         end.transform_values do |property_schema|
