@@ -74,7 +74,7 @@ module Dain
       #     }
       #
       # 的格式。
-      def to_schema_doc(user_options = {})
+      def to_schema_doc(user_options)
         stage = user_options[:stage]
         stage_options = options(stage)
 
@@ -86,11 +86,13 @@ module Dain
             next false unless property_schema.options(:param, :in) == 'body'
           elsif stage == :render
             next false unless property_schema.options(:render)
+          else
+            false
           end
 
           true
         end.transform_values do |property_schema|
-          property_schema.to_schema_doc
+          property_schema.to_schema_doc(user_options)
         end
 
         if properties.empty?

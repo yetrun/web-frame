@@ -81,7 +81,7 @@ module Dain
       end
 
       def to_schema_doc(user_options = {})
-        stage_options = user_options[:stage] == :param ? @param_options : @render_options
+        stage_options = options(user_options[:stage])
 
         return Presenters.to_schema_doc(stage_options[:presenter], stage_options) if stage_options[:presenter]
 

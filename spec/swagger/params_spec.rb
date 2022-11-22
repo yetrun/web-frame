@@ -215,6 +215,29 @@ describe 'Dain::SwaggerDocUtil.generate' do
             }
           )
         end
+
+        context '嵌套' do
+          subject do
+            Dain::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
+          end
+
+          let(:app) do
+            Class.new(Dain::Application) do
+              post '/request' do
+                params do
+                  param :nested do
+                    property :foo, type: 'string', param: false
+                    property :bar, type: 'string'
+                  end
+                end
+              end
+            end
+          end
+
+          it '不渲染 param 为 false 的参数' do
+            expect(subject[:properties][:nested][:properties].keys).to eq([:bar])
+          end
+        end
       end
     end
   end
