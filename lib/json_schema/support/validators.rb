@@ -4,7 +4,10 @@ module Dain
   module JsonSchema
     module Validators
       @validators = {
-        validate: proc { |value, p| p.call(value) },
+        validate: proc { |value, p|
+          next if value.nil?
+          p.call(value)
+        },
         required: proc { |value, options, full_options|
           next if options == false
 
@@ -20,9 +23,11 @@ module Dain
           end
         },
         format: proc { |value, format|
+          next if value.nil?
           raise JsonSchema::ValidationError, '格式不正确' unless value =~ format
         },
         allowable: proc { |value, allowable_values|
+          next if value.nil?
           raise JsonSchema::ValidationError, '不在允许的值范围内' unless allowable_values.include?(value)
         }
       }

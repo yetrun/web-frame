@@ -125,4 +125,16 @@ describe 'schema' do
       expect(value).to eq({ flag: false })
     end
   end
+
+  describe 'format validator' do
+    it 'nil 值不会触发 format validator' do
+      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+        property :number, type: 'string', format: /\d+/
+      end
+
+      expect {
+        schema.filter(number: nil)
+      }.not_to raise_error
+    end
+  end
 end
