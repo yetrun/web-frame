@@ -1,10 +1,14 @@
 # CHANGE LOG
 
+## 添加 info 选项
+
+app.to_swagger_doc(info: { title: '...' })
+
 ## 使用 $ref 引用实体
 
 - [x] 为 Entity 添加一个 schema_name 方法，它将文档转化为 `$ref: '...'` 的形式。
 - [x] 尚未区分参数和返回值。
-- [ ] 文档注释关键点：schemas，匿名类不受到影响。
+- [x] 文档注释关键点：schemas，匿名类不受到影响。
 
 ## 重构嵌套路由的逻辑
 

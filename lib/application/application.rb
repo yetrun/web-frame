@@ -56,8 +56,8 @@ module Dain
       mods.filter { |r| r.is_a?(Route) }
     end
 
-    def to_swagger_doc
-      SwaggerDocUtil.generate(self)
+    def to_swagger_doc(options = {})
+      SwaggerDocUtil.generate(self, **options)
     end
 
     private
