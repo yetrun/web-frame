@@ -17,7 +17,7 @@ module Dain
         end
       end
 
-      def_delegators :scope_builder, :property, :param, :expose, :required, :use, :lock
+      def_delegators :scope_builder, :property, :param, :expose, :required, :use, :lock, :locked
 
       def method_missing(method, *args)
         if method =~ /^lock_(\w+)$/
