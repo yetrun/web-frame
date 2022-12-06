@@ -121,7 +121,11 @@ module Dain
           end
 
           true
-        end.transform_values do |property_schema|
+        end
+        required_keys = properties.filter do |key, property_schema|
+          property_schema.options(stage, :required)
+        end.keys
+        properties = properties.transform_values do |property_schema|
           property_schema.to_schema_doc(user_options)
         end
 
@@ -133,6 +137,7 @@ module Dain
             properties: properties,
           }
           schema[:description] = stage_options[:description] if stage_options[:description]
+          schema[:requires] = required_keys unless required_keys.empty?
           schema
         end
       end

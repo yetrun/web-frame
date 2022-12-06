@@ -86,4 +86,30 @@ describe 'openapi' do
       )
     end
   end
+
+  describe 'requires' do
+    it 'required 属性生成 requires 文档' do
+      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+        param :user, description: '用户' do
+          param :name, required: true
+          param :age
+        end
+      end.to_schema
+
+      expect(schema.to_schema_doc(stage: :param)).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            type: 'object',
+            description: '用户',
+            properties: {
+              name: {},
+              age: {}
+            },
+            requires: [:name]
+          }
+        }
+      )
+    end
+  end
 end
