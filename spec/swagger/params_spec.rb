@@ -189,55 +189,101 @@ describe 'Dain::SwaggerDocUtil.generate' do
       end
     end
 
-    context 'with Entities' do
-      context 'with setting param to `false`' do
-        subject do 
+    context 'with setting param to `false`' do
+      subject do
+        Dain::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
+      end
+
+      let(:app) do
+        app = Class.new(Dain::Application)
+
+        app.route('/request', :post)
+           .params {
+             property :foo, type: 'string', param: false
+             property :bar, type: 'string'
+           }
+
+        app
+      end
+
+      it '只渲染 `bar` 参数' do
+        expect(subject).to eq(
+                             type: 'object',
+                             properties: {
+                               bar: { type: 'string' }
+                             }
+                           )
+      end
+
+      context '嵌套' do
+        subject do
           Dain::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
         end
 
         let(:app) do
-          app = Class.new(Dain::Application)
-
-          app.route('/request', :post)
-            .params {
-              property :foo, type: 'string', param: false
-              property :bar, type: 'string'
-            }
-
-          app
-        end
-
-        it '只渲染 `bar` 参数' do
-          expect(subject).to eq(
-            type: 'object',
-            properties: {
-              bar: { type: 'string' }
-            }
-          )
-        end
-
-        context '嵌套' do
-          subject do
-            Dain::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
-          end
-
-          let(:app) do
-            Class.new(Dain::Application) do
-              post '/request' do
-                params do
-                  param :nested do
-                    property :foo, type: 'string', param: false
-                    property :bar, type: 'string'
-                  end
+          Class.new(Dain::Application) do
+            post '/request' do
+              params do
+                param :nested do
+                  property :foo, type: 'string', param: false
+                  property :bar, type: 'string'
                 end
               end
             end
           end
+        end
 
-          it '不渲染 param 为 false 的参数' do
-            expect(subject[:properties][:nested][:properties].keys).to eq([:bar])
+        it '不渲染 param 为 false 的参数' do
+          expect(subject[:properties][:nested][:properties].keys).to eq([:bar])
+        end
+      end
+    end
+
+    context '使用 `using: Entity`' do
+      subject(:doc) do
+        Dain::SwaggerDocUtil.generate(app)
+      end
+
+      subject(:schema) do
+        Dain::SwaggerDocUtil.generate(app)[:paths]['/user'][:post][:requestBody][:content]['application/json'][:schema]
+      end
+
+      subject(:components) do
+        doc[:components]
+      end
+
+      def app
+        user_entity = Class.new(Dain::Entity) do
+          schema_name 'UserParams'
+
+          property :name, type: 'string'
+          property :age, type: 'integer'
+        end
+        Class.new(Dain::Application) do
+          post '/user' do
+            params do
+              param :user, using: user_entity
+            end
           end
         end
+      end
+
+      it do
+        expect(schema).to eq(
+                            type: 'object',
+                            properties: {
+                              user: {
+                                '$ref': '#/components/schemas/UserParams'
+                              }
+                            }
+                          )
+        expect(components[:schemas]['UserParams']).to eq(
+                                                        type: 'object',
+                                                        properties: {
+                                                          name: { type: 'string' },
+                                                          age: { type: 'integer' }
+                                                        }
+                                                      )
       end
     end
   end

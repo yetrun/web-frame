@@ -38,7 +38,7 @@ module Dain
           parameters = meta[:params_schema].generate_parameters_doc
           operation_object[:parameters] = parameters unless parameters.empty?
 
-          schema = meta[:params_schema].to_schema_doc(stage: :param)
+          schema = meta[:params_schema].to_schema_doc(stage: :param, schemas: schemas)
           if schema
             operation_object[:requestBody] = {
               content: {
