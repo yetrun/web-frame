@@ -34,7 +34,14 @@ module Dain
           if options[:type] == 'array'
             @properties[name] = ArraySchema.new(scope, options)
           else
-            @properties[name] = ObjectSchema.new(scope.properties, scope.object_validations, options, scope.locked_options)
+            # TODO: 这里每次都要重新生成一个 ObjectSchema，不知是为什么。这样导致一个问题，每次 ObjectSchema 新增选项时，别忘了在这里把选项传递过去。
+            @properties[name] = ObjectSchema.new(
+              properties: scope.properties,
+              object_validations: scope.object_validations,
+              options: options,
+              locked_options: scope.locked_options,
+              schema_names: scope.schema_names
+            )
           end
         else
           raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_schema` 方法的对象。当前传递：#{block}"
@@ -50,8 +57,8 @@ module Dain
         instance_exec(&proc)
       end
 
-      def to_schema(locked_options = nil)
-        ObjectSchema.new(@properties, @validations, @options, locked_options)
+      def to_schema(locked_options = nil, schema_name = nil)
+        ObjectSchema.new(properties: @properties, object_validations: @validations, options: @options, locked_options: locked_options, schema_names: schema_name)
       end
 
       # TODO: 设置 lock_scope 后，生成文档时属性依然没有过滤

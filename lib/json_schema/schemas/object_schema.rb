@@ -3,14 +3,17 @@
 module Dain
   module JsonSchema
     class ObjectSchema < BaseSchema
-      attr_reader :properties, :object_validations, :locked_options
+      attr_reader :properties, :object_validations, :locked_options, :schema_names
 
-      def initialize(properties = {}, object_validations = {}, options = {}, locked_options = nil)
+      def initialize(properties: {}, object_validations: {}, options: {}, locked_options: nil, schema_names: nil)
         super(options)
 
         @properties = properties
         @object_validations = object_validations
         @locked_options = locked_options
+
+        schema_names = { param: schema_names, render: schema_names } if schema_names.is_a?(String)
+        @schema_names = schema_names
       end
 
       def filter(object_value, user_options = {})
@@ -64,7 +67,9 @@ module Dain
         end
       end
 
-      # 生成 Swagger 文档的 schema 格式，所谓 schema 格式，是指形如
+      # 生成 Swagger 文档的 schema 格式。
+      #
+      # 根据 user_options 提供的选项不同，生成两种不同的格式。如果选项中没有提供 schemas，则返回 Schema 格式：
       #
       #     {
       #       type: 'object',
@@ -72,10 +77,35 @@ module Dain
       #         ...
       #       }
       #     }
+      # 如果选项中提供了 schemas，则返回 $ref 格式：
       #
-      # 的格式。
+      #     {
+      #       '$ref': '#/components/schemas/SchemaName'
+      #     }
+      #
+      # 同时 Schema 格式会写到 schemas 中：
+      #
+      #     schemas['SchemaName'] = {
+      #       type: 'object',
+      #       properties: {
+      #         ...
+      #       }
+      #     }
       def to_schema_doc(user_options)
         stage = user_options[:stage]
+        if schema_names && stage && user_options[:schemas]
+          schema_name = schema_names[stage]
+
+          # 首先将 Schema 写进 schemas 选项中去
+          schemas = user_options[:schemas]
+          unless schemas[schema_name]
+            user_options = user_options.dup.tap { |h| h.delete(:schemas) }
+            schemas[schema_name] = to_schema_doc(user_options) # 原地修改 schemas，无妨
+          end
+
+          return { '$ref': "#/components/schemas/#{schema_name}" }
+        end
+
         stage_options = options(stage)
 
         properties = @properties.filter do |name, property_schema|

@@ -6,9 +6,10 @@ module Dain
       def generate(application)
         routes = get_paths_and_routes!(application)
 
+        schemas = {}
         paths = routes.group_by { |path, route| path }.map { |path, routes| [path, routes.map { |item| item[1] }]}.map do |path, routes|
           operations = routes.map do |route|
-            [route.method.downcase.to_sym, generate_operation_object(route)]
+            [route.method.downcase.to_sym, generate_operation_object(route, schemas)]
           end.to_h
 
           # path 需要规范化
@@ -16,14 +17,16 @@ module Dain
           [path, operations]
         end.to_h
 
-        {
+        doc = {
           openapi: '3.0.0',
           paths: paths
         }
+        doc[:components] = { schemas: schemas } unless schemas.empty?
+        doc
       end
 
       # 生成单个路由的文档
-      def generate_operation_object(route)
+      def generate_operation_object(route, schemas)
         meta = route.meta
         operation_object = {}
 
@@ -48,11 +51,11 @@ module Dain
         end
 
         if meta.key?(:responses)
-          operation_object[:responses] = meta[:responses].transform_values do |entity_scope|
+          operation_object[:responses] = meta[:responses].transform_values do |schema|
             {
               content: {
                 'application/json' => {
-                  schema: entity_scope.to_schema_doc(stage: :render)
+                  schema: schema.to_schema_doc(stage: :render, schemas: schemas)
                 }
               }
             }

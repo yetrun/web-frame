@@ -26,4 +26,64 @@ describe 'openapi' do
       }
     )
   end
+
+  context 'using: Entity' do
+    let(:user_entity) do
+      Class.new(Dain::Entity) do
+        schema_name param: 'UserParams', render: 'UserEntity'
+
+        property :name
+        property :age
+      end
+    end
+
+    let(:schema) do
+      the_entity = user_entity
+      Dain::JsonSchema::SchemaBuilderTool.build do
+        param :user, using: the_entity
+      end.to_schema
+    end
+
+    it '参数文档返回引用的效果' do
+      schemas = {}
+      doc = schema.to_schema_doc(stage: :param, schemas: schemas)
+
+      expect(doc).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            '$ref': '#/components/schemas/UserParams'
+          }
+        }
+      )
+      expect(schemas['UserParams']).to eq(
+        type: 'object',
+        properties: {
+          age: {},
+          name: {}
+        }
+      )
+    end
+
+    it '实体文档返回引用的效果' do
+      schemas = {}
+      doc = schema.to_schema_doc(stage: :render, schemas: schemas)
+
+      expect(doc).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            '$ref': '#/components/schemas/UserEntity'
+          }
+        }
+      )
+      expect(schemas['UserEntity']).to eq(
+        type: 'object',
+        properties: {
+          age: {},
+          name: {}
+        }
+      )
+    end
+  end
 end

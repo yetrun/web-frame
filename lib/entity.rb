@@ -17,13 +17,44 @@ module Dain
         end
       end
 
-      def_delegators :scope_builder, :property, :param, :expose, :required, :use, :lock, :to_schema
+      def_delegators :scope_builder, :property, :param, :expose, :required, :use, :lock
 
       def method_missing(method, *args)
         if method =~ /^lock_(\w+)$/
           scope_builder.send(method, *args)
         else
           super
+        end
+      end
+
+      def to_schema(locked_options = nil)
+        scope_builder.to_schema(locked_options, schema_name)
+      end
+
+      def schema_name(name = nil)
+        if name
+          @schema_name = name
+        else
+          @schema_name || generate_schema_name
+        end
+      end
+
+      private
+
+      def generate_schema_name
+        return nil unless self.name
+
+        schema_name = self.name.gsub('::', '_')
+        if schema_name.end_with?('Entity')
+          {
+            param: schema_name.sub(/Entity$/, 'Params'),
+            render: schema_name
+          }
+        else
+          {
+            param: "#{schema_name}Params",
+            render: "#{schema_name}Entity",
+          }
         end
       end
     end

@@ -876,7 +876,7 @@ describe Dain::Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          the_scope = Dain::JsonSchema::ObjectSchema.new({
+          the_scope = Dain::JsonSchema::ObjectSchema.new(properties: {
             name: Dain::JsonSchema::BaseSchema.new,
             age: Dain::JsonSchema::BaseSchema.new 
           })
@@ -903,7 +903,7 @@ describe Dain::Application, '.param' do
 
           the_entity = Object.new
           def the_entity.to_schema
-            Dain::JsonSchema::ObjectSchema.new({
+            Dain::JsonSchema::ObjectSchema.new(properties: {
               name: Dain::JsonSchema::BaseSchema.new,
               age: Dain::JsonSchema::BaseSchema.new 
             })
