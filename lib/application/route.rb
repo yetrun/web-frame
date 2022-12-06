@@ -12,7 +12,7 @@ module Dain
     attr_reader :path, :method, :meta, :children
 
     def initialize(options)
-      @path = options[:path] || ''
+      @path = Utils::Path.normalize_path(options[:path])
       @method = options[:method] || :all
       @meta = options[:meta] || {}
       @action = options[:action]

@@ -271,4 +271,63 @@ describe 'Route Builder' do
       expect { get '/foo' }.not_to raise_error
     end
   end
+
+  describe '路径' do
+    context '内部使用根路径 `/`' do
+      def app
+        Class.new(Dain::Application) do
+          namespace '/nesting' do
+            get '/' do
+              action do
+                response.body = ['foo']
+              end
+            end
+          end
+        end
+      end
+
+      specify do
+        get '/nesting'
+        expect(last_response.body).to eq('foo')
+      end
+    end
+
+    context '内部不使用 `/` 前缀' do
+      def app
+        Class.new(Dain::Application) do
+          namespace '/nesting' do
+            get 'foo' do
+              action do
+                response.body = ['foo']
+              end
+            end
+          end
+        end
+      end
+
+      specify do
+        get '/nesting/foo'
+        expect(last_response.body).to eq('foo')
+      end
+    end
+
+    context '内部使用 `/` 后缀' do
+      def app
+        Class.new(Dain::Application) do
+          namespace '/nesting' do
+            get '/foo/' do
+              action do
+                response.body = ['foo']
+              end
+            end
+          end
+        end
+      end
+
+      specify do
+        get '/nesting/foo'
+        expect(last_response.body).to eq('foo')
+      end
+    end
+  end
 end

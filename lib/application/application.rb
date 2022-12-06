@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../utils/path'
+
 module Dain
   class Application
     include Execution::MakeToRackMiddleware
@@ -8,7 +10,7 @@ module Dain
     attr_reader :prefix, :mods, :before_callbacks, :after_callbacks, :error_guards
 
     def initialize(options)
-      @prefix = options[:prefix] || ''
+      @prefix = Utils::Path.normalize_path(options[:prefix])
       @mods = options[:mods] || []
       @shared_mods = options[:shared_mods] || []
       @before_callbacks = options[:before_callbacks] || []
