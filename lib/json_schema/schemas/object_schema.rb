@@ -148,7 +148,7 @@ module Dain
             properties: properties,
           }
           schema[:description] = stage_options[:description] if stage_options[:description]
-          schema[:requires] = required_keys unless required_keys.empty?
+          schema[:required] = required_keys unless required_keys.empty?
           schema
         end
       end

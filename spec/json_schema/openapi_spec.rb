@@ -106,7 +106,7 @@ describe 'openapi' do
               name: {},
               age: {}
             },
-            requires: [:name]
+            required: [:name]
           }
         }
       )
