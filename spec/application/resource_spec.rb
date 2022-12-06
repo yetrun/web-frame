@@ -14,7 +14,7 @@ describe Dain::Application, '.resource' do
     end
 
     it 'sets and gets resource' do
-      expect { get '/users' }.to raise_error(Dain::Errors::NotFound)
+      expect { get '/users' }.to raise_error(Dain::Errors::ResourceNotFound)
     end
   end
 

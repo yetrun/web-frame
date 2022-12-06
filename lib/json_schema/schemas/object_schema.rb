@@ -16,6 +16,17 @@ module Dain
         @schema_names = schema_names
       end
 
+      # 复制一个新的 ObjectSchema，只有 options 不同
+      def dup(options)
+        self.class.new(
+          properties: self.properties,
+          object_validations: self.object_validations,
+          options: options,
+          locked_options: self.locked_options,
+          schema_names: self.schema_names
+        )
+      end
+
       def filter(object_value, user_options = {})
         # 合并 user_options
         user_options = user_options.merge(locked_options) if locked_options

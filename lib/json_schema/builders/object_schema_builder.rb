@@ -30,18 +30,11 @@ module Dain
         if block.nil? || block.is_a?(Proc)
           @properties[name] = SchemaBuilderTool.build(options, &block)
         elsif block.respond_to?(:to_schema)
-          scope = block.to_schema
+          schema = block.to_schema
           if options[:type] == 'array'
-            @properties[name] = ArraySchema.new(scope, options)
+            @properties[name] = ArraySchema.new(schema, options)
           else
-            # TODO: 这里每次都要重新生成一个 ObjectSchema，不知是为什么。这样导致一个问题，每次 ObjectSchema 新增选项时，别忘了在这里把选项传递过去。
-            @properties[name] = ObjectSchema.new(
-              properties: scope.properties,
-              object_validations: scope.object_validations,
-              options: options,
-              locked_options: scope.locked_options,
-              schema_names: scope.schema_names
-            )
+            @properties[name] = schema.dup(options)
           end
         else
           raise "非法的参数。应传递代码块，或通过 using 选项传递 Proc、ObjectScope 或接受 `to_schema` 方法的对象。当前传递：#{block}"
