@@ -88,6 +88,7 @@ module Dain
         schema = {}
         schema[:type] = stage_options[:type] if stage_options[:type]
         schema[:description] = stage_options[:description] if stage_options[:description]
+        schema[:enum] = stage_options[:allowable] if stage_options[:allowable]
 
         schema
       end
