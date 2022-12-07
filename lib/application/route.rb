@@ -34,10 +34,10 @@ module Dain
 
     def match?(execution, remaining_path)
       request = execution.request
-      path = remaining_path
+      remaining_path = '' if remaining_path == '/'
       method = request.request_method
 
-      return false unless path_matching.match?(path)
+      return false unless path_matching.match?(remaining_path)
       return false unless @method == :all || @method.to_s.upcase == method
       return true
     end

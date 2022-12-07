@@ -273,6 +273,23 @@ describe 'Route Builder' do
   end
 
   describe '路径' do
+    context '访问根路由 `/`' do
+      def app
+        Class.new(Dain::Application) do
+          get '/' do
+            action do
+              response.body = ['foo']
+            end
+          end
+        end
+      end
+
+      specify do
+        get '/'
+        expect(last_response.status).to eq(200)
+      end
+    end
+
     context '内部使用根路径 `/`' do
       def app
         Class.new(Dain::Application) do

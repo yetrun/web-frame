@@ -37,6 +37,7 @@ module Dain
     end
 
     def capture_both(real_path)
+      real_path = '' if real_path == '/'
       m = @path_matching_regex.match(real_path)
       [m.named_captures, m.post_match]
     end
