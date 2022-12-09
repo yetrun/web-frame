@@ -4,6 +4,7 @@ source 'https://gems.ruby-china.com/'
 gemspec
 
 gem "rake", "~> 12.0"
+gem 'i18n'
 
 group :test do
   gem 'rspec'

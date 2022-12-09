@@ -55,6 +55,7 @@ PLATFORMS
 DEPENDENCIES
   dain!
   grape-entity
+  i18n
   pry-byebug
   rack
   rack-test

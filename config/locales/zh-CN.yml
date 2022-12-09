@@ -1,0 +1,6 @@
+zh-CN:
+  JsonSchema:
+    errors:
+      required: '未提供'
+      format: '格式不正确'
+      allowable: '不在允许的值范围内'

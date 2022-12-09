@@ -13,22 +13,22 @@ module Dain
 
           full_options ||= {}
           options = {} if options == true
-          raise JsonSchema::ValidationError, '未提供' if value.nil?
+          raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.required') if value.nil?
 
           if full_options[:type] == 'string' && (!options[:allow_empty]) && value.empty?
-            raise JsonSchema::ValidationError, '未提供'
+            raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.required')
           end
           if full_options[:type] == 'array' && (options[:allow_empty] == false) && value.empty?
-            raise JsonSchema::ValidationError, '未提供'
+            raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.required')
           end
         },
         format: proc { |value, format|
           next if value.nil?
-          raise JsonSchema::ValidationError, '格式不正确' unless value =~ format
+          raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.format') unless value =~ format
         },
         allowable: proc { |value, allowable_values|
           next if value.nil?
-          raise JsonSchema::ValidationError, '不在允许的值范围内' unless allowable_values.include?(value)
+          raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.allowable') unless allowable_values.include?(value)
         }
       }
 
