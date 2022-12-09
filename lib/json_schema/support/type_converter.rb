@@ -3,10 +3,12 @@
 module Dain
   module JsonSchema
     class ObjectWrapper
-      attr_reader :target
-
       def initialize(target)
         @target = target
+      end
+
+      def __target__
+        @target
       end
 
       def key?(key)
@@ -14,11 +16,11 @@ module Dain
       end
 
       def [](key)
-        @target.send(key)
+        @target.__send__(key)
       end
 
       def method_missing(method, *args)
-        @target.send(method, *args)
+        @target.__send__(method, *args)
       end
     end
 
