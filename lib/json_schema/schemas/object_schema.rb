@@ -80,38 +80,25 @@ module Dain
 
       # 生成 Swagger 文档的 schema 格式。
       #
-      # 根据 user_options 提供的选项不同，生成两种不同的格式。如果选项中没有提供 schemas，则返回 Schema 格式：
+      # 选项：
+      # - stage: 传递 :param 或 :render
+      # - schemas: 用于保存已经生成的 Schema
+      # - to_ref: 是否生成 $ref 格式，默认为“是”
       #
-      #     {
-      #       type: 'object',
-      #       properties: {
-      #         ...
-      #       }
-      #     }
-      # 如果选项中提供了 schemas，则返回 $ref 格式：
+      # 提示：
+      # > 每个 ObjectSchema 拥有一个 schema_names 方法。如果这个方法返回的内容不为 nil，则该 Schema 生成文档时会
+      # > 使用 $ref 格式。除非 to_ref 选项设置为 false.
       #
-      #     {
-      #       '$ref': '#/components/schemas/SchemaName'
-      #     }
-      #
-      # 同时 Schema 格式会写到 schemas 中：
-      #
-      #     schemas['SchemaName'] = {
-      #       type: 'object',
-      #       properties: {
-      #         ...
-      #       }
-      #     }
       def to_schema_doc(user_options)
         stage = user_options[:stage]
-        if schema_names && stage && user_options[:schemas]
+        if schema_names && user_options[:to_ref] != false
           schema_name = schema_names[stage]
 
           # 首先将 Schema 写进 schemas 选项中去
           schemas = user_options[:schemas]
-          unless schemas[schema_name]
-            user_options = user_options.dup.tap { |h| h.delete(:schemas) }
-            schemas[schema_name] = to_schema_doc(user_options) # 原地修改 schemas，无妨
+          unless schemas.key?(schema_name)
+            schemas[schema_name] = nil # 首先设置 schemas 防止出现无限循环
+            schemas[schema_name] = to_schema_doc(**user_options, to_ref: false) # 原地修改 schemas，无妨
           end
 
           return { '$ref': "#/components/schemas/#{schema_name}" }
@@ -137,7 +124,7 @@ module Dain
           property_schema.options(stage, :required)
         end.keys
         properties = properties.transform_values do |property_schema|
-          property_schema.to_schema_doc(user_options)
+          property_schema.to_schema_doc(**user_options, to_ref: true)
         end
 
         if properties.empty?

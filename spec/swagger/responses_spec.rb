@@ -88,4 +88,61 @@ describe 'Dain::SwaggerDocUtil.generate' do
       )
     end
   end
+
+  context '使用 `using: Entity` - 内部引用自身' do
+    subject(:doc) do
+      Dain::SwaggerDocUtil.generate(app)
+    end
+
+    subject(:schema) do
+      doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
+    end
+
+    subject(:components) do
+      doc[:components]
+    end
+
+    let(:entity) do
+      entity = Class.new(Dain::Entity) do
+        schema_name 'TheEntity'
+      end
+      entity.class_eval do
+        property :self, using: entity
+      end
+      entity
+    end
+
+    def app
+      the_entity = entity
+      Class.new(Dain::Application) do
+        get '/user' do
+          status(200) do
+            expose :the_entity, using: the_entity
+          end
+        end
+      end
+    end
+
+    it 'user 属性返回引用' do
+      expect(schema).to eq(
+        type: 'object',
+        properties: {
+          the_entity: {
+            '$ref': '#/components/schemas/TheEntity'
+          }
+        }
+      )
+    end
+
+    it 'UserEntity 被添加进 schemas' do
+      expect(components[:schemas]['TheEntity']).to eq(
+        type: 'object',
+        properties: {
+          self: {
+            '$ref': '#/components/schemas/TheEntity'
+          }
+        }
+      )
+    end
+  end
 end
