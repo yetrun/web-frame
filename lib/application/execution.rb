@@ -4,7 +4,7 @@ require 'rack'
 
 module Dain
   class Execution
-    attr_reader :request, :response, :params_schema
+    attr_reader :request, :response, :params_schema, :request_body_schema
     attr_accessor :parameters
 
     def initialize(request)
@@ -15,17 +15,36 @@ module Dain
 
     # 调用方式：
     #
-    # - params
-    # - params(:discard_missing)
-    # - params(:raw)
-    def params(mode = nil)
+    # - `request_body`：等价于 request_body(:keep_missing)
+    # - `request_body(:keep_missing)`
+    # - `request_body(:discard_missing)`
+    def request_body(mode = :keep_missing)
+      @_request_body ||= {}
+
       case mode
-      when :raw
-        @_raw_params || @_raw_params = parse_raw_params.freeze
+      when :keep_missing
+        @_request_body[:keep_missing] || @_request_body[:keep_missing] = parse_request_body_for_replacing.freeze
       when :discard_missing
-        @_modified_params || @_modified_params = parse_modified_params.freeze
+        @_request_body[:discard_missing] || @_request_body[:discard_missing] = parse_request_body_for_updating.freeze
       else
-        @_replaced_params || @_replaced_params = parse_replaced_params.freeze
+        raise NameError, "未知的 mode 参数：#{mode}"
+      end
+    end
+
+    # 调用方式：
+    #
+    # - `params`：等价于 params(:keep_missing)
+    # - `params(:keep_missing)`
+    # - `params(:discard_missing)`
+    # - `params(:raw)`
+    def params(mode = :keep_missing)
+      @_params ||= {}
+
+      if mode == :raw
+        @_params[:raw] || @_params[:raw] = parse_raw_params.freeze
+      else
+        rb = request_body(mode)
+        @_params[mode] || @_params[mode] = rb.is_a?(Hash) ? parameters.merge(rb).freeze : rb
       end
     end
 
@@ -54,11 +73,10 @@ module Dain
     # REVIEW: parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量
     def parse_params(params_schema)
       @params_schema = params_schema
+    end
 
-      # 清理来自父路由的参数
-      remove_instance_variable(:@_raw_params) if instance_variable_defined?(:@_raw_params)
-      remove_instance_variable(:@_modified_params) if instance_variable_defined?(:@_modified_params)
-      remove_instance_variable(:@_replaced_params) if instance_variable_defined?(:@_replaced_params)
+    def parse_request_body(schema)
+      @request_body_schema = schema
     end
 
     def render_entity(entity_schema)
@@ -112,17 +130,17 @@ module Dain
       json
     end
 
-    def parse_modified_params
+    def parse_request_body_for_replacing
       begin
-        params_schema.filter(params(:raw), stage: :param, discard_missing: true)
+        request_body_schema.filter(params(:raw), stage: :param)
       rescue JsonSchema::ValidationErrors => e
         raise Errors::ParameterInvalid.new(e.errors)
       end
     end
 
-    def parse_replaced_params
+    def parse_request_body_for_updating
       begin
-        params_schema.filter(params(:raw), stage: :param)
+        request_body_schema.filter(params(:raw), stage: :param, discard_missing: true)
       rescue JsonSchema::ValidationErrors => e
         raise Errors::ParameterInvalid.new(e.errors)
       end

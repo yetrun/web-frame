@@ -20,9 +20,11 @@ module Dain
         @meta[:parameters] = JsonSchema::SchemaBuilderTool.build(&block)
       end
 
-      def params(options = {}, &block)
-        @meta[:params_schema] = JsonSchema::SchemaBuilderTool.build(options, &block)
+      def request_body(options = {}, &block)
+        @meta[:request_body] = JsonSchema::SchemaBuilderTool.build(options, &block)
       end
+
+      alias :params :request_body
 
       def status(code, *other_codes, &block)
         codes = [code, *other_codes]

@@ -143,6 +143,26 @@ describe 'Meta Builder' do
   end
 
   describe 'request and response body' do
+    context '使用 request_body' do
+      def app
+        Class.new(Dain::Application) do
+          route '/request', :post do
+            request_body do
+              property :foo, type: 'string'
+            end
+            action do
+              response.body = [JSON.generate(request_body)]
+            end
+          end
+        end
+      end
+
+      it '成功传递和解析参数' do
+        post '/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json'}
+        expect(JSON.parse(last_response.body)).to eq('foo' => 'foo')
+      end
+    end
+
     context '遇到 `required: true` 时' do
       def app
         entity = Class.new(Dain::Entity) do

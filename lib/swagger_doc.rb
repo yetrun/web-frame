@@ -38,14 +38,14 @@ module Dain
         if meta.key?(:parameters)
           parameters = meta[:parameters].generate_parameters_doc
           operation_object[:parameters] = parameters unless parameters.empty?
-        elsif meta.key?(:params_schema)
-          # Note: 这里生成文档时 parameters 和 params_schema 是互斥的
-          parameters = meta[:params_schema].generate_parameters_doc
+        elsif meta.key?(:request_body)
+          # Note: 生成 parameters 文档时 meta[:parameters] 和 meta[:request_body] 是互斥的
+          parameters = meta[:request_body].generate_parameters_doc
           operation_object[:parameters] = parameters unless parameters.empty?
         end
 
-        if meta.key?(:params_schema)
-          schema = meta[:params_schema].to_schema_doc(stage: :param, schemas: schemas)
+        if meta.key?(:request_body)
+          schema = meta[:request_body].to_schema_doc(stage: :param, schemas: schemas)
           if schema
             operation_object[:requestBody] = {
               content: {

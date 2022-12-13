@@ -24,7 +24,8 @@ module Dain
       # 依次执行这个环境
       begin
         execution.parse_parameters(@meta[:parameters]) if @meta[:parameters]
-        execution.parse_params(@meta[:params_schema]) if @meta[:params_schema]
+        execution.parse_request_body(@meta[:request_body]) if @meta[:request_body]
+        # execution.parse_params(@meta[:params_schema]) if @meta[:params_schema]
 
         actions.each { |b| execution.instance_eval(&b) }
 
