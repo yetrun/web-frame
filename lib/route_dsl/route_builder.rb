@@ -28,7 +28,7 @@ module Dain
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
         meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
-          meta2[:parameters] = meta[:parameters].merge(meta2[:parameters].properties)
+          meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
         end
 
         # 将 before_callbacks、action、after_callbacks 合并为 actions

@@ -66,8 +66,10 @@ module Dain
       @renders[key] = { value: value, options: options || {} }
     end
 
-    def parse_parameters(param_schema)
-      self.parameters = param_schema.filter(params(:raw), stage: :param)
+    def parse_parameters(parameters_meta)
+      self.parameters = parameters_meta.map do |name, options|
+        [name, options[:schema].filter(request.params[name.to_s])]
+      end.to_h.freeze
     end
 
     # REVIEW: parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量

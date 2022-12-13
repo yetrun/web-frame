@@ -36,7 +36,16 @@ module Dain
         operation_object[:description] = meta[:description] if meta.key?(:description)
 
         if meta.key?(:parameters)
-          parameters = meta[:parameters].generate_parameters_doc
+          parameters = meta[:parameters].map do |name, options|
+            property_options = options[:schema].param_options
+            {
+              name: name,
+              in: options[:in],
+              type: property_options[:type],
+              required: property_options[:required] || false,
+              description: property_options[:description] || ''
+            }
+          end
           operation_object[:parameters] = parameters unless parameters.empty?
         elsif meta.key?(:request_body)
           # Note: 生成 parameters 文档时 meta[:parameters] 和 meta[:request_body] 是互斥的

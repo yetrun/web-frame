@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'parameters_builder'
+
 module Dain
   module RouteDSL
     class MetaBuilder
@@ -17,7 +19,7 @@ module Dain
       #
       # 它与 params 的区别在于 params 定义 Request Body
       def parameters(&block)
-        @meta[:parameters] = JsonSchema::SchemaBuilderTool.build(&block)
+        @meta[:parameters] = ParametersBuilder.new(&block).build
       end
 
       def request_body(options = {}, &block)

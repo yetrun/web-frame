@@ -24,7 +24,7 @@ module Dain
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
         meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
-          meta2[:parameters] = meta[:parameters].merge(meta2[:parameters].properties)
+          meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
         end
 
         # 构建子模块
@@ -98,7 +98,7 @@ module Dain
           # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
           meta2 = (meta || {}).merge(@meta)
           if meta[:parameters] && meta2[:parameters]
-            meta2[:parameters] = meta[:parameters].merge(meta2[:parameters].properties)
+            meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
           end
           @builder.build(meta2, before_callbacks, after_callbacks)
         end
