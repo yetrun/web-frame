@@ -9,14 +9,13 @@ module Dain
   class Route
     include PathMatchingMod.new(path_method: :path, matching_mode: :full)
 
-    attr_reader :path, :method, :meta, :children
+    attr_reader :path, :method, :meta, :actions
 
-    def initialize(options)
-      @path = Utils::Path.normalize_path(options[:path])
-      @method = options[:method] || :all
-      @meta = options[:meta] || {} # REVIEW: meta 用一个对象表示更好？
-      @action = options[:action]
-      @children = options[:children] || []
+    def initialize(path: '', method: :all, meta: {}, actions: [])
+      @path = Utils::Path.normalize_path(path)
+      @method = method
+      @meta = meta # REVIEW: meta 用一个对象表示更好？
+      @actions = actions
     end
 
     def execute(execution, remaining_path)
@@ -26,7 +25,9 @@ module Dain
       begin
         execution.parse_parameters(@meta[:parameters]) if @meta[:parameters]
         execution.parse_params(@meta[:params_schema]) if @meta[:params_schema]
-        execution.instance_exec(&@action) if @action
+
+        actions.each { |b| execution.instance_eval(&b) }
+
         render_entity(execution) if @meta[:responses]
       rescue Execution::Abort
         execution

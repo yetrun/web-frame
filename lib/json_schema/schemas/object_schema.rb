@@ -78,6 +78,11 @@ module Dain
         end
       end
 
+      # 合并其他的属性，并返回一个新的 ObjectSchema
+      def merge(properties)
+        ObjectSchema.new(properties: self.properties.merge(properties))
+      end
+
       # 生成 Swagger 文档的 schema 格式。
       #
       # 选项：

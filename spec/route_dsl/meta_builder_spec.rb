@@ -47,6 +47,99 @@ describe 'Meta Builder' do
         expect(last_response.body).to eq('foo')
       end
     end
+
+    context '父级定义参数' do
+      def app
+        Class.new(Dain::Application) do
+          namespace '/foo' do
+            parameters do
+              param :foo, type: 'string', in: 'query'
+            end
+
+            before do
+              @foo_in_namespace = parameters[:foo]
+            end
+
+            get '/bar' do
+              parameters do
+                param :bar, type: 'string', in: 'query'
+              end
+              action do
+                response.body = [{
+                  foo_in_namespace: @foo_in_namespace,
+                  foo_in_route: parameters[:foo],
+                  bar_in_route: parameters[:bar]
+                }.to_json]
+              end
+            end
+          end
+        end
+      end
+
+      it '传递 parameters 成功' do
+        get '/foo/bar?foo=foo&bar=bar', { 'CONTENT_TYPE' => 'application/json' }
+        expect(JSON.parse(last_response.body)).to eq({
+          'foo_in_namespace' => 'foo',
+          'foo_in_route' => 'foo',
+          'bar_in_route' => 'bar'
+        })
+      end
+    end
+
+    context '父级定义参数（三级嵌套）' do
+      def app
+        Class.new(Dain::Application) do
+          namespace '/foo' do
+            parameters do
+              param :foo, type: 'string', in: 'query'
+            end
+
+            before do
+              @foo1 = parameters[:foo]
+            end
+
+            namespace '/bar' do
+              parameters do
+                param :bar, type: 'string', in: 'query'
+              end
+
+              before do
+                @foo2 = parameters[:foo]
+                @bar2 = parameters[:bar]
+              end
+
+              get '/baz' do
+                parameters do
+                  param :baz, type: 'string', in: 'query'
+                end
+                action do
+                  response.body = [{
+                    foo1: @foo1,
+                    foo2: @foo2,
+                    foo3: parameters[:foo],
+                    bar2: @bar2,
+                    bar3: parameters[:bar],
+                    baz3: parameters[:baz]
+                  }.to_json]
+                end
+              end
+            end
+          end
+        end
+      end
+
+      it '传递 parameters 成功' do
+        get '/foo/bar/baz?foo=foo&bar=bar&baz=baz', { 'CONTENT_TYPE' => 'application/json' }
+        expect(JSON.parse(last_response.body)).to eq({
+          'foo1' => 'foo',
+          'foo2' => 'foo',
+          'foo3' => 'foo',
+          'bar2' => 'bar',
+          'bar3' => 'bar',
+          'baz3' => 'baz',
+        })
+      end
+    end
   end
 
   describe 'request and response body' do

@@ -58,15 +58,14 @@ describe Dain::Application, 'lifecycles' do
   context 'when defining lifecycles in both outer module and inner module' do
     def app
       holder = @holder
+      inner_app = build_app
 
-      app = Class.new(Dain::Application)
+      Class.new(Dain::Application) do
+        apply inner_app
 
-      app.apply build_app
-
-      app.before { holder << 'outer before' }
-      app.after { holder << 'outer after' }
-
-      app
+        before { holder << 'outer before' }
+        after { holder << 'outer after' }
+      end
     end
 
     it 'executes both outer lifecycles and inner lifecycles' do

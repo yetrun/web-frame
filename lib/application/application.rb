@@ -7,23 +7,19 @@ module Dain
     include Execution::MakeToRackMiddleware
     include PathMatchingMod.new(path_method: :prefix, matching_mode: :prefix)
 
-    attr_reader :prefix, :mods, :before_callbacks, :after_callbacks, :error_guards
+    attr_reader :prefix, :mods, :error_guards
 
-    def initialize(options)
-      @prefix = Utils::Path.normalize_path(options[:prefix])
-      @mods = options[:mods] || []
-      @shared_mods = options[:shared_mods] || []
-      @before_callbacks = options[:before_callbacks] || []
-      @after_callbacks = options[:after_callbacks] || []
-      @error_guards = options[:error_guards] || []
+    def initialize(prefix: '', mods: [], shared_mods: [], error_guards: [])
+      @prefix = Utils::Path.normalize_path(prefix)
+      @mods = mods
+      @shared_mods = shared_mods
+      @error_guards = error_guards
     end
 
     def execute(execution, remaining_path = '')
       remaining_path_for_children = path_matching.merge_path_params(remaining_path, execution.request)
 
       @shared_mods.each { |mod| execution.singleton_class.include(mod) }
-
-      before_callbacks.each { |b| execution.instance_eval(&b) }
 
       mod = find_child_mod(execution, remaining_path_for_children)
       if mod
@@ -32,8 +28,6 @@ module Dain
         request = execution.request
         raise Errors::NoMatchingRoute, "未能发现匹配的路由：#{request.request_method} #{request.path}"
       end
-
-      after_callbacks.each { |b| execution.instance_eval(&b) }
     rescue StandardError => e
       guard = error_guards.find { |g| e.is_a?(g[:error_class]) }
       raise unless guard

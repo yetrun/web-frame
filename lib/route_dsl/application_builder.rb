@@ -20,16 +20,22 @@ module Dain
         instance_exec &block if block_given?
       end
 
-      def build(meta)
-        meta = (meta || {}).merge(@meta_builder.build)
-        mods = @mod_builders.map { |builder| builder.build(meta) }
+      def build(meta, before_callbacks = [], after_callbacks = [])
+        # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
+        meta2 = (meta || {}).merge(@meta_builder.build)
+        if meta[:parameters] && meta2[:parameters]
+          meta2[:parameters] = meta[:parameters].merge(meta2[:parameters].properties)
+        end
+
+        # 构建子模块
+        before_callbacks += @before_callbacks
+        after_callbacks = @after_callbacks + after_callbacks
+        mods = @mod_builders.map { |builder| builder.build(meta2, before_callbacks, after_callbacks) }
 
         Application.new(
           prefix: @mod_prefix,
           mods: mods,
           shared_mods: @shared_mods,
-          before_callbacks: @before_callbacks,
-          after_callbacks: @after_callbacks,
           error_guards: @error_guards
         )
       end
@@ -52,14 +58,8 @@ module Dain
       end
 
       # 应用另一个模块
-      def apply(builder, options = {})
-        tags = options[:tags]
-        if tags
-          builder = BindingTags.new(builder, tags)
-          @mod_builders << builder
-        else
-          @mod_builders << builder
-        end
+      def apply(builder, tags: nil)
+        @mod_builders << BindingMeta.new(builder, tags ? { tags: tags } : {})
       end
 
       # 定义模块内的公共逻辑
@@ -87,14 +87,20 @@ module Dain
         end
       end
 
-      class BindingTags
-        def initialize(builder, tags)
+      # 绑定 Meta，绑定的 Meta 会覆盖父级的 Meta，用于 Application.apply 方法
+      class BindingMeta
+        def initialize(builder, meta)
           @builder = builder
-          @tags = tags
+          @meta = meta
         end
 
-        def build(_meta)
-          @builder.build({ tags: @tags })
+        def build(meta, before_callbacks = [], after_callbacks = [])
+          # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
+          meta2 = (meta || {}).merge(@meta)
+          if meta[:parameters] && meta2[:parameters]
+            meta2[:parameters] = meta[:parameters].merge(meta2[:parameters].properties)
+          end
+          @builder.build(meta2, before_callbacks, after_callbacks)
         end
       end
     end

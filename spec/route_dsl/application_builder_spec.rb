@@ -4,7 +4,7 @@ require 'spec_helper'
 require_relative '../../lib/route_dsl/application_builder'
 require_relative '../../lib/swagger_doc'
 
-describe 'Route Builder' do
+describe 'Application Builder' do
   include Rack::Test::Methods
 
   describe '在 Application 层定义 params 的效果' do
@@ -40,7 +40,7 @@ describe 'Route Builder' do
     it '检查接口调用的效果' do
       post '/foo/bar', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
       expect(JSON.parse(last_response.body)).to eq({
-        'foo_in_namespace' => '无法访问',
+        'foo_in_namespace' => nil,
         'foo_in_route' => nil,
         'bar_in_route' => 'bar'
       })

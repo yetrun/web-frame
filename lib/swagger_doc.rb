@@ -86,9 +86,6 @@ module Dain
           route = application
           route_path = route.path == :all ? prefix : RouteDSL::Helpers.join_path(prefix, route.path)
           store_routes << [route_path, route] unless route.method == :all
-          route.children.each do |child|
-            get_paths_and_routes!(child, route_path, store_routes)
-          end
         else
           raise "Param application must be a Application instance, Application module or a Route instance, but it got a `#{application}`"
         end

@@ -18,24 +18,28 @@ module Dain
       def initialize(path = '', method = :all, &block)
         @path = path || ''
         @method = method || :all
-        @children = []
         @action_builder = nil
         @meta_builder = MetaBuilder.new
 
         instance_exec &block if block_given?
       end
 
-      def build(meta)
-        children = @children.map { |builder| builder.build(meta) }
+      def build(meta, before_callbacks = [], after_callbacks = [])
+        # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
+        meta2 = (meta || {}).merge(@meta_builder.build)
+        if meta[:parameters] && meta2[:parameters]
+          meta2[:parameters] = meta[:parameters].merge(meta2[:parameters].properties)
+        end
+
+        # 将 before_callbacks、action、after_callbacks 合并为 actions
         action = @action_builder&.build
-        meta = (meta || {}).merge(@meta_builder.build)
+        actions = before_callbacks + (action ? [action] : []) + after_callbacks
 
         Route.new(
           path: @path,
           method: @method,
-          meta: meta,
-          action: action,
-          children: children
+          meta: meta2,
+          actions: actions
         )
       end
 
