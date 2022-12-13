@@ -7,7 +7,49 @@ require_relative '../../lib/swagger_doc'
 describe 'Meta Builder' do
   include Rack::Test::Methods
 
-  describe 'params & status' do
+  describe 'parameters' do
+    context '定义简单的 query 参数' do
+      def app
+        Class.new(Dain::Application) do
+          get '/request' do
+            parameters do
+              param :foo, type: 'string', in: 'query'
+            end
+            action do
+              response.body = [parameters[:foo]]
+            end
+          end
+        end
+      end
+
+      it '传递 parameters 成功' do
+        get '/request?foo=foo', { 'CONTENT_TYPE' => 'application/json' }
+        expect(last_response.body).to eq('foo')
+      end
+    end
+
+    context '定义 path 参数' do
+      def app
+        Class.new(Dain::Application) do
+          get '/request/:foo' do
+            parameters do
+              param :foo, type: 'string', in: 'path'
+            end
+            action do
+              response.body = [parameters[:foo]]
+            end
+          end
+        end
+      end
+
+      it '传递 parameters 成功' do
+        get '/request/foo', { 'CONTENT_TYPE' => 'application/json' }
+        expect(last_response.body).to eq('foo')
+      end
+    end
+  end
+
+  describe 'request and response body' do
     context '遇到 `required: true` 时' do
       def app
         entity = Class.new(Dain::Entity) do

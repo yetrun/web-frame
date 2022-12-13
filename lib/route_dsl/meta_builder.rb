@@ -13,6 +13,13 @@ module Dain
         @meta
       end
 
+      # 定义参数。
+      #
+      # 它与 params 的区别在于 params 定义 Request Body
+      def parameters(&block)
+        @meta[:parameters] = JsonSchema::SchemaBuilderTool.build(&block)
+      end
+
       def params(options = {}, &block)
         @meta[:params_schema] = JsonSchema::SchemaBuilderTool.build(options, &block)
       end

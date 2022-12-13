@@ -14,7 +14,7 @@ module Dain
     def initialize(options)
       @path = Utils::Path.normalize_path(options[:path])
       @method = options[:method] || :all
-      @meta = options[:meta] || {}
+      @meta = options[:meta] || {} # REVIEW: meta 用一个对象表示更好？
       @action = options[:action]
       @children = options[:children] || []
     end
@@ -24,6 +24,7 @@ module Dain
 
       # 依次执行这个环境
       begin
+        execution.parse_parameters(@meta[:parameters]) if @meta[:parameters]
         execution.parse_params(@meta[:params_schema]) if @meta[:params_schema]
         execution.instance_exec(&@action) if @action
         render_entity(execution) if @meta[:responses]

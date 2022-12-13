@@ -5,10 +5,12 @@ require 'rack'
 module Dain
   class Execution
     attr_reader :request, :response, :params_schema
+    attr_accessor :parameters
 
     def initialize(request)
       @request = request
       @response = Rack::Response.new
+      @parameters = {}
     end
 
     # 调用方式：
@@ -45,6 +47,11 @@ module Dain
       @renders[key] = { value: value, options: options || {} }
     end
 
+    def parse_parameters(param_schema)
+      self.parameters = param_schema.filter(params(:raw), stage: :param)
+    end
+
+    # REVIEW: parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量
     def parse_params(params_schema)
       @params_schema = params_schema
 
