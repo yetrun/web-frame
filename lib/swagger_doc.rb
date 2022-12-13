@@ -35,10 +35,16 @@ module Dain
         operation_object[:summary] = meta[:title] if meta.key?(:title)
         operation_object[:description] = meta[:description] if meta.key?(:description)
 
-        if meta.key?(:params_schema)
+        if meta.key?(:parameters)
+          parameters = meta[:parameters].generate_parameters_doc
+          operation_object[:parameters] = parameters unless parameters.empty?
+        elsif meta.key?(:params_schema)
+          # Note: 这里生成文档时 parameters 和 params_schema 是互斥的
           parameters = meta[:params_schema].generate_parameters_doc
           operation_object[:parameters] = parameters unless parameters.empty?
+        end
 
+        if meta.key?(:params_schema)
           schema = meta[:params_schema].to_schema_doc(stage: :param, schemas: schemas)
           if schema
             operation_object[:requestBody] = {
