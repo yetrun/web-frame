@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# 每个块都是在 execution 环境下执行的
-
 require_relative 'execution'
 require_relative 'path_matching_mod'
 
@@ -25,7 +23,6 @@ module Dain
       begin
         execution.parse_parameters(@meta[:parameters]) if @meta[:parameters]
         execution.parse_request_body(@meta[:request_body]) if @meta[:request_body]
-        # execution.parse_params(@meta[:params_schema]) if @meta[:params_schema]
 
         actions.each { |b| execution.instance_eval(&b) }
 

@@ -47,10 +47,6 @@ module Dain
             }
           end
           operation_object[:parameters] = parameters unless parameters.empty?
-        elsif meta.key?(:request_body)
-          # Note: 生成 parameters 文档时 meta[:parameters] 和 meta[:request_body] 是互斥的
-          parameters = meta[:request_body].generate_parameters_doc
-          operation_object[:parameters] = parameters unless parameters.empty?
         end
 
         if meta.key?(:request_body)

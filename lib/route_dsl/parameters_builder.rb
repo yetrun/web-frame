@@ -11,7 +11,7 @@ module Dain
 
       def param(name, options)
         options = options.dup
-        op_in = options.delete(:in)
+        op_in = options.delete(:in) || 'query'
 
         @parameters[name] = { in: op_in, schema: JsonSchema::BaseSchema.new(options) }
       end

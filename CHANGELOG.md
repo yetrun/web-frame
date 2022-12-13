@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 拆分 parameters 和 requestBody
+
+params 遗留方法，作为它们的合并宏
+
 ## 添加 info 选项
 
 app.to_swagger_doc(info: { title: '...' })

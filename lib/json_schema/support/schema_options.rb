@@ -4,7 +4,6 @@ module Dain
   module JsonSchema
     module SchemaOptions
       @default_options = {
-        in: 'body',
         scope: [],
         required: false
       }

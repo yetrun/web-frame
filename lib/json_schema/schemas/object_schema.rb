@@ -112,16 +112,9 @@ module Dain
         stage_options = options(stage)
 
         properties = @properties.filter do |name, property_schema|
-          if stage == :param
-            # 首先要通过 stage 过滤
-            next false unless property_schema.options(:param)
-            # 然后过滤掉非 body 参数
-            next false unless property_schema.options(:param, :in) == 'body'
-          elsif stage == :render
-            next false unless property_schema.options(:render)
-          else
-            false
-          end
+          next false if stage.nil?
+          next false if stage == :param && !property_schema.options(:param)
+          next false if stage == :render && !property_schema.options(:render)
 
           true
         end
@@ -143,30 +136,6 @@ module Dain
           schema[:required] = required_keys unless required_keys.empty?
           schema
         end
-      end
-
-      # 生成 Swagger 文档的 parameters 部分，这里是指生成路径位于 `path`、`query`、`header` 的参数。
-      def generate_parameters_doc
-        doc = []
-
-        # 提取根路径的所有 `:in` 选项不为 `body` 的元素（默认值为 `body`）
-        @properties.each do |key, property_schema| 
-          # 首先要通过 stage 过滤
-          next unless property_schema.options(:param)
-          # 然后过滤掉 body 参数
-          next if property_schema.options(:param, :in) == 'body'
-
-          property_options = property_schema.param_options
-          doc << {
-            name: key,
-            in: property_options[:in],
-            type: property_options[:type],
-            required: property_options[:required] || false,
-            description: property_options[:description] || ''
-          }
-        end
-
-        doc
       end
 
       def locked_scope
