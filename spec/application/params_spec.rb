@@ -1292,11 +1292,14 @@ describe Dain::Application, '.param' do
       @holder = {}
       the_holder = @holder
 
-      app = Class.new(Dain::Application)
-      app.route('/users', :post)
-        .params(type: 'string')
-        .do_any { the_holder[:params] = params }
-      app
+      Class.new(Dain::Application) do
+        post '/users' do
+          request_body type: 'string'
+          action do
+            the_holder[:params] = params
+          end
+        end
+      end
     end
 
     it '正确解析参数' do

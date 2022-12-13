@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'parameters_builder'
+require_relative 'uniformed_params_builder'
 
 module Dain
   module RouteDSL
@@ -15,9 +16,6 @@ module Dain
         @meta
       end
 
-      # 定义参数。
-      #
-      # 它与 params 的区别在于 params 定义 Request Body
       def parameters(&block)
         @meta[:parameters] = ParametersBuilder.new(&block).build
       end
@@ -26,7 +24,10 @@ module Dain
         @meta[:request_body] = JsonSchema::SchemaBuilderTool.build(options, &block)
       end
 
-      alias :params :request_body
+      # params 宏是一个遗留的宏，它在一个宏定义块内同时定义 parameters 和 request_body
+      def params(&block)
+        @meta[:parameters], @meta[:request_body] = UniformedParamsBuilder.new(&block).build
+      end
 
       def status(code, *other_codes, &block)
         codes = [code, *other_codes]
