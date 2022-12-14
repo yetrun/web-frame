@@ -20,7 +20,7 @@ module Dain
         instance_exec &block if block_given?
       end
 
-      def build(meta, before_callbacks = [], after_callbacks = [])
+      def build(parent_path: '', meta: {}, before_callbacks: [], after_callbacks: [])
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
         meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
@@ -30,7 +30,7 @@ module Dain
         # 构建子模块
         before_callbacks += @before_callbacks
         after_callbacks = @after_callbacks + after_callbacks
-        mods = @mod_builders.map { |builder| builder.build(meta2, before_callbacks, after_callbacks) }
+        mods = @mod_builders.map { |builder| builder.build(parent_path: Utils::Path.join(parent_path, @mod_prefix), meta: meta2, before_callbacks: before_callbacks, after_callbacks: after_callbacks) }
 
         Application.new(
           prefix: @mod_prefix,
@@ -94,13 +94,13 @@ module Dain
           @meta = meta
         end
 
-        def build(meta, before_callbacks = [], after_callbacks = [])
+        def build(parent_path: '', meta: {}, before_callbacks: [], after_callbacks: [])
           # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
           meta2 = (meta || {}).merge(@meta)
           if meta[:parameters] && meta2[:parameters]
             meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
           end
-          @builder.build(meta2, before_callbacks, after_callbacks)
+          @builder.build(parent_path: parent_path, meta: meta2, before_callbacks: before_callbacks, after_callbacks: after_callbacks)
         end
       end
     end

@@ -31,11 +31,11 @@ module Dain
       def_delegators :builder, *builder_methods
 
       def app
-        @app || @app = builder.build({})
+        @app || @app = builder.build
       end
 
-      def build(*args)
-        @app = builder.build(*args)
+      def build(**args)
+        @app = builder.build(**args)
       end
     end
   end

@@ -24,11 +24,25 @@ module Dain
         instance_exec &block if block_given?
       end
 
-      def build(meta, before_callbacks = [], after_callbacks = [])
+      def build(parent_path: '', meta: {}, before_callbacks: [], after_callbacks: [])
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
         meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
           meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
+        end
+
+        # 合并 parameters 参数
+        meta2[:parameters] ||= {}
+        path_params = Utils::Path.join(parent_path, @path).split('/')
+          .filter { |part| part =~ /[:*].+/ }
+          .map { |part| part[1..-1].to_sym }
+        path_params.each do |name|
+          unless meta2[:parameters].key?(name)
+            meta2[:parameters][name] = {
+              in: 'path',
+              schema: JsonSchema::BaseSchema.new(required: true)
+            }
+          end
         end
 
         # 将 before_callbacks、action、after_callbacks 合并为 actions

@@ -81,6 +81,5 @@ module Dain
         self.class.new(parts)
       end
     end
-
   end
 end

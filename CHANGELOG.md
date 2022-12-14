@@ -4,6 +4,9 @@
 
 params 遗留方法，作为它们的合并宏
 
+- 支持 header 参数
+- 支持 path 参数文档的自动生成
+
 ## 添加 info 选项
 
 app.to_swagger_doc(info: { title: '...' })

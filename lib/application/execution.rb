@@ -133,7 +133,7 @@ module Dain
       else
         json = JSON.parse(request_body)
       end
-      json.merge!(request.params) if json.is_a?(Hash) # TODO: 如果参数模式不是对象，就无法合并 query 和 path 里的参数
+      json.merge!(request.params) if json.is_a?(Hash)
 
       request.body.rewind
       json
