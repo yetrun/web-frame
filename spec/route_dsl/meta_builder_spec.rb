@@ -8,7 +8,7 @@ describe 'Meta Builder' do
   include Rack::Test::Methods
 
   describe 'parameters' do
-    context '定义简单的 query 参数' do
+    context '定义 query 参数' do
       def app
         Class.new(Dain::Application) do
           get '/request' do
@@ -23,7 +23,7 @@ describe 'Meta Builder' do
       end
 
       it '传递 parameters 成功' do
-        get '/request?foo=foo', { 'CONTENT_TYPE' => 'application/json' }
+        get '/request', { foo: 'foo' }
         expect(last_response.body).to eq('foo')
       end
     end
@@ -43,7 +43,27 @@ describe 'Meta Builder' do
       end
 
       it '传递 parameters 成功' do
-        get '/request/foo', { 'CONTENT_TYPE' => 'application/json' }
+        get '/request/foo'
+        expect(last_response.body).to eq('foo')
+      end
+    end
+
+    context '定义 header 参数' do
+      def app
+        Class.new(Dain::Application) do
+          get '/request' do
+            parameters do
+              param 'X-FOO', type: 'string', in: 'header'
+            end
+            action do
+              response.body = [parameters['X-FOO']]
+            end
+          end
+        end
+      end
+
+      it '传递 parameters 成功' do
+        get '/request', {}, { 'X-FOO' => 'foo' }
         expect(last_response.body).to eq('foo')
       end
     end

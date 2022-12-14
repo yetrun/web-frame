@@ -66,9 +66,16 @@ module Dain
       @renders[key] = { value: value, options: options || {} }
     end
 
+    # 运行过程中首先会解析参数
     def parse_parameters(parameters_meta)
       self.parameters = parameters_meta.map do |name, options|
-        [name, options[:schema].filter(request.params[name.to_s])]
+        schema = options[:schema]
+        value = if options[:in] == 'header'
+          schema.filter(request.get_header(name.to_s) || request.get_header('HTTP_' + name.to_s.gsub('-', '_')))
+        else
+          schema.filter(request.params[name.to_s])
+        end
+        [name, value]
       end.to_h.freeze
     end
 
