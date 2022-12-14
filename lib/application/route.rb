@@ -2,6 +2,7 @@
 
 require_relative 'execution'
 require_relative 'path_matching_mod'
+require_relative 'meta'
 
 module Dain
   class Route
@@ -12,7 +13,7 @@ module Dain
     def initialize(path: '', method: :all, meta: {}, actions: [])
       @path = Utils::Path.normalize_path(path)
       @method = method
-      @meta = meta # REVIEW: meta 用一个对象表示更好？
+      @meta = Meta.new(meta)
       @actions = actions
     end
 

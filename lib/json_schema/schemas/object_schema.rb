@@ -125,17 +125,11 @@ module Dain
           property_schema.to_schema_doc(**user_options, to_ref: true)
         end
 
-        if properties.empty?
-          nil
-        else
-          schema = {
-            type: 'object',
-            properties: properties,
-          }
-          schema[:description] = stage_options[:description] if stage_options[:description]
-          schema[:required] = required_keys unless required_keys.empty?
-          schema
-        end
+        schema = { type: 'object' }
+        schema[:description] = stage_options[:description] if stage_options[:description]
+        schema[:properties] = properties unless properties.empty?
+        schema[:required] = required_keys unless required_keys.empty?
+        schema
       end
 
       def locked_scope

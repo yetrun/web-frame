@@ -26,7 +26,8 @@ module Dain
       end
 
       def build
-        [@parameters, @request_body_builder.to_schema]
+        request_body = @request_body_builder.to_schema
+        [@parameters, request_body.properties.empty? ? nil : request_body]
       end
     end
   end

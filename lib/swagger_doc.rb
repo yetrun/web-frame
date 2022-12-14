@@ -28,53 +28,7 @@ module Dain
 
       # 生成单个路由的文档
       def generate_operation_object(route, schemas)
-        meta = route.meta
-        operation_object = {}
-
-        operation_object[:tags] = meta[:tags] if meta.key?(:tags)
-        operation_object[:summary] = meta[:title] if meta.key?(:title)
-        operation_object[:description] = meta[:description] if meta.key?(:description)
-
-        if meta.key?(:parameters)
-          parameters = meta[:parameters].map do |name, options|
-            property_options = options[:schema].param_options
-            {
-              name: name,
-              in: options[:in],
-              type: property_options[:type],
-              required: property_options[:required] || false,
-              description: property_options[:description] || ''
-            }
-          end
-          operation_object[:parameters] = parameters unless parameters.empty?
-        end
-
-        if meta.key?(:request_body)
-          schema = meta[:request_body].to_schema_doc(stage: :param, schemas: schemas)
-          if schema
-            operation_object[:requestBody] = {
-              content: {
-                'application/json' => {
-                  schema: schema
-                }
-              }
-            }
-          end
-        end
-
-        if meta.key?(:responses)
-          operation_object[:responses] = meta[:responses].transform_values do |schema|
-            {
-              content: {
-                'application/json' => {
-                  schema: schema.to_schema_doc(stage: :render, schemas: schemas)
-                }
-              }
-            }
-          end
-        end
-
-        operation_object
+        route.meta.generate_operation_doc(schemas)
       end
 
       private

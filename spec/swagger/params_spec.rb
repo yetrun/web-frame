@@ -166,7 +166,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
         end
       end
 
-      describe 'no body params' do
+      describe '不生成 requestBody' do
         subject do 
           Dain::SwaggerDocUtil.generate(app)[:paths]['/users'][:post]
         end
