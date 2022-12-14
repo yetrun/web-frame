@@ -36,8 +36,8 @@ module Dain
 
         # 第一步，根据 user_options[:scope] 需要过滤一些字段
         # user_options[:scope] 应是一个数组
-        scope_filter = user_options[:scope] || []
-        scope_filter = [scope_filter] unless scope_filter.is_a?(Array)
+        user_scope = user_options[:scope] || []
+        user_scope = [user_scope] unless user_scope.is_a?(Array)
         stage = user_options[:stage]
         exclude = user_options.delete(:exclude) # 这里删除 exclude 选项
         filtered_properties = @properties.filter do |name, property_schema|
@@ -54,8 +54,8 @@ module Dain
           # 通过 scope 过滤
           scope_option = property_schema_options[:scope]
           next true if scope_option.empty?
-          next false if scope_filter.empty?
-          (scope_filter - scope_option).empty? # scope_filter 应被消耗殆尽
+          next false if user_scope.empty?
+          (user_scope - scope_option).empty? # user_scope 应被消耗殆尽
         end
 
         # 第二步，递归过滤每一个属性
@@ -110,13 +110,20 @@ module Dain
         end
 
         stage_options = options(stage)
-
+        user_scope = locked_scope || []
+        user_scope = [user_scope] unless user_scope.is_a?(Array)
         properties = @properties.filter do |name, property_schema|
+          # 根据 stage 过滤
           next false if stage.nil?
           next false if stage == :param && !property_schema.options(:param)
           next false if stage == :render && !property_schema.options(:render)
 
-          true
+          # 根据 locked_scope 过滤
+          scope_option = property_schema.options(stage, :scope)
+          scope_option = [scope_option] unless scope_option.is_a?(Array)
+          next true if scope_option.empty?
+          next false if user_scope.empty?
+          (user_scope - scope_option).empty? # user_scope 应被消耗殆尽
         end
         required_keys = properties.filter do |key, property_schema|
           property_schema.options(stage, :required)

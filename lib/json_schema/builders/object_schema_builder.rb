@@ -21,6 +21,25 @@ module Dain
         instance_exec(&) if block_given?
       end
 
+      # 设置 schema_name.
+      #
+      # 一、可以传递一个块，该块会接收 locked_scope 参数，需要返回一个带有 param 和 render 键的 Hash.
+      # 二、可以传递一个 Hash，它包含 param 和 render 键。
+      # 三、可以传递一个字符串。
+      def schema_name(schema_name_resolver)
+        if schema_name_resolver.is_a?(Proc)
+          @schema_name_resolver = schema_name_resolver
+        elsif schema_name_resolver.is_a?(Hash)
+          @schema_name_resolver = proc { schema_name_resolver }
+        elsif schema_name_resolver.is_a?(String)
+          @schema_name_resolver = proc do |locked_scope|
+            { param: schema_name_resolver, render: schema_name_resolver }
+          end
+        else
+          raise TypeError, "schema_name_resolver 必须是一个 Proc、Hash 或 String，当前是：#{schema_name_resolver.class}"
+        end
+      end
+
       def property(name, options = {}, &block)
         name = name.to_sym
         options = options.dup
@@ -50,11 +69,12 @@ module Dain
         instance_exec(&proc)
       end
 
-      def to_schema(locked_options = nil, schema_name = nil)
-        ObjectSchema.new(properties: @properties, object_validations: @validations, options: @options, locked_options: locked_options, schema_names: schema_name)
+      def to_schema(locked_options = nil, schema_names = nil)
+        locked_scope = (locked_options || {})[:scope]
+        schema_names = @schema_name_resolver.call(locked_scope) if schema_names.nil? && @schema_name_resolver
+        ObjectSchema.new(properties: @properties, object_validations: @validations, options: @options, locked_options: locked_options, schema_names: schema_names)
       end
 
-      # TODO: 设置 lock_scope 后，生成文档时属性依然没有过滤
       def lock(key, value)
         locked(key => value)
       end
@@ -90,6 +110,9 @@ module Dain
           @locked_options = locked_options
         end
 
+        # 当调用 Entity.locked 方法后，生成 schema 的方法会掉到这里面来。
+        # 在生成 schema 时，locked_options 会覆盖；当生成 schema 文档时，由于缺失 schema_name 的
+        # 信息，故而 schema_name 相关的影响就消失不见了。
         def to_schema
           builder.to_schema(locked_options)
         end

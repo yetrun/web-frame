@@ -41,7 +41,8 @@ describe 'Dain::SwaggerDocUtil.generate' do
     end
   end
 
-  context '使用 `using: Entity`' do
+  # 因为 ObjectSchemaBuilder 没有 locked 方法，故而将测试放在这里比较合适
+  context '使用 `using: Entity - schema_name 用块解析`' do
     subject(:doc) do
       Dain::SwaggerDocUtil.generate(app)
     end
@@ -56,7 +57,13 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     def app
       user_entity = Class.new(Dain::Entity) do
-        schema_name 'UserEntity'
+        p = proc do
+          {
+            param: 'UserEntity',
+            render: 'UserEntity'
+          }
+        end
+        schema_name p
 
         property :name, type: 'string'
         property :age, type: 'integer'
@@ -84,6 +91,157 @@ describe 'Dain::SwaggerDocUtil.generate' do
         properties: {
           name: { type: 'string' },
           age: { type: 'integer' }
+        }
+      )
+    end
+  end
+
+  context '使用 `using: Entity - schema_name 用块解析 & lock_scope`' do
+    subject(:doc) do
+      Dain::SwaggerDocUtil.generate(app)
+    end
+
+    subject(:schema) do
+      doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
+    end
+
+    subject(:components) do
+      doc[:components]
+    end
+
+    def app
+      user_entity = Class.new(Dain::Entity) do
+        p = proc do |locked_scope|
+          {
+            param: "UserParams#{locked_scope}",
+            render: "UserEntity_#{locked_scope}"
+          }
+        end
+        schema_name p
+
+        property :foo
+        property :bar, scope: 'bar'
+        property :baz, scope: 'baz'
+      end
+      Class.new(Dain::Application) do
+        get '/user' do
+          status(200) do
+            expose :user, using: user_entity.lock_scope('bar')
+          end
+        end
+      end
+    end
+
+    it do
+      expect(schema).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            '$ref': '#/components/schemas/UserEntity_bar'
+          }
+        }
+      )
+      expect(components[:schemas]['UserEntity_bar']).to eq(
+        type: 'object',
+        properties: {
+          foo: {},
+          bar: {}
+        }
+      )
+    end
+  end
+
+  context '使用 `using: Entity - 自动解析 schema_name`' do
+    subject(:doc) do
+      Dain::SwaggerDocUtil.generate(app)
+    end
+
+    subject(:schema) do
+      doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
+    end
+
+    subject(:components) do
+      doc[:components]
+    end
+
+    class UserEntity < Dain::Entity
+      property :name, type: 'string'
+      property :age, type: 'integer'
+    end
+
+    def app
+      # TODO: 测试结束后移除常量名
+      Class.new(Dain::Application) do
+        get '/user' do
+          status(200) do
+            expose :user, using: UserEntity
+          end
+        end
+      end
+    end
+
+    it do
+      expect(schema).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            '$ref': '#/components/schemas/UserEntity'
+          }
+        }
+      )
+      expect(components[:schemas]['UserEntity']).to eq(
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'integer' }
+        }
+      )
+    end
+  end
+
+  context '使用 `using: Entity - 自动解析 schema_name & lock_scope`' do
+    subject(:doc) do
+      Dain::SwaggerDocUtil.generate(app)
+    end
+
+    subject(:schema) do
+      doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
+    end
+
+    subject(:components) do
+      doc[:components]
+    end
+
+    class TheEntity < Dain::Entity
+      property :foo
+      property :bar, scope: 'bar'
+      property :baz, scope: 'baz'
+    end
+
+    def app
+      Class.new(Dain::Application) do
+        get '/user' do
+          status(200) do
+            expose :user, using: TheEntity.lock_scope('bar')
+          end
+        end
+      end
+    end
+
+    it do
+      expect(schema).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            '$ref': '#/components/schemas/TheEntity_bar'
+          }
+        }
+      )
+      expect(components[:schemas]['TheEntity_bar']).to eq(
+        type: 'object',
+        properties: {
+          foo: {},
+          bar: {}
         }
       )
     end

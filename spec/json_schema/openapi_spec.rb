@@ -87,6 +87,24 @@ describe 'openapi' do
     end
   end
 
+  context 'locked scope' do
+    it '过滤掉 scope 不匹配的参数' do
+      schema = Dain::JsonSchema::ObjectSchemaBuilder.new do
+        param :foo
+        param :bar, scope: 'bar'
+        param :baz, scope: 'baz'
+      end.to_schema(scope: 'bar')
+
+      expect(schema.to_schema_doc(stage: :param)).to eq(
+        type: 'object',
+        properties: {
+          foo: {},
+          bar: {}
+        }
+      )
+    end
+  end
+
   describe 'requires' do
     it 'required 属性生成 requires 文档' do
       schema = Dain::JsonSchema::SchemaBuilderTool.build do
