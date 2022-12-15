@@ -342,43 +342,46 @@ describe Dain::Application, '.param' do
 
       context 'nesting' do
         def app
-          app = Class.new(Dain::Application)
-
           the_holder = holder
-          app.route('/users', :post)
-            .params {
-              param :user, type: 'object' do
-                param :name
-                param :age
+          Class.new(Dain::Application) do
+            post '/users' do
+              request_body do
+                property :user do
+                  property :name
+                  property :age
+                end
               end
-            }
-            .do_any { the_holder[:params] = params }
-
-          app
+              action do
+                the_holder[:params] = params
+                the_holder[:request_body] = request_body
+              end
+            end
+          end
         end
 
         it '支持传递整个 null 作为参数' do
           post('/users', JSON.generate(nil), { 'CONTENT_TYPE' => 'application/json' })
 
-          expect(holder[:params]).to eq(nil)
+          expect(holder[:params]).to eq({})
+          expect(holder[:request_body]).to eq(nil)
         end
 
         it 'supports passing empty hash to outer params' do
           post('/users', JSON.generate({}), { 'CONTENT_TYPE' => 'application/json' })
 
-          expect(holder[:params]).to eq(user: nil)
+          expect(holder[:request_body]).to eq(user: nil)
         end
 
         it 'supports passing empty hash to inner params' do
           post('/users', JSON.generate(user: {}), { 'CONTENT_TYPE' => 'application/json' })
 
-          expect(holder[:params]).to eq(user: { name: nil, age: nil })
+          expect(holder[:request_body]).to eq(user: { name: nil, age: nil })
         end
 
         it 'supports passing nil to inner params' do
           post('/users', JSON.generate(user: nil), { 'CONTENT_TYPE' => 'application/json' })
 
-          expect(holder[:params]).to eq(user: nil)
+          expect(holder[:request_body]).to eq(user: nil)
         end
 
         it 'raises error when passing not hash value to inner params' do
@@ -1296,7 +1299,7 @@ describe Dain::Application, '.param' do
         post '/users' do
           request_body type: 'string'
           action do
-            the_holder[:params] = params
+            the_holder[:request_body] = request_body
           end
         end
       end
@@ -1304,7 +1307,7 @@ describe Dain::Application, '.param' do
 
     it '正确解析参数' do
       post('/users', JSON.generate('Jim'), { 'CONTENT_TYPE' => 'application/json' })
-      expect(@holder[:params]).to eq 'Jim'
+      expect(@holder[:request_body]).to eq 'Jim'
     end
   end
 end

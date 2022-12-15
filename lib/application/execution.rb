@@ -39,13 +39,17 @@ module Dain
     # - `params(:raw)`
     def params(mode = :keep_missing)
       @_params ||= {}
+      return @_params[mode] if @_params.key?(mode)
 
       if mode == :raw
-        @_params[:raw] || @_params[:raw] = parse_raw_params.freeze
+        @_params[:raw] = parse_raw_params.freeze
       else
-        rb = request_body(mode)
-        @_params[mode] || @_params[mode] = rb.is_a?(Hash) ? parameters.merge(rb).freeze : rb
+        params = parameters
+        params = params.merge(request_body(mode) || {}) if @request_body_schema
+        @_params[mode] = params
       end
+
+      @_params[mode]
     end
 
     # 调用方式：
