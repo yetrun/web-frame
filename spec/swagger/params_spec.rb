@@ -28,23 +28,21 @@ describe 'Dain::SwaggerDocUtil.generate' do
           {
             name: :id,
             in: 'path',
-            type: 'string',
             required: true,
-            description: 'the id'
+            description: 'the id',
+            schema: { type: 'string' }
           },
           {
             name: :name,
             in: 'query',
-            type: 'string',
-            required: false,
-            description: 'the name'
+            description: 'the name',
+            schema: { type: 'string' }
           },
           {
             name: :age,
             in: 'query',
-            type: 'integer',
-            required: false,
-            description: 'the age'
+            description: 'the age',
+            schema: { type: 'integer' }
           }
         ]
       end

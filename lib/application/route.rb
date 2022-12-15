@@ -52,7 +52,7 @@ module Dain
       return unless codes.include?(status)
 
       entity_schema = responses[status]
-      execution.render_entity(entity_schema)
+      execution.render_entity(entity_schema) if entity_schema
     end
   end
 end

@@ -101,10 +101,10 @@ describe 'Dain::SwaggerDocUtil.generate' do
     end
 
     it 'generates title and description' do
-      expect(subject[:paths]['/users'][:get]).to match(
+      expect(subject[:paths]['/users'][:get]).to match(a_hash_including(
         summary: '查看用户列表',
         description: '此接口返回用户的列表'
-      ) 
+      ))
     end
   end
 end

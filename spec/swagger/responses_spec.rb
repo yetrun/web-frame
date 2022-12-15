@@ -297,4 +297,34 @@ describe 'Dain::SwaggerDocUtil.generate' do
       )
     end
   end
+
+  context '未提供 status 宏时' do
+    subject(:doc) do
+      Dain::SwaggerDocUtil.generate(app)
+    end
+
+    subject(:responses) do
+      doc[:paths]['/request'][:get][:responses]
+    end
+
+    def app
+      Class.new(Dain::Application) do
+        get '/request' do
+          action do
+            response.status = 204
+          end
+        end
+      end
+    end
+
+    it '生成状态码为 204 的文档' do
+      expect(responses).to have_key(204)
+    end
+
+    it '成功调用请求' do
+      get '/request'
+
+      expect(last_response.status).to eq 204
+    end
+  end
 end

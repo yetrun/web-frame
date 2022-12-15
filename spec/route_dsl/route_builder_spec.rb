@@ -136,7 +136,9 @@ describe 'Route Builder' do
         def app
           Class.new(Dain::Application) do
             namespace '/nesting' do
-              status(200, 201) { expose :foo }
+              meta do
+                status(200, 201) { expose :foo }
+              end
 
               route '/foo', :post do
                 action { render('foo' => 'foo', 'bar' => 'bar') }

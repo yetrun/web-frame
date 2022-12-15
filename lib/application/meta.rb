@@ -4,13 +4,13 @@ module Dain
   class Meta
     attr_reader :title, :description, :tags, :parameters, :request_body, :responses
 
-    def initialize(title: nil, description: nil, tags: [], parameters: {}, request_body: nil, responses: {})
+    def initialize(title: nil, description: nil, tags: [], parameters: {}, request_body: nil, responses: nil)
       @title = title
       @description = description
       @tags = tags
       @parameters = parameters
       @request_body = request_body
-      @responses = responses
+      @responses = responses || { 204 => nil }
     end
 
     def [](key)
@@ -29,10 +29,12 @@ module Dain
         {
           name: name,
           in: options[:in],
-          type: property_options[:type],
-          required: property_options[:required] || false,
-          description: property_options[:description] || ''
-        }
+          required: property_options[:required] || nil,
+          description: property_options[:description] || '',
+          schema: {
+            type: property_options[:type]
+          }
+        }.compact
       end unless parameters.empty?
 
       if request_body
@@ -50,12 +52,13 @@ module Dain
 
       operation_object[:responses] = responses.transform_values do |schema|
         {
-          content: {
+          description: '', # description 属性必须存在
+          content: schema ? {
             'application/json' => {
               schema: schema.to_schema_doc(stage: :render, schemas: schemas)
             }
-          }
-        }
+          } : nil
+        }.compact
       end unless responses.empty?
 
       operation_object

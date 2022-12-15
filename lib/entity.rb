@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'forwardable'
 require_relative 'errors'
 require_relative 'json_schema/schemas'
 

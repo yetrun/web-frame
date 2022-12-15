@@ -25,23 +25,21 @@ describe 'Dain::SwaggerDocUtil.generate' do
           {
             name: :id,
             in: 'path',
-            type: 'string',
             required: true,
-            description: 'the id'
+            description: 'the id',
+            schema: { type: 'string' }
           },
           {
             name: :name,
             in: 'query',
-            type: 'string',
-            required: false,
-            description: 'the name'
+            description: 'the name',
+            schema: { type: 'string' }
           },
           {
             name: :age,
             in: 'query',
-            type: 'integer',
-            required: false,
-            description: 'the age'
+            description: 'the age',
+            schema: { type: 'integer' }
           }
         ]
       end
@@ -58,10 +56,10 @@ describe 'Dain::SwaggerDocUtil.generate' do
         expect(subject[:paths]['/users/{id}'][:get][:parameters]).to eq [
           {
             name: :id,
-            type: nil,
             in: 'path',
             required: true,
-            description: ''
+            description: '',
+            schema: { type: nil }
           }
         ]
       end
@@ -80,17 +78,17 @@ describe 'Dain::SwaggerDocUtil.generate' do
         expect(subject[:paths]['/{foo}/{bar}'][:get][:parameters]).to eq [
           {
             name: :foo,
-            type: nil,
             in: 'path',
             required: true,
-            description: ''
+            description: '',
+            schema: { type: nil }
           },
           {
             name: :bar,
-            type: nil,
             in: 'path',
             required: true,
-            description: ''
+            description: '',
+            schema: { type: nil }
           }
         ]
       end
@@ -112,17 +110,17 @@ describe 'Dain::SwaggerDocUtil.generate' do
         expect(subject[:paths]['/{foo}/{bar}'][:get][:parameters]).to eq [
           {
             name: :foo,
-            type: nil,
             in: 'path',
             required: true,
-            description: ''
+            description: '',
+            schema: { type: nil }
           },
           {
             name: :bar,
-            type: nil,
             in: 'path',
             required: true,
-            description: ''
+            description: '',
+            schema: { type: nil }
           }
         ]
       end
