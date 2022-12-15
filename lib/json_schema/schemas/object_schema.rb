@@ -94,8 +94,10 @@ module Dain
       #
       def to_schema_doc(user_options)
         stage = user_options[:stage]
-        locked_scope = (locked_options || {})[:scope]
-        schema_name = @schema_name_resolver.call(locked_scope, stage)
+        # HACK: 标准化选项的工作进行得怎样？
+        locked_scopes = (locked_options || {})[:scope] || []
+        locked_scopes = [locked_scopes] unless locked_scopes.is_a?(Array)
+        schema_name = @schema_name_resolver.call(locked_scopes, stage)
         if schema_name && user_options[:to_ref] != false
           # 首先将 Schema 写进 schemas 选项中去
           schemas = user_options[:schemas]
@@ -108,8 +110,6 @@ module Dain
         end
 
         stage_options = options(stage)
-        user_scope = locked_scope || []
-        user_scope = [user_scope] unless user_scope.is_a?(Array)
         properties = @properties.filter do |name, property_schema|
           # 根据 stage 过滤
           next false if stage.nil?
@@ -117,11 +117,11 @@ module Dain
           next false if stage == :render && !property_schema.options(:render)
 
           # 根据 locked_scope 过滤
-          scope_option = property_schema.options(stage, :scope)
-          scope_option = [scope_option] unless scope_option.is_a?(Array)
-          next true if scope_option.empty?
-          next false if user_scope.empty?
-          (user_scope - scope_option).empty? # user_scope 应被消耗殆尽
+          next true if locked_scopes.empty? # locked_scope 未提供时不过滤
+          property_scope = property_schema.options(stage, :scope)
+          property_scope = [property_scope] unless property_scope.is_a?(Array)
+          next true if property_scope.empty?
+          (locked_scopes - property_scope).empty? # user_scope 应被消耗殆尽
         end
         required_keys = properties.filter do |key, property_schema|
           property_schema.options(stage, :required)

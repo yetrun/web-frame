@@ -63,7 +63,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
         schema_name p
 
         property :name, type: 'string'
-        property :age, type: 'integer'
+        property :age, type: 'integer', scope: 'a'
       end
       Class.new(Dain::Application) do
         get '/user' do
@@ -108,8 +108,8 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     def app
       user_entity = Class.new(Dain::Entity) do
-        p = proc do |locked_scope, stage|
-          "UserEntity_#{locked_scope}"
+        p = proc do |locked_scopes, stage|
+          "UserEntity_#{locked_scopes.join('_')}"
         end
         schema_name p
 
