@@ -32,7 +32,7 @@ module Dain
 
       private
 
-      def generate_schema_name(locked_scope = nil, stage = nil)
+      def generate_schema_name(stage, locked_scopes)
         # 匿名类不考虑自动生成名称
         return nil unless self.name
 
@@ -48,8 +48,7 @@ module Dain
         end
 
         # 再考虑 locked_scope
-        locked_scope = [locked_scope] unless locked_scope.is_a?(Array)
-        scope_suffix = (locked_scope || []).join('_')
+        scope_suffix = locked_scopes.join('_')
         schema_name = "#{schema_name}_#{scope_suffix}" unless scope_suffix.empty?
 
         schema_name

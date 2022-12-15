@@ -30,9 +30,9 @@ module Dain
         if schema_name_resolver.is_a?(Proc)
           @schema_name_resolver = schema_name_resolver
         elsif schema_name_resolver.is_a?(Hash)
-          @schema_name_resolver = proc { |locked_scope, stage| schema_name_resolver[stage] }
+          @schema_name_resolver = proc { |stage, locked_scopes| schema_name_resolver[stage] }
         elsif schema_name_resolver.is_a?(String)
-          @schema_name_resolver = proc { |locked_scope, stage| schema_name_resolver }
+          @schema_name_resolver = proc { |stage, locked_scopes| schema_name_resolver }
         elsif schema_name_resolver.nil?
           @schema_name_resolver = proc { nil }
         else

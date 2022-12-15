@@ -108,7 +108,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     def app
       user_entity = Class.new(Dain::Entity) do
-        p = proc do |locked_scopes, stage|
+        p = proc do |stage, locked_scopes|
           "UserEntity_#{locked_scopes.join('_')}"
         end
         schema_name p

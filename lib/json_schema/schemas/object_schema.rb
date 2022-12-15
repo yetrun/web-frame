@@ -96,8 +96,8 @@ module Dain
         stage = user_options[:stage]
         # HACK: 标准化选项的工作进行得怎样？
         locked_scopes = (locked_options || {})[:scope] || []
-        locked_scopes = [locked_scopes] unless locked_scopes.is_a?(Array)
-        schema_name = @schema_name_resolver.call(locked_scopes, stage)
+        locked_scopes = [locked_scopes] unless locked_scope.nil? && locked_scopes.is_a?(Array)
+        schema_name = @schema_name_resolver.call(stage, locked_scopes)
         if schema_name && user_options[:to_ref] != false
           # 首先将 Schema 写进 schemas 选项中去
           schemas = user_options[:schemas]
