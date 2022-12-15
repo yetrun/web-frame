@@ -3,7 +3,7 @@
 module Dain
   module SwaggerDocUtil
     class << self
-      def generate(application, info: {})
+      def generate(application, info: {}, servers: [])
         routes = get_paths_and_routes!(application)
 
         schemas = {}
@@ -20,6 +20,7 @@ module Dain
         doc = {
           openapi: '3.0.0',
           info: info,
+          servers: servers,
           paths: paths
         }
         doc[:components] = { schemas: schemas } unless schemas.empty?
