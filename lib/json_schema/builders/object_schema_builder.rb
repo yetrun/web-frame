@@ -30,11 +30,11 @@ module Dain
         if schema_name_resolver.is_a?(Proc)
           @schema_name_resolver = schema_name_resolver
         elsif schema_name_resolver.is_a?(Hash)
-          @schema_name_resolver = proc { schema_name_resolver }
+          @schema_name_resolver = proc { |locked_scope, stage| schema_name_resolver[stage] }
         elsif schema_name_resolver.is_a?(String)
-          @schema_name_resolver = proc do |locked_scope|
-            { param: schema_name_resolver, render: schema_name_resolver }
-          end
+          @schema_name_resolver = proc { |locked_scope, stage| schema_name_resolver }
+        elsif schema_name_resolver.nil?
+          @schema_name_resolver = proc { nil }
         else
           raise TypeError, "schema_name_resolver 必须是一个 Proc、Hash 或 String，当前是：#{schema_name_resolver.class}"
         end
@@ -69,10 +69,8 @@ module Dain
         instance_exec(&proc)
       end
 
-      def to_schema(locked_options = nil, schema_names = nil)
-        locked_scope = (locked_options || {})[:scope]
-        schema_names = @schema_name_resolver.call(locked_scope) if schema_names.nil? && @schema_name_resolver
-        ObjectSchema.new(properties: @properties, object_validations: @validations, options: @options, locked_options: locked_options, schema_names: schema_names)
+      def to_schema(locked_options = nil)
+        ObjectSchema.new(properties: @properties, object_validations: @validations, options: @options, locked_options: locked_options, schema_name_resolver: @schema_name_resolver)
       end
 
       def lock(key, value)

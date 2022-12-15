@@ -57,11 +57,8 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     def app
       user_entity = Class.new(Dain::Entity) do
-        p = proc do
-          {
-            param: 'UserEntity',
-            render: 'UserEntity'
-          }
+        p = proc do |locked_scope, stage|
+          'UserEntity'
         end
         schema_name p
 
@@ -111,11 +108,8 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     def app
       user_entity = Class.new(Dain::Entity) do
-        p = proc do |locked_scope|
-          {
-            param: "UserParams#{locked_scope}",
-            render: "UserEntity_#{locked_scope}"
-          }
+        p = proc do |locked_scope, stage|
+          "UserEntity_#{locked_scope}"
         end
         schema_name p
 

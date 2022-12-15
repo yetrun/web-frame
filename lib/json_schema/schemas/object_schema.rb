@@ -3,27 +3,25 @@
 module Dain
   module JsonSchema
     class ObjectSchema < BaseSchema
-      attr_reader :properties, :object_validations, :locked_options, :schema_names
+      attr_reader :properties, :object_validations, :locked_options
 
-      def initialize(properties: {}, object_validations: {}, options: {}, locked_options: nil, schema_names: nil)
+      def initialize(properties: {}, object_validations: {}, options: {}, locked_options: {}, schema_name_resolver: proc { nil })
         super(options)
 
-        @properties = properties
-        @object_validations = object_validations
-        @locked_options = locked_options
-
-        schema_names = { param: schema_names, render: schema_names } if schema_names.is_a?(String)
-        @schema_names = schema_names
+        @properties = properties || {}
+        @object_validations = object_validations || {}
+        @locked_options = locked_options || {}
+        @schema_name_resolver = schema_name_resolver || proc { nil }
       end
 
       # 复制一个新的 ObjectSchema，只有 options 不同
       def dup(options)
         self.class.new(
-          properties: self.properties,
-          object_validations: self.object_validations,
+          properties: properties,
+          object_validations: object_validations,
           options: options,
-          locked_options: self.locked_options,
-          schema_names: self.schema_names
+          locked_options: locked_options,
+          schema_name_resolver: @schema_name_resolver
         )
       end
 
@@ -91,14 +89,14 @@ module Dain
       # - to_ref: 是否生成 $ref 格式，默认为“是”
       #
       # 提示：
-      # > 每个 ObjectSchema 拥有一个 schema_names 方法。如果这个方法返回的内容不为 nil，则该 Schema 生成文档时会
-      # > 使用 $ref 格式。除非 to_ref 选项设置为 false.
+      # > 每个 ObjectSchema 拥有一个 @schema_name_resolver 实例变量，如果由它解析出来的名称不为 nil，
+      # > 则该 Schema 生成文档时会使用 $ref 格式。除非 to_ref 选项设置为 false.
       #
       def to_schema_doc(user_options)
         stage = user_options[:stage]
-        if schema_names && user_options[:to_ref] != false
-          schema_name = schema_names[stage]
-
+        locked_scope = (locked_options || {})[:scope]
+        schema_name = @schema_name_resolver.call(locked_scope, stage)
+        if schema_name && user_options[:to_ref] != false
           # 首先将 Schema 写进 schemas 选项中去
           schemas = user_options[:schemas]
           unless schemas.key?(schema_name)

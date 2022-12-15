@@ -14,8 +14,8 @@ module Dain
       def inherited(base)
         base.instance_eval do
           @schema_builder = JsonSchema::ObjectSchemaBuilder.new
-          @schema_builder.schema_name(proc { |locked_scope|
-            generate_schema_name(locked_scope)
+          @schema_builder.schema_name(proc { |locked_scope, stage|
+            generate_schema_name(locked_scope, stage)
           })
         end
       end
@@ -32,24 +32,27 @@ module Dain
 
       private
 
-      def generate_schema_name(locked_scope)
+      def generate_schema_name(locked_scope = nil, stage = nil)
+        # 匿名类不考虑自动生成名称
         return nil unless self.name
 
         schema_name = self.name.gsub('::', '_')
-        if schema_name.end_with?('Entity')
-          schema_names = {
-            param: schema_name.sub(/Entity$/, 'Params'),
-            render: schema_name
-          }
-        else
-          schema_names = {
-            param: "#{schema_name}Params",
-            render: "#{schema_name}Entity",
-          }
+        schema_name = schema_name.delete_suffix('Entity') unless schema_name == 'Entity'
+
+        # 先考虑 stage
+        case stage
+        when :param
+          schema_name += 'Params'
+        when :render
+          schema_name += 'Entity'
         end
 
-        schema_names = schema_names.transform_values { |base_name| "#{base_name}_#{locked_scope}" } if locked_scope
-        schema_names
+        # 再考虑 locked_scope
+        locked_scope = [locked_scope] unless locked_scope.is_a?(Array)
+        scope_suffix = (locked_scope || []).join('_')
+        schema_name = "#{schema_name}_#{scope_suffix}" unless scope_suffix.empty?
+
+        schema_name
       end
     end
   end
