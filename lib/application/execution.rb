@@ -75,7 +75,7 @@ module Dain
       self.parameters = parameters_meta.map do |name, options|
         schema = options[:schema]
         value = if options[:in] == 'header'
-          schema.filter(request.get_header(name.to_s) || request.get_header('HTTP_' + name.to_s.gsub('-', '_')))
+          schema.filter(request.get_header('HTTP_' + name.to_s.upcase.gsub('-', '_')))
         else
           schema.filter(request.params[name.to_s])
         end

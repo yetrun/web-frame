@@ -53,17 +53,17 @@ describe 'Meta Builder' do
         Class.new(Dain::Application) do
           get '/request' do
             parameters do
-              param 'X-FOO', type: 'string', in: 'header'
+              param 'X-Foo', type: 'string', in: 'header'
             end
             action do
-              response.body = [parameters['X-FOO']]
+              response.body = [parameters['X-Foo']]
             end
           end
         end
       end
 
       it '传递 parameters 成功' do
-        get '/request', {}, { 'X-FOO' => 'foo' }
+        get '/request', {}, { 'HTTP_X_FOO' => 'foo' }
         expect(last_response.body).to eq('foo')
       end
     end
