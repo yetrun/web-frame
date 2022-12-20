@@ -1,5 +1,5 @@
 zh-CN:
-  JsonSchema:
+  json_schema:
     errors:
       required: '未提供'
       format: '格式不正确'

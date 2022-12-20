@@ -13,22 +13,22 @@ module Dain
 
           full_options ||= {}
           options = {} if options == true
-          raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.required') if value.nil?
+          raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.required') if value.nil?
 
           if full_options[:type] == 'string' && (!options[:allow_empty]) && value.empty?
-            raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.required')
+            raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.required')
           end
           if full_options[:type] == 'array' && (options[:allow_empty] == false) && value.empty?
-            raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.required')
+            raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.required')
           end
         },
         format: proc { |value, format|
           next if value.nil?
-          raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.format') unless value =~ format
+          raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.format') unless value =~ format
         },
         allowable: proc { |value, allowable_values|
           next if value.nil?
-          raise JsonSchema::ValidationError, I18n.t(:'JsonSchema.errors.allowable') unless allowable_values.include?(value)
+          raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.allowable') unless allowable_values.include?(value)
         }
       }
 

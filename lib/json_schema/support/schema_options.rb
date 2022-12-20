@@ -8,7 +8,7 @@ module Dain
         required: false
       }
       @allowable_options = (
-        %i[type description in value using default presenter convert scope] + 
+        %i[type description in value using default presenter convert scope items] +
         @default_options.keys + 
         JsonSchema::Validators.keys
       ).uniq

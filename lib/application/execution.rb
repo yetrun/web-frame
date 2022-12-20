@@ -107,11 +107,7 @@ module Dain
           options = {}
         end
 
-        begin
-          new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render)
-        rescue JsonSchema::ValidationErrors => e
-          raise Errors::RenderingInvalid.new(e.errors)
-        end
+        new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render)
         response.body = [JSON.generate(new_hash)]
       else
         # 渲染多键值结点
@@ -124,6 +120,8 @@ module Dain
         end.to_h
         response.body = [JSON.generate(new_hash)]
       end
+    rescue JsonSchema::ValidationErrors => e
+      raise Errors::RenderingInvalid.new(e.errors)
     end
 
     private
