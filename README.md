@@ -114,7 +114,7 @@ end
 通过主动调用以下的方法可以生成 OpenAPI 的规格文档（JSON 文档）：
 
 ```ruby
-NoteAPI.to_swagger_doc
+NotesAPI.to_swagger_doc
 ```
 
 ### 将模块挂载在 Rack 下运行
@@ -134,4 +134,4 @@ run NotesAPI
 
 ## License
 
-LGPL v2
+LGPL v2.1
