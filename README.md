@@ -9,7 +9,7 @@ Meta 框架是一个适用于 Web API 的后端框架，采用 Ruby 语言编写
 你可直接使用我的脚手架项目上手体验：
 
 ```bash
-$ git clone https://github.com/yetrun/web-frame-example
+$ git clone https://github.com/yetrun/web-frame-example.git
 ```
 
 ## 安装
@@ -17,7 +17,7 @@ $ git clone https://github.com/yetrun/web-frame-example
 在 Gemfile 中添加：
 
 ```ruby
-gem 'meta-api', git: 'https://github.com/yetrun/web-frame'
+gem 'meta-api', '~> 0.0.1' # Meta 框架处于快速开发阶段，引入时应尽量固定版本
 ```
 
 然后在 Ruby 代码中引用：
@@ -144,6 +144,10 @@ run NotesAPI
 - [教程](docs/教程.md)
 - [索引](docs/索引.md)
 
+## 支持
+
+加 QQ 群（489579810）可获得实时答疑。
+
 ## License
 
-LGPL v2.1
+LGPL-2.1

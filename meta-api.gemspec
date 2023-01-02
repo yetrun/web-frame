@@ -1,13 +1,13 @@
 Gem::Specification.new do |spec|
   spec.name          = "meta-api"
-  spec.version       = "0.0.0"
+  spec.version       = "0.0.1"
   spec.authors       = ["yetrun"]
   spec.email         = ["yetrun@foxmail.com"]
 
   spec.summary       = "一个 Web API 框架"
-  spec.description   = "一个 Web API 框架"
+  spec.description   = "一个 Web API 框架，该框架采用定义元信息的方式编写 API，并同步生成 API 文档"
   spec.homepage      = "https://github.com/yetrun/web-frame"
-  spec.license       = "None"
+  spec.license       = "LGPL-2.1"
   spec.required_ruby_version = Gem::Requirement.new(">= 3.0.0")
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
