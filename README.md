@@ -4,6 +4,14 @@ Meta 框架是一个适用于 Web API 的后端框架，采用 Ruby 语言编写
 
 > 有关框架名称的由来，阅读[框架的名称由来](docs/名称由来.md)。
 
+## 脚手架
+
+你可直接使用我的脚手架项目上手体验：
+
+```bash
+$ git clone https://github.com/yetrun/web-frame-example
+```
+
 ## 安装
 
 在 Gemfile 中添加：
@@ -111,11 +119,15 @@ end
 
 ### 生成 API 文档
 
-通过主动调用以下的方法可以生成 OpenAPI 的规格文档（JSON 文档）：
+通过主动调用以下的方法可以生成 Open API 的规格文档：
 
 ```ruby
 NotesAPI.to_swagger_doc
 ```
+
+该 Open API 文档是 JSON 格式，可以在 Swagger UI 下预览效果。如果你不想寻找提供 Swagger UI 服务的站点，也不想自己搭建，可以直接使用我的：
+
+> http://openapi.yet.run/playground
 
 ### 将模块挂载在 Rack 下运行
 
