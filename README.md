@@ -1,25 +1,29 @@
-# Dain 框架
+# Meta 框架
 
-Dain 框架是一个适用于 Web API 的后端框架，采用 Ruby 语言编写。它最大的特色在于实现即文档的思想。
+Meta 框架是一个适用于 Web API 的后端框架，采用 Ruby 语言编写。它最大的特色在于实现即文档的思想。
 
 ## 安装
 
 在 Gemfile 中添加：
 
 ```ruby
-gem 'dain', git: 'https://github.com/yetrun/web-frame'
+gem 'meta-api', git: 'https://github.com/yetrun/web-frame'
+```
+
+然后在 Ruby 代码中引用：
+
+```ruby
+require 'meta/api'
 ```
 
 ## 快速上手
 
 ### 定义 API
 
-通过继承 `Dain::Application` 来定义一个 API 模块。（PS：以下示例的运行依赖 `ActiveRecord`）
+通过继承 `Meta::Application` 来定义一个 API 模块。（PS：以下示例的运行依赖 `ActiveRecord`）
 
 ```ruby
-require 'dain'
-
-class NotesAPI < Dain::Application
+class NotesAPI < Meta::Application
   get '/notes' do
     title '查看笔记列表'
     status 200 do
@@ -90,7 +94,7 @@ end
 以上示例看到有用到 `NoteEntity`，它是一个预先定义的实体：
 
 ```ruby
-class NoteEntity < Dain::Entity
+class NoteEntity < Meta::Entity
   property :id, type: 'integer', param: false
   property :title, type: 'string'
   property :content, type: 'string', render: { scope: 'full' }

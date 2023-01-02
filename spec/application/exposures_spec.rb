@@ -4,12 +4,12 @@ require 'grape-entity'
 require_relative '../support/grape_entity_presenter_handler'
 
 
-describe Dain::Application, '.exposures' do
+describe Meta::Application, '.exposures' do
   include Rack::Test::Methods
 
   describe '如何渲染返回值' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       route = app.route('/request', :post)
         .do_any {
@@ -32,7 +32,7 @@ describe Dain::Application, '.exposures' do
 
   describe '值转换：convert' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       route = app.route('/request', :post)
         .do_any {
@@ -55,7 +55,7 @@ describe Dain::Application, '.exposures' do
   describe '提供值：value' do
     context '用在基本类型上' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         route = app.route('/request', :post)
           .do_any {
@@ -81,7 +81,7 @@ describe Dain::Application, '.exposures' do
 
     context '用在对象类型上' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         route = app.route('/request', :post)
           .do_any {
@@ -106,7 +106,7 @@ describe Dain::Application, '.exposures' do
 
     context '用在数组类型上' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         route = app.route('/request', :post)
           .do_any {
@@ -145,15 +145,15 @@ describe Dain::Application, '.exposures' do
     end
 
     before(:all) do
-      Dain::JsonSchema::Presenters.register(GrapeEntityPresenterHandler)
+      Meta::JsonSchema::Presenters.register(GrapeEntityPresenterHandler)
     end
 
     after(:all) do
-      Dain::JsonSchema::Presenters.unregister(GrapeEntityPresenterHandler)
+      Meta::JsonSchema::Presenters.unregister(GrapeEntityPresenterHandler)
     end
 
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       the_entity_class = entity_class
       the_entity = entity
@@ -180,7 +180,7 @@ describe Dain::Application, '.exposures' do
   describe '结构性语法' do
     describe '基本结构' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         route = app.route('/request', :post)
           .do_any {
@@ -204,7 +204,7 @@ describe Dain::Application, '.exposures' do
     describe '对象结构' do
       context '使用 properties 属性' do
         def app
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
 
           route = app.route('/request', :post)
             .do_any {
@@ -228,7 +228,7 @@ describe Dain::Application, '.exposures' do
 
         context '内部还有个对象' do
           def app
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
             route = app.route('/request', :post)
               .do_any {
@@ -256,7 +256,7 @@ describe Dain::Application, '.exposures' do
 
       context '使用块' do
         def app
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
 
           route = app.route('/request', :post)
             .do_any {
@@ -280,7 +280,7 @@ describe Dain::Application, '.exposures' do
 
         context '内部继续使用块' do
           def app
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
             route = app.route('/request', :post)
               .do_any {
@@ -307,7 +307,7 @@ describe Dain::Application, '.exposures' do
 
         context '内部使用 properties' do
           def app
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
             route = app.route('/request', :post)
               .do_any {
@@ -338,7 +338,7 @@ describe Dain::Application, '.exposures' do
   describe '数组结构' do
     context '无 items 定义' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         route = app.route('/request', :post)
           .do_any {
@@ -361,7 +361,7 @@ describe Dain::Application, '.exposures' do
     context '使用 items' do
       context '简单数组' do
         def app
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
 
           route = app.route('/request', :post)
             .do_any {
@@ -383,7 +383,7 @@ describe Dain::Application, '.exposures' do
 
       context '内部使用 properties 定义对象' do
         def app
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
 
           route = app.route('/request', :post)
             .do_any {
@@ -411,7 +411,7 @@ describe Dain::Application, '.exposures' do
 
     context '内部使用块定义对象' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         route = app.route('/request', :post)
           .do_any {
@@ -437,7 +437,7 @@ describe Dain::Application, '.exposures' do
 
   describe '数组和对象混合的复杂结构' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       route = app.route('/request', :post)
         .do_any {

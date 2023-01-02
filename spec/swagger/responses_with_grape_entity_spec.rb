@@ -1,27 +1,26 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'
 require_relative '../support/grape_entity_presenter_handler'
 
-describe 'Dain::SwaggerDocUtil.generate' do
+describe 'Meta::SwaggerDocUtil.generate' do
   before(:all) do
-    Dain::JsonSchema::Presenters.register(GrapeEntityPresenterHandler)
+    Meta::JsonSchema::Presenters.register(GrapeEntityPresenterHandler)
   end
 
   after(:all) do
-    Dain::JsonSchema::Presenters.unregister(GrapeEntityPresenterHandler)
+    Meta::JsonSchema::Presenters.unregister(GrapeEntityPresenterHandler)
   end
 
   subject do
-    doc = Dain::SwaggerDocUtil.generate(app)
+    doc = Meta::SwaggerDocUtil.generate(app)
     doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
   end
 
   let(:app) do
-    app = Class.new(Dain::Application)
+    app = Class.new(Meta::Application)
 
     the_arguments = arguments
     app.route('/user', :get)

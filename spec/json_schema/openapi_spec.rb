@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/json_schema/schemas'
 
 describe 'openapi' do
   it '生成对象 Schema 的文档' do
-    schema = Dain::JsonSchema::SchemaBuilderTool.build do
+    schema = Meta::JsonSchema::SchemaBuilderTool.build do
       param :user, description: '用户' do
         param :name
         param :age
@@ -29,7 +28,7 @@ describe 'openapi' do
 
   context 'using: Entity' do
     let(:user_entity) do
-      Class.new(Dain::Entity) do
+      Class.new(Meta::Entity) do
         schema_name param: 'UserParams', render: 'UserEntity'
 
         property :name
@@ -39,7 +38,7 @@ describe 'openapi' do
 
     let(:schema) do
       the_entity = user_entity
-      Dain::JsonSchema::SchemaBuilderTool.build do
+      Meta::JsonSchema::SchemaBuilderTool.build do
         param :user, using: the_entity
       end.to_schema
     end
@@ -89,7 +88,7 @@ describe 'openapi' do
 
   context 'locked scope' do
     it '过滤掉 scope 不匹配的参数' do
-      schema = Dain::JsonSchema::ObjectSchemaBuilder.new do
+      schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
         param :foo
         param :bar, scope: 'bar'
         param :baz, scope: 'baz'
@@ -107,7 +106,7 @@ describe 'openapi' do
 
   describe 'requires' do
     it 'required 属性生成 requires 文档' do
-      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
         param :user, description: '用户' do
           param :name, required: true
           param :age
@@ -133,7 +132,7 @@ describe 'openapi' do
 
   describe 'enum' do
     it 'allowable 选项可以生成 enum 部分' do
-      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
         param :user, description: '用户' do
           param :name, allowable: %w[Jim Jack James]
           param :age

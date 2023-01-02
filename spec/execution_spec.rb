@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Dain::Execution do
+describe Meta::Execution do
   include Rack::Test::Methods
 
   before { @holder = {} }
@@ -8,7 +8,7 @@ describe Dain::Execution do
   def app
     holder = @holder
 
-    app = Class.new(Dain::Application)
+    app = Class.new(Meta::Application)
 
     app.route('/users', :get)
       .do_any { 

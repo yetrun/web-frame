@@ -1,13 +1,12 @@
 require 'spec_helper'
-require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'
 
-describe 'Dain::SwaggerDocUtil.generate' do
+describe 'Meta::SwaggerDocUtil.generate' do
   subject { app.to_swagger_doc }
 
   let(:app) do
-    app = Class.new(Dain::Application)
+    app = Class.new(Meta::Application)
     app
   end
 

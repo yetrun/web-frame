@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe Dain::Application, 'lifecycles' do
+describe Meta::Application, 'lifecycles' do
   before { @holder = [] }
 
   def app
@@ -12,7 +12,7 @@ describe Dain::Application, 'lifecycles' do
   def build_app
     holder = @holder
 
-    app = Class.new(Dain::Application)
+    app = Class.new(Meta::Application)
 
     app.before { holder << 'before one' }
     app.before { holder << 'before two' }
@@ -40,7 +40,7 @@ describe Dain::Application, 'lifecycles' do
 
   context 'when defining lifecycles in inner module' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.apply build_app
 
@@ -60,7 +60,7 @@ describe Dain::Application, 'lifecycles' do
       holder = @holder
       inner_app = build_app
 
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         apply inner_app
 
         before { holder << 'outer before' }

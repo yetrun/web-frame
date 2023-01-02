@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/json_schema/schemas'
 
 describe 'schema' do
   context 'discard_missing' do
     it '丢弃缺失的参数' do
-      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
         param :foo, type: 'string'
         param :bar, type: 'string'
       end.to_schema
@@ -25,7 +24,7 @@ describe 'schema' do
 
     context '定义标量数组' do
       let(:schema) do
-        Dain::JsonSchema::SchemaBuilderTool.build type: 'array'
+        Meta::JsonSchema::SchemaBuilderTool.build type: 'array'
       end
 
       include_examples '过滤 nil 得到 nil'
@@ -33,7 +32,7 @@ describe 'schema' do
 
     context '定义对象数组' do
       let(:schema) do
-        Dain::JsonSchema::SchemaBuilderTool.build type: 'array' do
+        Meta::JsonSchema::SchemaBuilderTool.build type: 'array' do
           property :foo
           property :bar
         end
@@ -48,7 +47,7 @@ describe 'schema' do
     # 对于对象，obj[:foo] 会调用 obj.foo 方法；对于数组，arr[index]、arr.length 和
     # arr.each 都会对应地调用
     it 'render 对象时，调用对象的方法' do
-      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
         property :foo
         property :bar
       end
@@ -61,7 +60,7 @@ describe 'schema' do
     end
 
     it 'render 数组时，首先调用数组的 `to_a` 方法' do
-      schema = Dain::JsonSchema::SchemaBuilderTool.build type: 'array'
+      schema = Meta::JsonSchema::SchemaBuilderTool.build type: 'array'
 
       arr = Object.new
       def arr.to_a; [1, 2, 3] end
@@ -73,24 +72,24 @@ describe 'schema' do
   describe 'filter options' do
     describe '自定义验证器' do
       let (:schema) do
-        Dain::JsonSchema::SchemaBuilderTool.build validate: ->(value) {
-          raise Dain::JsonSchema::ValidationError, "value mustn't be zero"  if value == 0
+        Meta::JsonSchema::SchemaBuilderTool.build validate: ->(value) {
+          raise Meta::JsonSchema::ValidationError, "value mustn't be zero"  if value == 0
         }
       end
 
       it '验证失败时抛出异常' do
-        expect { schema.filter(0) }.to raise_error(Dain::JsonSchema::ValidationError)
+        expect { schema.filter(0) }.to raise_error(Meta::JsonSchema::ValidationError)
       end
     end
 
     describe 'using entity' do
       it '成功使用外部 Entity 类' do
-        entity_class = Class.new(Dain::Entity) do
+        entity_class = Class.new(Meta::Entity) do
           property :a
           property :b
         end
 
-        schema = Dain::JsonSchema::SchemaBuilderTool.build do
+        schema = Meta::JsonSchema::SchemaBuilderTool.build do
           property :foo, required: true, using: entity_class
         end
 
@@ -104,7 +103,7 @@ describe 'schema' do
 
     describe 'render: false' do
       it '不过滤 render 选项为 false 的属性' do
-        schema = Dain::JsonSchema::SchemaBuilderTool.build do
+        schema = Meta::JsonSchema::SchemaBuilderTool.build do
           property :foo
           property :bar, render: false
         end
@@ -117,7 +116,7 @@ describe 'schema' do
 
   describe 'default: 默认值' do
     it '生成 boolean 类型的默认值' do
-      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
         property :flag, type: 'boolean', default: false
       end
 
@@ -128,7 +127,7 @@ describe 'schema' do
 
   describe 'format validator' do
     it 'nil 值不会触发 format validator' do
-      schema = Dain::JsonSchema::SchemaBuilderTool.build do
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
         property :number, type: 'string', format: /\d+/
       end
 

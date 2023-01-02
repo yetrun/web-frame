@@ -1,12 +1,12 @@
 require 'spec_helper'
 
-describe Dain::Application, '.authorize' do
+describe Meta::Application, '.authorize' do
   before { @holder = {} }
 
   def app
     holder = @holder
 
-    app = Class.new(Dain::Application)
+    app = Class.new(Meta::Application)
 
     app.route('/permit', :get)
       .authorize { true }
@@ -29,6 +29,6 @@ describe Dain::Application, '.authorize' do
   it 'forbids when authorize false' do
     expect {
       get '/forbid'
-    }.to raise_error(Dain::Errors::NotAuthorized)
+    }.to raise_error(Meta::Errors::NotAuthorized)
   end
 end

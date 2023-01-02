@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'support/shared_examples'
 
-describe Dain::Application, '.route' do
+describe Meta::Application, '.route' do
   include Rack::Test::Methods
 
   def app
-    app = Class.new(Dain::Application)
+    app = Class.new(Meta::Application)
 
     app.route('/users', :get)
     app.route('/users', :post)
@@ -23,7 +23,7 @@ describe Dain::Application, '.route' do
       let(:app_capturing_parameters) do
         @holder = holder = [] 
 
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
         app.route(path, :get)
           .do_any { holder[0] = request.params }
         app
@@ -112,7 +112,7 @@ describe Dain::Application, '.route' do
 
         context '在模块内定义' do
           def app
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
             app.apply app_capturing_parameters
             app
           end

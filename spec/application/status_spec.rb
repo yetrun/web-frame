@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Dain::Application do
+describe Meta::Application do
   describe 'default status' do
     it 'sets status code' do
       response = Rack::Response.new
@@ -10,7 +10,7 @@ describe Dain::Application do
 
   describe '.set_status' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.route('/status', :get)
         .set_status { 201 }
@@ -27,7 +27,7 @@ describe Dain::Application do
 
   describe '.if_status' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.route('/status', :get)
         .do_any {
@@ -54,11 +54,11 @@ describe Dain::Application do
     end
   end
 
-  describe 'Dain::Execution#render' do
+  describe 'Meta::Execution#render' do
     describe 'scope 过滤' do
       context '渲染时不传递 scope 选项' do
         def app
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
           app.route('/article', :get)
             .do_any {
               render({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' })
@@ -80,7 +80,7 @@ describe Dain::Application do
 
       context '渲染时传递 scope 选项' do
         def app
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
           app.route('/article', :get)
             .do_any {
               render({ 'title' => 'Title', 'content' => 'Content', 'other' => 'Other' }, scope: 'full')
@@ -107,7 +107,7 @@ describe Dain::Application do
         def the_object.title; 'Title' end
         def the_object.content; 'Content' end
 
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
         app.route('/article', :get)
           .do_any {
             render('article' => the_object)

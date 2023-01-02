@@ -1,20 +1,18 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/route_dsl/application_builder'
-require_relative '../../lib/swagger_doc'
 
 describe 'Route Builder' do
   include Rack::Test::Methods
 
   describe '一个带有所有基本要素的 DSL 实例' do
     def app
-      article_entity = Class.new(Dain::Entity) do
+      article_entity = Class.new(Meta::Entity) do
         property :title
         property :content
       end
 
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         route '/article', :put do
           title '更新一篇新的文章'
           params do
@@ -43,7 +41,7 @@ describe 'Route Builder' do
   describe 'namespace' do
     context '简单调用' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/nesting' do
             route '/foo', :get do
               action do
@@ -71,7 +69,7 @@ describe 'Route Builder' do
 
     context '带路径参数' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/nesting/:key' do
             before do
               @key = request.params['key']
@@ -107,7 +105,7 @@ describe 'Route Builder' do
     describe '定义共同 meta' do
       context '定义共同参数' do
         def app
-          Class.new(Dain::Application) do
+          Class.new(Meta::Application) do
             namespace '/nesting' do
               params { param :foo }
 
@@ -134,7 +132,7 @@ describe 'Route Builder' do
 
       context '定义共同响应值' do
         def app
-          Class.new(Dain::Application) do
+          Class.new(Meta::Application) do
             namespace '/nesting' do
               meta do
                 status(200, 201) { expose :foo }
@@ -167,7 +165,7 @@ describe 'Route Builder' do
 
   describe 'apply' do
     def app
-      foo = Class.new(Dain::Application) do
+      foo = Class.new(Meta::Application) do
         route '/foo', :get do
           action do
             response.body = ['foo']
@@ -175,7 +173,7 @@ describe 'Route Builder' do
         end
       end
 
-      bar = Class.new(Dain::Application) do
+      bar = Class.new(Meta::Application) do
         route '/bar', :get do
           action do
             response.body = ['bar']
@@ -183,7 +181,7 @@ describe 'Route Builder' do
         end
       end
 
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         apply foo, tags: ['Foo']
         apply bar, tags: ['Bar']
       end
@@ -198,7 +196,7 @@ describe 'Route Builder' do
     end
 
     it '生成对应 tags 的文档' do
-      doc = Dain::SwaggerDocUtil.generate(app)
+      doc = Meta::SwaggerDocUtil.generate(app)
 
       expect(doc[:paths]['/foo'][:get][:tags]).to eq(['Foo'])
       expect(doc[:paths]['/bar'][:get][:tags]).to eq(['Bar'])
@@ -207,7 +205,7 @@ describe 'Route Builder' do
 
   describe 'namespace 和 apply 结合' do
     def app
-      foo = Class.new(Dain::Application) do
+      foo = Class.new(Meta::Application) do
         route '/foo', :get do
           action do
             response.body = ['foo']
@@ -215,7 +213,7 @@ describe 'Route Builder' do
         end
       end
 
-      bar = Class.new(Dain::Application) do
+      bar = Class.new(Meta::Application) do
         route '/bar', :get do
           action do
             response.body = ['bar']
@@ -223,7 +221,7 @@ describe 'Route Builder' do
         end
       end
 
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         namespace '/nesting' do
           apply foo, tags: ['Foo']
           apply bar, tags: ['Bar']
@@ -240,7 +238,7 @@ describe 'Route Builder' do
     end
 
     it '生成对应 tags 的文档' do
-      doc = Dain::SwaggerDocUtil.generate(app)
+      doc = Meta::SwaggerDocUtil.generate(app)
 
       expect(doc[:paths]['/nesting/foo'][:get][:tags]).to eq(['Foo'])
       expect(doc[:paths]['/nesting/bar'][:get][:tags]).to eq(['Bar'])
@@ -256,7 +254,7 @@ describe 'Route Builder' do
         def bar; 'bar' end
       end
 
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         shared mod_foo, mod_bar do
           def ok; 'ok' end
         end
@@ -277,7 +275,7 @@ describe 'Route Builder' do
   describe '路径' do
     context '访问根路由 `/`' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           get '/' do
             action do
               response.body = ['foo']
@@ -294,7 +292,7 @@ describe 'Route Builder' do
 
     context '内部使用根路径 `/`' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/nesting' do
             get '/' do
               action do
@@ -313,7 +311,7 @@ describe 'Route Builder' do
 
     context '内部不使用 `/` 前缀' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/nesting' do
             get 'foo' do
               action do
@@ -332,7 +330,7 @@ describe 'Route Builder' do
 
     context '内部使用 `/` 后缀' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/nesting' do
             get '/foo/' do
               action do

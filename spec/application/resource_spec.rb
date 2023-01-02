@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe Dain::Application, '.resource' do
+describe Meta::Application, '.resource' do
   include Rack::Test::Methods
 
   context '返回一个 nil 值' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.route('/users', :get)
         .resource { nil }
@@ -14,7 +14,7 @@ describe Dain::Application, '.resource' do
     end
 
     it 'sets and gets resource' do
-      expect { get '/users' }.to raise_error(Dain::Errors::ResourceNotFound)
+      expect { get '/users' }.to raise_error(Meta::Errors::ResourceNotFound)
     end
   end
 
@@ -22,10 +22,10 @@ describe Dain::Application, '.resource' do
     def app
       holder = @holder = []
 
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.route('/users', :get)
-        .resource { "Self is a execution: #{self.is_a?(Dain::Execution)}" }
+        .resource { "Self is a execution: #{self.is_a?(Meta::Execution)}" }
         .do_any { holder[0] = resource }
 
       app

@@ -1,7 +1,7 @@
 require 'spec_helper'
 require "rack/test"
 
-describe Dain::Application, '.do_any' do
+describe Meta::Application, '.do_any' do
   include Rack::Test::Methods
 
   before { @holder = {} }
@@ -9,7 +9,7 @@ describe Dain::Application, '.do_any' do
   def app
     holder = @holder
 
-    app = Class.new(Dain::Application)
+    app = Class.new(Meta::Application)
 
     app.route('/users', :get)
       .do_any { holder[:value] = 'Hello, do something!'}

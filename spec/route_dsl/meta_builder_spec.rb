@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/route_dsl/application_builder'
-require_relative '../../lib/swagger_doc'
 
 describe 'Meta Builder' do
   include Rack::Test::Methods
@@ -10,7 +8,7 @@ describe 'Meta Builder' do
   describe 'parameters' do
     context '定义 query 参数' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           get '/request' do
             parameters do
               param :foo, type: 'string', in: 'query'
@@ -30,7 +28,7 @@ describe 'Meta Builder' do
 
     context '定义 path 参数' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           get '/request/:foo' do
             parameters do
               param :foo, type: 'string', in: 'path'
@@ -50,7 +48,7 @@ describe 'Meta Builder' do
 
     context '定义 header 参数' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           get '/request' do
             parameters do
               param 'X-Foo', type: 'string', in: 'header'
@@ -70,7 +68,7 @@ describe 'Meta Builder' do
 
     context '父级定义参数' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/foo' do
             parameters do
               param :foo, type: 'string', in: 'query'
@@ -108,7 +106,7 @@ describe 'Meta Builder' do
 
     context '父级定义参数（三级嵌套）' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/foo' do
             parameters do
               param :foo, type: 'string', in: 'query'
@@ -165,7 +163,7 @@ describe 'Meta Builder' do
   describe 'request and response body' do
     context '使用 request_body' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           route '/request', :post do
             request_body do
               property :foo, type: 'string'
@@ -185,12 +183,12 @@ describe 'Meta Builder' do
 
     context '遇到 `required: true` 时' do
       def app
-        entity = Class.new(Dain::Entity) do
+        entity = Class.new(Meta::Entity) do
           expose :foo
           expose :bar, required: true
         end
 
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           route '/request', :post do
             params do
               param :nested, using: entity
@@ -211,12 +209,12 @@ describe 'Meta Builder' do
 
     describe 'render: false' do
       def app
-        entity = Class.new(Dain::Entity) do
+        entity = Class.new(Meta::Entity) do
           expose :foo
           expose :bar, render: false
         end
 
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           route '/request', :post do
             status 200 do
               expose :nested, using: entity
@@ -236,11 +234,11 @@ describe 'Meta Builder' do
 
     describe 'value 中使用 Execution 环境' do
       def app
-        entity = Class.new(Dain::Entity) do
+        entity = Class.new(Meta::Entity) do
           expose :foo, value: lambda { resolve_method }
         end
 
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           route '/request', :post do
             status 200 do
               expose :nested, using: entity

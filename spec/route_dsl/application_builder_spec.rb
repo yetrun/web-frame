@@ -1,15 +1,13 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/route_dsl/application_builder'
-require_relative '../../lib/swagger_doc'
 
 describe 'Application Builder' do
   include Rack::Test::Methods
 
   describe '在 Application 层定义 params 的效果' do
     def app
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         namespace '/foo' do
           params do
             param :foo

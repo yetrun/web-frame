@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dain (0.1.0)
+    meta-api (0.0.0)
 
 GEM
   remote: https://gems.ruby-china.com/
@@ -53,9 +53,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  dain!
   grape-entity
   i18n
+  meta-api!
   pry-byebug
   rack
   rack-test

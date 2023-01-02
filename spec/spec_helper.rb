@@ -1,7 +1,6 @@
 require 'bundler/setup'
 require "rack/test"
-require_relative '../lib/application'
-require_relative '../lib/load_i18n'
+require_relative '../lib/meta/api'
 
 I18n.locale = :'zh-CN'
 

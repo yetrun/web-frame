@@ -1,15 +1,14 @@
 require 'spec_helper'
-require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'
 
-describe 'Dain::SwaggerDocUtil.generate' do
-  subject { Dain::SwaggerDocUtil.generate(app) }
+describe 'Meta::SwaggerDocUtil.generate' do
+  subject { Meta::SwaggerDocUtil.generate(app) }
 
   describe '生成 paths 部分' do
     context 'singular module' do
       let(:app) do
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         app.route('/users', :get)
         app.route('/users', :post)
@@ -35,16 +34,16 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     context 'including multiple modules' do
       let(:app) do
-        users_app = Class.new(Dain::Application) do
+        users_app = Class.new(Meta::Application) do
           route('/users', :get)
           route('/users', :post)
         end
-        posts_app = Class.new(Dain::Application) do
+        posts_app = Class.new(Meta::Application) do
           route('/posts', :get)
           route('/posts', :post)
         end
 
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         app.apply users_app
         app.apply posts_app
@@ -68,7 +67,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     context 'with path parameters' do
       let(:app) do
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         app.route('/users/:id', :get)
         app.route('/posts/*title', :get)
@@ -91,7 +90,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
   describe '生成 paths.description 部分' do
     let(:app) do
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.route('/users', :get)
         .title('查看用户列表')

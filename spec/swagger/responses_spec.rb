@@ -3,17 +3,16 @@
 # Note: 响应实体的生成与参数的一致，所以这里不再做深层次的测试了
 
 require 'spec_helper'
-require_relative '../../lib/swagger_doc'
 
-describe 'Dain::SwaggerDocUtil.generate' do
+describe 'Meta::SwaggerDocUtil.generate' do
   context '简单生成文档的效果' do
     subject do
-      doc = Dain::SwaggerDocUtil.generate(app)
+      doc = Meta::SwaggerDocUtil.generate(app)
       doc[:paths]['/user'][:get][:responses][200][:content]['application/json'][:schema]
     end
 
     def app
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         get '/user' do
           status(200) do
             expose :user, type: 'object' do
@@ -44,7 +43,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
   # 因为 ObjectSchemaBuilder 没有 locked 方法，故而将测试放在这里比较合适
   context '使用 `using: Entity - schema_name 用块解析`' do
     subject(:doc) do
-      Dain::SwaggerDocUtil.generate(app)
+      Meta::SwaggerDocUtil.generate(app)
     end
 
     subject(:schema) do
@@ -56,7 +55,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
     end
 
     def app
-      user_entity = Class.new(Dain::Entity) do
+      user_entity = Class.new(Meta::Entity) do
         p = proc do |locked_scope, stage|
           'UserEntity'
         end
@@ -65,7 +64,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
         property :name, type: 'string'
         property :age, type: 'integer', scope: 'a'
       end
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         get '/user' do
           status(200) do
             expose :user, using: user_entity
@@ -95,7 +94,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
   context '使用 `using: Entity - schema_name 用块解析 & lock_scope`' do
     subject(:doc) do
-      Dain::SwaggerDocUtil.generate(app)
+      Meta::SwaggerDocUtil.generate(app)
     end
 
     subject(:schema) do
@@ -107,7 +106,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
     end
 
     def app
-      user_entity = Class.new(Dain::Entity) do
+      user_entity = Class.new(Meta::Entity) do
         p = proc do |stage, locked_scopes|
           "UserEntity_#{locked_scopes.join('_')}"
         end
@@ -117,7 +116,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
         property :bar, scope: 'bar'
         property :baz, scope: 'baz'
       end
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         get '/user' do
           status(200) do
             expose :user, using: user_entity.lock_scope('bar')
@@ -147,7 +146,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
   context '使用 `using: Entity - 自动解析 schema_name`' do
     subject(:doc) do
-      Dain::SwaggerDocUtil.generate(app)
+      Meta::SwaggerDocUtil.generate(app)
     end
 
     subject(:schema) do
@@ -158,14 +157,14 @@ describe 'Dain::SwaggerDocUtil.generate' do
       doc[:components]
     end
 
-    class UserEntity < Dain::Entity
+    class UserEntity < Meta::Entity
       property :name, type: 'string'
       property :age, type: 'integer'
     end
 
     def app
       # TODO: 测试结束后移除常量名
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         get '/user' do
           status(200) do
             expose :user, using: UserEntity
@@ -195,7 +194,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
   context '使用 `using: Entity - 自动解析 schema_name & lock_scope`' do
     subject(:doc) do
-      Dain::SwaggerDocUtil.generate(app)
+      Meta::SwaggerDocUtil.generate(app)
     end
 
     subject(:schema) do
@@ -206,14 +205,14 @@ describe 'Dain::SwaggerDocUtil.generate' do
       doc[:components]
     end
 
-    class TheEntity < Dain::Entity
+    class TheEntity < Meta::Entity
       property :foo
       property :bar, scope: 'bar'
       property :baz, scope: 'baz'
     end
 
     def app
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         get '/user' do
           status(200) do
             expose :user, using: TheEntity.lock_scope('bar')
@@ -243,7 +242,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
   context '使用 `using: Entity` - 内部引用自身' do
     subject(:doc) do
-      Dain::SwaggerDocUtil.generate(app)
+      Meta::SwaggerDocUtil.generate(app)
     end
 
     subject(:schema) do
@@ -255,7 +254,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
     end
 
     let(:entity) do
-      entity = Class.new(Dain::Entity) do
+      entity = Class.new(Meta::Entity) do
         schema_name 'TheEntity'
       end
       entity.class_eval do
@@ -266,7 +265,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     def app
       the_entity = entity
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         get '/user' do
           status(200) do
             expose :the_entity, using: the_entity
@@ -300,7 +299,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
   context '未提供 status 宏时' do
     subject(:doc) do
-      Dain::SwaggerDocUtil.generate(app)
+      Meta::SwaggerDocUtil.generate(app)
     end
 
     subject(:responses) do
@@ -308,7 +307,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
     end
 
     def app
-      Class.new(Dain::Application) do
+      Class.new(Meta::Application) do
         get '/request' do
           action do
             response.status = 204

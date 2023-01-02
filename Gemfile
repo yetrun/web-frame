@@ -1,6 +1,6 @@
 source 'https://gems.ruby-china.com/'
 
-# Specify your gem's dependencies in dain.gemspec
+# Specify your gem's dependencies in xxx.gemspec
 gemspec
 
 gem "rake", "~> 12.0"

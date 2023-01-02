@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Dain::Application, '.rescue_error' do
+describe Meta::Application, '.rescue_error' do
   include Rack::Test::Methods
 
   context '捕获自定义异常' do
@@ -9,7 +9,7 @@ describe Dain::Application, '.rescue_error' do
 
     def app
       caught_error_holder = @caught_error_holder = []
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.rescue_error(caught_error) { |e|
         response.status = 500
@@ -46,7 +46,7 @@ describe Dain::Application, '.rescue_error' do
       let(:escaped_error) { Class.new(StandardError) }
 
       def app
-        inner_app = Class.new(Dain::Application)
+        inner_app = Class.new(Meta::Application)
 
         inner_app.rescue_error(caught_by_inner_error) {
           response.status = 500
@@ -64,7 +64,7 @@ describe Dain::Application, '.rescue_error' do
         inner_app.route('/escaped', :get)
           .do_any { raise the_escaped_error }
 
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
         app.rescue_error(caught_by_outer_error) {
           response.status = 500
           response.body = ['Caught by outer module!']
@@ -107,14 +107,14 @@ describe Dain::Application, '.rescue_error' do
         the_caught_by_inner_error = caught_by_inner_error
         the_caught_by_outer_error = caught_by_outer_error
 
-        inner_app = Class.new(Dain::Application)
+        inner_app = Class.new(Meta::Application)
         inner_app.rescue_error(caught_by_inner_error) {
           raise the_caught_by_outer_error
         }
         inner_app.route('/caught', :get)
           .do_any { raise the_caught_by_inner_error }
 
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
         app.rescue_error(caught_by_outer_error) {
           response.status = 500
           response.body = ['Caught by outer module!']
@@ -134,22 +134,22 @@ describe Dain::Application, '.rescue_error' do
       end
     end
 
-    describe 'Dain::Errors::NoMatchingRoute' do
+    describe 'Meta::Errors::NoMatchingRoute' do
       let(:holder) { {} }
 
       def rescue_error(app)
         the_holder = holder
 
-        app.rescue_error(Dain::Errors::NoMatchingRoute) {
+        app.rescue_error(Meta::Errors::NoMatchingRoute) {
           the_holder[:rescued] = true
         }
       end
 
-      shared_examples 'raises `Dain::Errors::NoMatchingRoute`' do
-        it 'raises `Dain::Errors::NoMatchingRoute`' do
+      shared_examples 'raises `Meta::Errors::NoMatchingRoute`' do
+        it 'raises `Meta::Errors::NoMatchingRoute`' do
           expect {
             get '/unknown'
-          }.to raise_error Dain::Errors::NoMatchingRoute
+          }.to raise_error Meta::Errors::NoMatchingRoute
         end
       end
 
@@ -164,17 +164,17 @@ describe Dain::Application, '.rescue_error' do
       context 'not applying modules' do
         context 'not defining `rescue_error`' do
           def app
-            Class.new(Dain::Application)
+            Class.new(Meta::Application)
           end
 
-          it_behaves_like 'raises `Dain::Errors::NoMatchingRoute`'
+          it_behaves_like 'raises `Meta::Errors::NoMatchingRoute`'
         end
 
         context 'defining `rescue_error`' do
           let(:holder) { {} }
 
           def app
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
             rescue_error(app)
             app
@@ -187,21 +187,21 @@ describe Dain::Application, '.rescue_error' do
       context 'applying modules' do
         context 'not defining `rescue_error`' do
           def app
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
-            app.apply Class.new(Dain::Application)
+            app.apply Class.new(Meta::Application)
             app
           end
 
-          it_behaves_like 'raises `Dain::Errors::NoMatchingRoute`'
+          it_behaves_like 'raises `Meta::Errors::NoMatchingRoute`'
         end
 
         context 'defining `rescue_error` in outer module' do
           let(:holder) { {} }
 
           def app
-            app = Class.new(Dain::Application)
-            app.apply Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
+            app.apply Class.new(Meta::Application)
 
             rescue_error(app)
             app
@@ -212,16 +212,16 @@ describe Dain::Application, '.rescue_error' do
 
         context 'defining `rescue_error` in inner module' do
           def app
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
-            inner_app = Class.new(Dain::Application)
+            inner_app = Class.new(Meta::Application)
             rescue_error(inner_app)
 
             app.apply inner_app
             app
           end
 
-          it_behaves_like 'raises `Dain::Errors::NoMatchingRoute`'
+          it_behaves_like 'raises `Meta::Errors::NoMatchingRoute`'
         end
       end
     end

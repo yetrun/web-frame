@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/json_schema/schemas'
 
 describe 'render' do
   include Rack::Test::Methods
 
   context '完整渲染' do
     def app
-      app = Class.new(Dain::Application)
+      app = Class.new(Meta::Application)
 
       app.route('/request', :post)
         .do_any {
@@ -35,7 +34,7 @@ describe 'render' do
   context '带符号键名' do
     context '渲染正确的键名' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         app.route('/request', :post)
           .do_any {
@@ -61,7 +60,7 @@ describe 'render' do
 
     context '渲染错误的键名' do
       def app
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         app.route('/request', :post)
           .do_any {
@@ -80,7 +79,7 @@ describe 'render' do
       specify do
         expect {
           post('/request')
-        }.to raise_error(Dain::Errors::RenderingError, /user2/)
+        }.to raise_error(Meta::Errors::RenderingError, /user2/)
       end
     end
   end

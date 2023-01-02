@@ -1,17 +1,16 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/swagger_doc'
 require 'json'
 require 'grape-entity'
 
-describe 'Dain::SwaggerDocUtil.generate' do
+describe 'Meta::SwaggerDocUtil.generate' do
   describe 'generating parameters documentation' do
     describe 'path params' do
-      subject { Dain::SwaggerDocUtil.generate(app) }
+      subject { Meta::SwaggerDocUtil.generate(app) }
 
       let(:app) do
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         app.route('/users/:id', :get)
           .params {
@@ -50,12 +49,12 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     describe 'body params' do
       subject do 
-        Dain::SwaggerDocUtil.generate(app)[:paths]['/users'][:post][:requestBody][:content]['application/json'][:schema]
+        Meta::SwaggerDocUtil.generate(app)[:paths]['/users'][:post][:requestBody][:content]['application/json'][:schema]
       end
 
       context 'with simple parameters' do # 同时包含了 type 和 description 的测试
         let(:app) do
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
 
           app.route('/users', :post)
             .params {
@@ -98,7 +97,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
       context 'with nesting parameters' do
         context 'nesting hash' do # 同时包含 description 的测试
           let(:app) do
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
             app.route('/users', :post)
               .params {
@@ -130,7 +129,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
         context 'nesting array' do # 同时包含 description 的测试
           let(:app) do
-            app = Class.new(Dain::Application)
+            app = Class.new(Meta::Application)
 
             app.route('/users', :post)
               .params {
@@ -166,11 +165,11 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
       describe '不生成 requestBody' do
         subject do 
-          Dain::SwaggerDocUtil.generate(app)[:paths]['/users'][:post]
+          Meta::SwaggerDocUtil.generate(app)[:paths]['/users'][:post]
         end
 
         let(:app) do
-          app = Class.new(Dain::Application)
+          app = Class.new(Meta::Application)
 
           app.route('/users', :post)
             .params {
@@ -189,11 +188,11 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     context 'with setting param to `false`' do
       subject do
-        Dain::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
+        Meta::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
       end
 
       let(:app) do
-        app = Class.new(Dain::Application)
+        app = Class.new(Meta::Application)
 
         app.route('/request', :post)
            .params {
@@ -215,11 +214,11 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
       context '嵌套' do
         subject do
-          Dain::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
+          Meta::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
         end
 
         let(:app) do
-          Class.new(Dain::Application) do
+          Class.new(Meta::Application) do
             post '/request' do
               params do
                 param :nested do
@@ -239,11 +238,11 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     context '使用 `using: Entity`' do
       subject(:doc) do
-        Dain::SwaggerDocUtil.generate(app)
+        Meta::SwaggerDocUtil.generate(app)
       end
 
       subject(:schema) do
-        Dain::SwaggerDocUtil.generate(app)[:paths]['/user'][:post][:requestBody][:content]['application/json'][:schema]
+        Meta::SwaggerDocUtil.generate(app)[:paths]['/user'][:post][:requestBody][:content]['application/json'][:schema]
       end
 
       subject(:components) do
@@ -251,13 +250,13 @@ describe 'Dain::SwaggerDocUtil.generate' do
       end
 
       def app
-        user_entity = Class.new(Dain::Entity) do
+        user_entity = Class.new(Meta::Entity) do
           schema_name 'UserParams'
 
           property :name, type: 'string'
           property :age, type: 'integer'
         end
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           post '/user' do
             params do
               param :user, using: user_entity

@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/swagger_doc'
 
-describe 'Dain::SwaggerDocUtil.generate' do
+describe 'Meta::SwaggerDocUtil.generate' do
   describe '生成 parameters 文档' do
     subject { app.to_swagger_doc }
 
     context '定义 path、query 参数' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           get '/users/:id' do
             parameters do
               param :id, type: 'string', in: 'path', required: true, description: 'the id'
@@ -47,7 +46,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     context '路径存在 path 参数，但参数宏中未提供 path 定义' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           get '/users/:id'
         end
       end
@@ -67,7 +66,7 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     context '路径存在 path 参数，但参数宏中未提供 path 定义（多层）' do
       def app
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/:foo' do
             get '/:bar'
           end
@@ -96,10 +95,10 @@ describe 'Dain::SwaggerDocUtil.generate' do
 
     context '路径存在 path 参数，但参数宏中未提供 path 定义（apply）' do
       def app
-        mod = Class.new(Dain::Application) do
+        mod = Class.new(Meta::Application) do
           get '/:bar'
         end
-        Class.new(Dain::Application) do
+        Class.new(Meta::Application) do
           namespace '/:foo' do
             apply mod
           end
