@@ -4,7 +4,6 @@ require 'forwardable'
 require_relative 'errors'
 require_relative 'json_schema/schemas'
 
-# Meta::Entity 是 ObjectSchemaBuilder 的一个类封装，它不应有自己的逻辑
 module Meta
   class Entity
     class << self

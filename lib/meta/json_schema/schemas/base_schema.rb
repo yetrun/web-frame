@@ -50,9 +50,10 @@ module Meta
         value = stage_options[:default] if value.nil? && stage_options.key?(:default)
         value = stage_options[:convert].call(value) if stage_options[:convert]
 
-        # 这一步转换值。需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
+        # 第一步，转化值。
+        # 需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
         type = stage_options[:type]
-        unless type.nil? || value.nil?
+        unless user_options[:type_conversion] == false || type.nil? || value.nil?
           begin
             value = JsonSchema::TypeConverter.convert_value(value, type)
           rescue JsonSchema::TypeConvertError => e
@@ -60,7 +61,8 @@ module Meta
           end
         end
 
-        validate!(value, stage_options)
+        # 第二步，做校验。
+        validate!(value, stage_options) unless user_options[:validation] == false
 
         value
       end

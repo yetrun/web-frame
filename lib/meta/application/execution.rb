@@ -107,7 +107,7 @@ module Meta
           options = {}
         end
 
-        new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render)
+        new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render, validation: ::Meta.config.render_validation, type_conversion: ::Meta.config.render_type_conversion)
         response.body = [JSON.generate(new_hash)]
       else
         # 渲染多键值结点
