@@ -43,6 +43,22 @@ module Meta
       end
 
       def filter(value, user_options = {})
+        user_options = Utils::KeywordArgs.check(
+          args: user_options,
+          schema: {
+            stage: nil,
+            execution: nil,
+            object_value: nil,
+            type_conversion: true,
+            validation: true,
+
+            # 以下三个是 ObjectSchema 需要的选项
+            discard_missing: false,
+            exclude: [],
+            scope: []
+          }
+        )
+
         stage_options = options(user_options[:stage])
 
         value = resolve_value(user_options) if stage_options[:value]

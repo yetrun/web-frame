@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../../utils/kwargs'
+
 module Meta
   module JsonSchema
     class ObjectSchema < BaseSchema
