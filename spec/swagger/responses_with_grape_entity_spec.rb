@@ -190,8 +190,7 @@ describe 'Meta::SwaggerDocUtil.generate' do
         context 'exposing a hash' do
           let(:arguments) { [:data, presenter: entity_class] }
 
-          # HACK: 命名为 user_entity_class
-          let(:inner_entity_class) do
+          let(:user_entity_class) do
             Class.new(Grape::Entity) do
               expose :name
               expose :age
@@ -199,7 +198,7 @@ describe 'Meta::SwaggerDocUtil.generate' do
           end
 
           let(:entity_class) do
-            the_inner_entity_class = inner_entity_class
+            the_inner_entity_class = user_entity_class
             Class.new(Grape::Entity) do
               expose :user, using: the_inner_entity_class, documentation: { description: '用户' }
             end

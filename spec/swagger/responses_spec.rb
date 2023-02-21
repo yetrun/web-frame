@@ -163,7 +163,6 @@ describe 'Meta::SwaggerDocUtil.generate' do
     end
 
     def app
-      # TODO: 测试结束后移除常量名
       Class.new(Meta::Application) do
         get '/user' do
           status(200) do

@@ -95,8 +95,12 @@ module Meta
       # > 则该 Schema 生成文档时会使用 $ref 格式。除非 to_ref 选项设置为 false.
       #
       def to_schema_doc(user_options)
+        Utils::KeywordArgs.check(
+          args: user_options,
+          schema: { stage: nil, scope: nil, to_ref: false, schemas: nil }
+        )
+
         stage = user_options[:stage]
-        # HACK: 标准化选项的工作进行得怎样？
         locked_scopes = (locked_options || {})[:scope] || []
         locked_scopes = [locked_scopes] unless locked_scope.nil? && locked_scopes.is_a?(Array)
         schema_name = @schema_name_resolver.call(stage, locked_scopes)

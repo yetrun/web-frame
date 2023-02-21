@@ -83,7 +83,7 @@ module Meta
       end.to_h.freeze
     end
 
-    # REVIEW: parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量
+    # parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量
     def parse_params(params_schema)
       @params_schema = params_schema
     end
