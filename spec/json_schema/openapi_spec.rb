@@ -26,63 +26,101 @@ describe 'openapi' do
     )
   end
 
-  context 'using: Entity' do
-    let(:user_entity) do
-      Class.new(Meta::Entity) do
-        schema_name param: 'UserParams', render: 'UserEntity'
+  context 'using' do
+    context 'using: Entity' do
+      let(:user_entity) do
+        Class.new(Meta::Entity) do
+          schema_name param: 'UserParams', render: 'UserEntity'
 
-        property :name
-        property :age
+          property :name
+          property :age
+        end
+      end
+
+      let(:schema) do
+        the_entity = user_entity
+        Meta::JsonSchema::SchemaBuilderTool.build do
+          param :user, using: the_entity
+        end.to_schema
+      end
+
+      describe '参数文档的效果' do
+        before {
+          @schemas = {}
+          @doc = schema.to_schema_doc(stage: :param, schemas: @schemas)
+        }
+
+        it '参数文档返回引用的效果' do
+          expect(@doc).to eq(
+            type: 'object',
+            properties: {
+              user: {
+                '$ref': '#/components/schemas/UserParams'
+              }
+            }
+          )
+        end
+
+        it '详细的实体定义写到 schemas 中' do
+          expect(@schemas['UserParams']).to eq(
+            type: 'object',
+            properties: {
+              age: {},
+              name: {}
+            }
+          )
+        end
+      end
+
+      describe '实体文档的效果' do
+        before {
+          @schemas = {}
+          @doc = schema.to_schema_doc(stage: :render, schemas: @schemas)
+        }
+
+        it '渲染实体返回引用的效果' do
+          expect(@doc).to eq(
+            type: 'object',
+            properties: {
+              user: {
+                '$ref': '#/components/schemas/UserEntity'
+              }
+            }
+          )
+        end
+
+        it '详细的实体定义写到 schemas 中' do
+          expect(@schemas['UserEntity']).to eq(
+            type: 'object',
+            properties: {
+              age: {},
+              name: {}
+            }
+          )
+        end
       end
     end
 
-    let(:schema) do
-      the_entity = user_entity
-      Meta::JsonSchema::SchemaBuilderTool.build do
-        param :user, using: the_entity
-      end.to_schema
-    end
+    context 'using: Proc' do
+      let(:schema) do
+        Meta::JsonSchema::SchemaBuilderTool.build do
+          param :user, using: ->(value) {}
+        end.to_schema
+      end
 
-    it '参数文档返回引用的效果' do
-      schemas = {}
-      doc = schema.to_schema_doc(stage: :param, schemas: schemas)
+      it '参数文档直接返回 `type: "object"`' do
+        schemas = {}
+        doc = schema.to_schema_doc(stage: :render, schemas: schemas)
 
-      expect(doc).to eq(
-        type: 'object',
-        properties: {
-          user: {
-            '$ref': '#/components/schemas/UserParams'
+        expect(doc).to eq(
+          type: 'object',
+          properties: {
+            user: {
+              type: 'object'
+            }
           }
-        }
-      )
-      expect(schemas['UserParams']).to eq(
-        type: 'object',
-        properties: {
-          age: {},
-          name: {}
-        }
-      )
-    end
-
-    it '实体文档返回引用的效果' do
-      schemas = {}
-      doc = schema.to_schema_doc(stage: :render, schemas: schemas)
-
-      expect(doc).to eq(
-        type: 'object',
-        properties: {
-          user: {
-            '$ref': '#/components/schemas/UserEntity'
-          }
-        }
-      )
-      expect(schemas['UserEntity']).to eq(
-        type: 'object',
-        properties: {
-          age: {},
-          name: {}
-        }
-      )
+        )
+      end
     end
   end
 

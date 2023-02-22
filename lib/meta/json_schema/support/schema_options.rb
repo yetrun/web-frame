@@ -8,7 +8,7 @@ module Meta
         required: false
       }
       @allowable_options = (
-        %i[type description in value using default presenter convert scope items] +
+        %i[type description in value using default presenter convert scope items using] +
         @default_options.keys + 
         JsonSchema::Validators.keys
       ).uniq

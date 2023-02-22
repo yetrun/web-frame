@@ -82,22 +82,73 @@ describe 'schema' do
       end
     end
 
-    describe 'using entity' do
-      it '成功使用外部 Entity 类' do
-        entity_class = Class.new(Meta::Entity) do
-          property :a
-          property :b
+    describe 'using Entity' do
+      context '使用单独的一个 Entity' do
+        it '成功使用外部 Entity 类' do
+          entity_class = Class.new(Meta::Entity) do
+            property :a
+            property :b
+          end
+
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, required: true, using: entity_class
+          end
+
+          obj = Object.new
+          def obj.a; 'a' end
+          def obj.b; 'b' end
+
+          expect { schema.filter('foo' => obj) }.not_to raise_error
+        end
+      end
+
+      context '多态' do
+        it '成功使用块解析的实体' do
+          entity_a = Class.new(Meta::Entity) do
+            property :a
+          end
+          entity_b = Class.new(Meta::Entity) do
+            property :b
+          end
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, required: true, using: ->(value) {
+              value['name'] === 'a' ? entity_a : entity_b
+            }
+          end
+
+          value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
+          expect(value[:foo]).to eq(a: 'a')
         end
 
-        schema = Meta::JsonSchema::SchemaBuilderTool.build do
-          property :foo, required: true, using: entity_class
+        it '使用多态时 `required` 选项应起作用' do
+          inner_entity = Class.new(Meta::Entity) do
+            property :a
+          end
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, required: true, using: ->(value) { inner_entity }
+          end
+
+          expect {
+            schema.filter({})
+          }.to raise_error(Meta::JsonSchema::ValidationErrors)
         end
 
-        obj = Object.new
-        def obj.a; 'a' end
-        def obj.b; 'b' end
+        it '使用多态时 `scope` 选项应起作用' do
+          inner_entity = Class.new(Meta::Entity) do
+            property :a
+          end
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, scope: :foo, using: ->(value) { inner_entity }
+            property :bar, scope: :bar, using: ->(value) { inner_entity }
+          end
 
-        expect { schema.filter('foo' => obj) }.not_to raise_error
+          value = schema.filter({
+            'foo' => { 'a' => 'a', 'b' => 'b'  },
+            'bar' => { 'a' => 'a', 'b' => 'b' }
+          }, scope: [:bar])
+          expect(value).not_to be_key(:foo)
+          expect(value).to be_key(:bar)
+        end
       end
     end
 

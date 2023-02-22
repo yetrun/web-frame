@@ -80,6 +80,12 @@ module Meta
         # 第二步，做校验。
         validate!(value, stage_options) unless user_options[:validation] == false
 
+        # 第三步，如果使用了 using 块，需要进一步解析
+        if stage_options[:using] && stage_options[:using].is_a?(Proc)
+          schema = stage_options[:using].call(value).to_schema
+          value = schema.filter(value, user_options)
+        end
+
         value
       end
 

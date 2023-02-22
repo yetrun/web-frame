@@ -848,31 +848,6 @@ describe Meta::Application, '.param' do
     end
 
     describe 'using:' do
-      context 'using: Proc' do
-        def app
-          @holder = {}
-          the_holder = @holder
-
-          the_proc = Proc.new do
-            param :name
-            param :age
-          end
-
-          app = Class.new(Meta::Application)
-          app.route('/users', :post)
-            .params {
-              param :user, type: 'object', using: the_proc 
-            }
-            .do_any { the_holder[:params] = params }
-          app
-        end
-
-        it '正确处理参数' do
-          post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-          expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
-        end
-      end
-
       context 'using: Schema' do
         def app
           @holder = {}
