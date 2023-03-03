@@ -103,51 +103,74 @@ describe 'schema' do
       end
 
       context '多态' do
-        it '成功使用块解析的实体' do
-          entity_a = Class.new(Meta::Entity) do
-            property :a
-          end
-          entity_b = Class.new(Meta::Entity) do
-            property :b
-          end
-          schema = Meta::JsonSchema::SchemaBuilderTool.build do
-            property :foo, required: true, using: ->(value) {
-              value['name'] === 'a' ? entity_a : entity_b
-            }
+        context 'using Hash' do
+          it '用过 resolve 选项解析实体' do
+            entity_a = Class.new(Meta::Entity) do
+              property :a
+            end
+            entity_b = Class.new(Meta::Entity) do
+              property :b
+            end
+            schema = Meta::JsonSchema::SchemaBuilderTool.build do
+              property :foo, required: true, using: {
+                resolve: ->(value) {
+                  value['name'] === 'a' ? entity_a : entity_b
+                }
+              }
+            end
+
+            value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
+            expect(value[:foo]).to eq(a: 'a')
           end
 
-          value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
-          expect(value[:foo]).to eq(a: 'a')
+          it '使用多态时 `required` 选项应起作用' do
+            inner_entity = Class.new(Meta::Entity) do
+              property :a
+            end
+            schema = Meta::JsonSchema::SchemaBuilderTool.build do
+              property :foo, required: true, using: { resolve: ->(value) { inner_entity } }
+            end
+
+            expect {
+              schema.filter({})
+            }.to raise_error(Meta::JsonSchema::ValidationErrors)
+          end
+
+          it '使用多态时 `scope` 选项应起作用' do
+            inner_entity = Class.new(Meta::Entity) do
+              property :a
+            end
+            schema = Meta::JsonSchema::SchemaBuilderTool.build do
+              property :foo, scope: :foo, using: { resolve: ->(value) { inner_entity } }
+              property :bar, scope: :bar, using: { resolve: ->(value) { inner_entity } }
+            end
+
+            value = schema.filter({
+              'foo' => { 'a' => 'a', 'b' => 'b'  },
+              'bar' => { 'a' => 'a', 'b' => 'b' }
+            }, scope: [:bar])
+            expect(value).not_to be_key(:foo)
+            expect(value).to be_key(:bar)
+          end
         end
 
-        it '使用多态时 `required` 选项应起作用' do
-          inner_entity = Class.new(Meta::Entity) do
-            property :a
-          end
-          schema = Meta::JsonSchema::SchemaBuilderTool.build do
-            property :foo, required: true, using: ->(value) { inner_entity }
-          end
+        context 'using Proc' do
+          it '等效于 using: { resolve }' do
+            entity_a = Class.new(Meta::Entity) do
+              property :a
+            end
+            entity_b = Class.new(Meta::Entity) do
+              property :b
+            end
+            schema = Meta::JsonSchema::SchemaBuilderTool.build do
+              property :foo, required: true, using: ->(value) {
+                value['name'] === 'a' ? entity_a : entity_b
+              }
+            end
 
-          expect {
-            schema.filter({})
-          }.to raise_error(Meta::JsonSchema::ValidationErrors)
-        end
-
-        it '使用多态时 `scope` 选项应起作用' do
-          inner_entity = Class.new(Meta::Entity) do
-            property :a
+            value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
+            expect(value[:foo]).to eq(a: 'a')
           end
-          schema = Meta::JsonSchema::SchemaBuilderTool.build do
-            property :foo, scope: :foo, using: ->(value) { inner_entity }
-            property :bar, scope: :bar, using: ->(value) { inner_entity }
-          end
-
-          value = schema.filter({
-            'foo' => { 'a' => 'a', 'b' => 'b'  },
-            'bar' => { 'a' => 'a', 'b' => 'b' }
-          }, scope: [:bar])
-          expect(value).not_to be_key(:foo)
-          expect(value).to be_key(:bar)
         end
       end
     end

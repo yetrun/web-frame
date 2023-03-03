@@ -35,6 +35,8 @@ module Meta
           # 只要 options 中设置为 nil 的选项没有明确的意义，则下行代码是永远有效的
           options = (@default_options.compact).merge(options.compact)
           options[:scope] = [options[:scope]] unless options[:scope].is_a?(Array)
+          # TODO: 更好的规范选项的方式，以及如何检查深层次嵌套下参数类型的错误
+          options[:using] = { resolve: options[:using] } if options[:using].is_a?(Proc)
           if options[:using]
             if options[:type].nil?
               options[:type] = 'object'

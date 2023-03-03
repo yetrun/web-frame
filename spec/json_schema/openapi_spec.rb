@@ -101,25 +101,66 @@ describe 'openapi' do
       end
     end
 
-    context 'using: Proc' do
-      let(:schema) do
-        Meta::JsonSchema::SchemaBuilderTool.build do
-          param :user, using: ->(value) {}
-        end.to_schema
+    context 'using: Hash' do
+      context 'Hash 中写有 one_of' do
+        let(:schema) do
+          entity_one = Class.new(Meta::Entity) do
+            schema_name param: 'EntityOne', render: 'EntityOne'
+            property :one
+          end
+          entity_two = Class.new(Meta::Entity) do
+            schema_name param: 'EntityTwo', render: 'EntityTwo'
+            property :two
+          end
+
+          Meta::JsonSchema::SchemaBuilderTool.build do
+            param :nested, using: { one_of: [entity_one, entity_two] }
+          end.to_schema
+        end
+
+        it '文档返回了参数的引用' do
+          schemas = {}
+          doc = schema.to_schema_doc(stage: :render, schemas: schemas)
+
+          expect(doc).to eq(
+            type: 'object',
+            properties: {
+              nested: {
+                type: 'object',
+                oneOf: [
+                  {
+                    '$ref': '#/components/schemas/EntityOne'
+                  },
+                  {
+                    '$ref': '#/components/schemas/EntityTwo'
+                  }
+                ]
+              }
+            }
+          )
+        end
       end
 
-      it '参数文档直接返回 `type: "object"`' do
-        schemas = {}
-        doc = schema.to_schema_doc(stage: :render, schemas: schemas)
+      context 'Hash 中不写有 one_of' do
+        let(:schema) do
+          Meta::JsonSchema::SchemaBuilderTool.build do
+            param :nested, using: {}
+          end.to_schema
+        end
 
-        expect(doc).to eq(
-          type: 'object',
-          properties: {
-            user: {
-              type: 'object'
+        it '文档仅返回 type: "object"' do
+          schemas = {}
+          doc = schema.to_schema_doc(stage: :render, schemas: schemas)
+
+          expect(doc).to eq(
+            type: 'object',
+            properties: {
+              nested: {
+                type: 'object'
+              }
             }
-          }
-        )
+          )
+        end
       end
     end
   end

@@ -53,10 +53,10 @@ module Meta
           else
             @properties[name] = schema.dup(options)
           end
-        elsif using.is_a?(Proc) || using.nil?
+        elsif using.is_a?(Proc) || using.is_a?(Hash) || using.nil?
           @properties[name] = SchemaBuilderTool.build(options, &block)
         else
-          raise "非法的 `using` 选项，应传递具有 `to_schema` 方法（如 Entity、Schema 等）或 Proc（动态生成 Schema）。当前传递：#{block}"
+          raise "非法的 `using` 选项，应传递具有 `to_schema` 方法（如 Entity、Schema 等）或 Hash、Proc（动态生成 Schema）。当前传递：#{block}"
         end
       end
 

@@ -81,8 +81,8 @@ module Meta
         validate!(value, stage_options) unless user_options[:validation] == false
 
         # 第三步，如果使用了 using 块，需要进一步解析
-        if stage_options[:using] && stage_options[:using].is_a?(Proc)
-          schema = stage_options[:using].call(value).to_schema
+        if stage_options[:using] && stage_options[:using].is_a?(Hash)
+          schema = stage_options[:using][:resolve].call(value).to_schema
           value = schema.filter(value, user_options)
         end
 
@@ -113,6 +113,12 @@ module Meta
         schema[:type] = stage_options[:type] if stage_options[:type]
         schema[:description] = stage_options[:description] if stage_options[:description]
         schema[:enum] = stage_options[:allowable] if stage_options[:allowable]
+        if stage_options[:using] && stage_options[:using].is_a?(Hash)
+          using_options = stage_options[:using]
+          schema[:oneOf] = using_options[:one_of].map do |schema|
+            schema.to_schema.to_schema_doc(user_options)
+          end if using_options[:one_of]
+        end
 
         schema
       end
