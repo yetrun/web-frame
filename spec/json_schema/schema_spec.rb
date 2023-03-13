@@ -171,6 +171,28 @@ describe 'schema' do
             value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
             expect(value[:foo]).to eq(a: 'a')
           end
+
+          context '放在 render 下也能生效' do
+            it '等效于 using: { resolve }' do
+              entity_a = Class.new(Meta::Entity) do
+                property :a
+              end
+              entity_b = Class.new(Meta::Entity) do
+                property :b
+              end
+              schema = Meta::JsonSchema::SchemaBuilderTool.build do
+                property :foo, render: {
+                  required: true,
+                  using: ->(value) {
+                    value['name'] === 'a' ? entity_a : entity_b
+                  }
+                }
+              end
+
+              value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' }, stage: :render)
+              expect(value[:foo]).to eq(a: 'a')
+            end
+          end
         end
       end
     end

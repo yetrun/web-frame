@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# 运行时检查关键字参数。
+# 运行时检查关键字参数。（将来可能会被 Builder 取代）
 #
 # 在 Ruby 3 中，关键字参数有所变化。简单来说，关键字参数和 Hash 类型不再自动转化，并且一般情况下推荐使用关键字参数。
 # 但关键字参数还是有稍稍不足之处，比如在做一些复杂的关键字参数定义时。
@@ -58,33 +58,33 @@ module Meta
 
         private
 
-          def build_schemas(spec)
-            if spec.is_a?(Array)
-              build_schemas_from_array(spec)
-            elsif spec.is_a?(Hash)
-              build_schemas_from_hash(spec)
-            elsif spec.is_a?(Symbol)
-              build_schemas_from_symbol(spec)
-            else
-              raise "未知的参数类型：#{spec.class}"
-            end
+        def build_schemas(spec)
+          if spec.is_a?(Array)
+            build_schemas_from_array(spec)
+          elsif spec.is_a?(Hash)
+            build_schemas_from_hash(spec)
+          elsif spec.is_a?(Symbol)
+            build_schemas_from_symbol(spec)
+          else
+            raise "未知的参数类型：#{spec.class}"
           end
+        end
 
-          def build_schemas_from_array(spec_array)
-            spec_array.inject({}) do |accumulated, val|
-              accumulated.merge!(build_schemas(val))
-            end
+        def build_schemas_from_array(spec_array)
+          spec_array.inject({}) do |accumulated, val|
+            accumulated.merge!(build_schemas(val))
           end
+        end
 
-          def build_schemas_from_hash(spec_hash)
-            spec_hash.transform_values do |val|
-              { default: val }
-            end
+        def build_schemas_from_hash(spec_hash)
+          spec_hash.transform_values do |val|
+            { default: val }
           end
+        end
 
-          def build_schemas_from_symbol(spec_symbol)
-            { spec_symbol => {} }
-          end
+        def build_schemas_from_symbol(spec_symbol)
+          { spec_symbol => {} }
+        end
       end
     end
   end

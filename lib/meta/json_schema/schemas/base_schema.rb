@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative '../../utils/kwargs/check'
 require_relative '../support/schema_options'
 
 module Meta
@@ -14,7 +15,6 @@ module Meta
       # 较常出现错误的是数组，`options` 是描述数组的，而不是描述数组内部元素的。
       attr_reader :param_options, :render_options
 
-      # 传递 path 参数主要是为了渲染 Parameter 文档时需要
       def initialize(options = {})
         @param_options, @render_options = SchemaOptions.normalize_to_param_and_render(options)
       end

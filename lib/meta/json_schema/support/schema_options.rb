@@ -1,8 +1,18 @@
 # frozen_string_literal: true
 
+require_relative '../../utils/kwargs/builder'
+
 module Meta
   module JsonSchema
     module SchemaOptions
+      OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
+        key :type, :items, :description, :presenter, :value, :format, :required, :default, :validate, :allowable, :properties, :convert
+        key :scope, normalizer: ->(value) { value.is_a?(Array) ? value : [value] }
+        key :using, normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
+        key :param
+        key :render
+      end
+
       @default_options = {
         scope: [],
         required: false
@@ -32,11 +42,10 @@ module Meta
         end
 
         def normalize(options)
+          options = OPTIONS_CHECKER.check(options)
+
           # 只要 options 中设置为 nil 的选项没有明确的意义，则下行代码是永远有效的
           options = (@default_options.compact).merge(options.compact)
-          options[:scope] = [options[:scope]] unless options[:scope].is_a?(Array)
-          # TODO: 更好的规范选项的方式，以及如何检查深层次嵌套下参数类型的错误
-          options[:using] = { resolve: options[:using] } if options[:using].is_a?(Proc)
           if options[:using]
             if options[:type].nil?
               options[:type] = 'object'

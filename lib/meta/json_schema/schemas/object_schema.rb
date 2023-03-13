@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../utils/kwargs'
+require_relative '../../utils/kwargs/check'
 
 module Meta
   module JsonSchema
