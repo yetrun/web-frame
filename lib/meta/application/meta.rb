@@ -25,7 +25,7 @@ module Meta
       operation_object[:description] = description if description
 
       operation_object[:parameters] = parameters.map do |name, options|
-        property_options = options[:schema].param_options
+        property_options = options[:schema].options
         {
           name: name,
           in: options[:in],

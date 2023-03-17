@@ -7,7 +7,7 @@ module Meta
     module SchemaOptions
       OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         key :type, :items, :description, :presenter, :value, :format, :required, :default, :validate, :allowable, :properties, :convert
-        key :scope, normalizer: ->(value) { value.is_a?(Array) ? value : [value] }
+        # key :scope, normalizer: ->(value) { value.is_a?(Array) ? value : [value] }
         key :using, normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
         key :param
         key :render
@@ -24,21 +24,14 @@ module Meta
       ).uniq
 
       class << self
-        def normalize_to_param_and_render(options)
+        def divide_to_param_and_render(options)
           common_opts = (options || {}).dup
           param_opts = common_opts.delete(:param)
           render_opts = common_opts.delete(:render)
 
           param_opts = merge_common_to_stage(common_opts, param_opts)
           render_opts = merge_common_to_stage(common_opts, render_opts)
-          [param_opts, render_opts]
-        end
-
-        def merge_common_to_stage(common_opts, stage_opts)
-          stage_opts = {} if stage_opts.nil? || stage_opts == true
-          stage_opts = common_opts.merge(stage_opts) if stage_opts
-          stage_opts = normalize(stage_opts) if stage_opts
-          stage_opts
+          [param_opts, render_opts, common_opts]
         end
 
         def normalize(options)
@@ -59,6 +52,14 @@ module Meta
           raise "未知的选项：#{unknown_validators.join(', ')}" unless unknown_validators.empty?
 
           options
+        end
+
+        private
+
+        def merge_common_to_stage(common_opts, stage_opts)
+          stage_opts = {} if stage_opts.nil? || stage_opts == true
+          stage_opts = common_opts.merge(stage_opts) if stage_opts
+          stage_opts
         end
       end
     end

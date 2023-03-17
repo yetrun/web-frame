@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../schemas/properties'
+
 module Meta
   module JsonSchema
     class ObjectSchemaBuilder
@@ -49,12 +51,12 @@ module Meta
         if using.respond_to?(:to_schema)
           schema = using.to_schema
           if options[:type] == 'array'
-            @properties[name] = ArraySchema.new(schema, options)
+            @properties[name] = Properties.build_property(options, ->(options) { ArraySchema.new(schema, options) })
           else
-            @properties[name] = schema.dup(options)
+            @properties[name] = Properties.build_property(options, ->(options) { schema.dup(options) })
           end
         elsif using.is_a?(Proc) || using.is_a?(Hash) || using.nil?
-          @properties[name] = SchemaBuilderTool.build(options, &block)
+          @properties[name] = Properties.build_property(options, ->(options) { SchemaBuilderTool.build(options, &block) })
         else
           raise "非法的 `using` 选项，应传递具有 `to_schema` 方法（如 Entity、Schema 等）或 Hash、Proc（动态生成 Schema）。当前传递：#{block}"
         end
@@ -70,7 +72,7 @@ module Meta
       end
 
       def to_schema(locked_options = nil)
-        ObjectSchema.new(properties: @properties, object_validations: @validations, options: @options, locked_options: locked_options, schema_name_resolver: @schema_name_resolver)
+        ObjectSchema.new(properties: @properties, options: @options, locked_options: locked_options, schema_name_resolver: @schema_name_resolver)
       end
 
       def lock(key, value)

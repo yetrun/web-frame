@@ -22,8 +22,9 @@
 module Meta
   module Utils
     class KeywordArgs
-      def initialize(arguments)
+      def initialize(arguments, permit_extras = false)
         @arguments = arguments
+        @permit_extras = permit_extras
       end
 
       def check(args)
@@ -34,9 +35,14 @@ module Meta
           argument.consume!(final_args, args)
         end
 
+        # 处理剩余字段
         unless args.keys.empty?
-          extras = args.keys
-          raise "不接受额外的关键字参数：#{extras.join(', ')}" unless extras.empty?
+          if @permit_extras
+            final_args.merge!(args)
+          else
+            extras = args.keys
+            raise "不接受额外的关键字参数：#{extras.join(', ')}" unless extras.empty?
+          end
         end
 
         final_args
@@ -61,6 +67,7 @@ module Meta
       class Builder
         def initialize
           @arguments = []
+          @permit_extras = false
         end
 
         def key(*names, **options)
@@ -69,8 +76,12 @@ module Meta
           end
         end
 
+        def permit_extras(value)
+          @permit_extras = value
+        end
+
         def build
-          KeywordArgs.new(@arguments)
+          KeywordArgs.new(@arguments, @permit_extras)
         end
 
         def self.build(&block)

@@ -13,33 +13,10 @@ module Meta
       # `options` 属性都是描述该对象的本身，而不是深层的属性。
       #
       # 较常出现错误的是数组，`options` 是描述数组的，而不是描述数组内部元素的。
-      attr_reader :param_options, :render_options
+      attr_reader :options
 
       def initialize(options = {})
-        @param_options, @render_options = SchemaOptions.normalize_to_param_and_render(options)
-      end
-
-      def options(stage, key = nil)
-        stage_options = case stage 
-                        when :param 
-                          param_options
-                        when :render
-                          render_options
-                        when nil
-                          merged_options
-                        else
-                          raise "非法的 stage 参数，它只允许取值 :param、:render 或 nil，却收到 #{stage.inspect}"
-                        end
-        if key
-          stage_options ? stage_options[key] : nil
-        else
-          stage_options
-        end
-      end
-
-      # 将 params 和 render 的选项合并
-      def merged_options
-        (param_options || {}).merge(render_options || {})
+        @options = SchemaOptions.normalize(options)
       end
 
       def filter(value, user_options = {})
@@ -59,16 +36,14 @@ module Meta
           }
         )
 
-        stage_options = options(user_options[:stage])
-
-        value = resolve_value(user_options) if stage_options[:value]
-        value = JsonSchema::Presenters.present(stage_options[:presenter], value) if stage_options[:presenter]
-        value = stage_options[:default] if value.nil? && stage_options.key?(:default)
-        value = stage_options[:convert].call(value) if stage_options[:convert]
+        value = resolve_value(user_options) if options[:value]
+        value = JsonSchema::Presenters.present(options[:presenter], value) if options[:presenter]
+        value = options[:default] if value.nil? && options.key?(:default)
+        value = options[:convert].call(value) if options[:convert]
 
         # 第一步，转化值。
         # 需要注意的是，对象也可能被转换，因为并没有深层次的结构被声明。
-        type = stage_options[:type]
+        type = options[:type]
         unless user_options[:type_conversion] == false || type.nil? || value.nil?
           begin
             value = JsonSchema::TypeConverter.convert_value(value, type)
@@ -78,23 +53,23 @@ module Meta
         end
 
         # 第二步，做校验。
-        validate!(value, stage_options) unless user_options[:validation] == false
+        validate!(value, options) unless user_options[:validation] == false
 
         # 第三步，如果使用了 using 块，需要进一步解析
-        if stage_options[:using] && stage_options[:using].is_a?(Hash)
-          schema = stage_options[:using][:resolve].call(value).to_schema
+        if options[:using] && options[:using].is_a?(Hash)
+          schema = options[:using][:resolve].call(value).to_schema
           value = schema.filter(value, user_options)
         end
 
         value
       end
 
-      def value?(stage)
-        options(stage, :value) != nil
+      def value?
+        options[:value] != nil
       end
 
       def resolve_value(user_options)
-        value_proc = options(user_options[:stage], :value)
+        value_proc = options[:value]
         value_proc_params = (value_proc.lambda? && value_proc.arity == 0) ?  [] : [user_options[:object_value]]
 
         if user_options[:execution]
@@ -105,16 +80,14 @@ module Meta
       end
 
       def to_schema_doc(user_options = {})
-        stage_options = options(user_options[:stage])
-
-        return Presenters.to_schema_doc(stage_options[:presenter], stage_options) if stage_options[:presenter]
+        return Presenters.to_schema_doc(options[:presenter], options) if options[:presenter]
 
         schema = {}
-        schema[:type] = stage_options[:type] if stage_options[:type]
-        schema[:description] = stage_options[:description] if stage_options[:description]
-        schema[:enum] = stage_options[:allowable] if stage_options[:allowable]
-        if stage_options[:using] && stage_options[:using].is_a?(Hash)
-          using_options = stage_options[:using]
+        schema[:type] = options[:type] if options[:type]
+        schema[:description] = options[:description] if options[:description]
+        schema[:enum] = options[:allowable] if options[:allowable]
+        if options[:using] && options[:using].is_a?(Hash)
+          using_options = options[:using]
           schema[:oneOf] = using_options[:one_of].map do |schema|
             schema.to_schema.to_schema_doc(user_options)
           end if using_options[:one_of]

@@ -189,7 +189,7 @@ describe 'schema' do
                 }
               end
 
-              value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' }, stage: :render)
+              value = schema.filter({ 'foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' } }, stage: :render)
               expect(value[:foo]).to eq(a: 'a')
             end
           end

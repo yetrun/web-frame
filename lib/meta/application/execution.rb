@@ -112,8 +112,8 @@ module Meta
       else
         # 渲染多键值结点
         new_hash = renders.map do |key, render_content|
-          schema = entity_schema.properties[key]
-          raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" if schema.nil?
+          raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" unless entity_schema.properties.key?(key)
+          schema = entity_schema.properties[key].schema(:render)
 
           filtered = schema.filter(render_content[:value], **render_content[:options], execution: self, stage: :render)
           [key, filtered]

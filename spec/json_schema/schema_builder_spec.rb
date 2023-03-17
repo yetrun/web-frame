@@ -9,9 +9,9 @@ describe 'Schema Builders' do
       property :array_value, type: 'array', using: Class.new(Meta::Entity), value: proc { |board| [] }
     end.to_schema
 
-    array_schema = schema.properties[:array_value]
+    array_schema = schema.properties[:array_value].schema
     expect(array_schema.items.is_a?(Meta::JsonSchema::ObjectSchema)).to be true
-    expect(array_schema.render_options.include?(:value)).to be true
+    expect(array_schema.options.include?(:value)).to be true
   end
 
   it '使用 scope 约束 Schema' do

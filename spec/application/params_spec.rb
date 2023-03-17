@@ -853,46 +853,19 @@ describe Meta::Application, '.param' do
           @holder = {}
           the_holder = @holder
 
-          the_scope = Meta::JsonSchema::ObjectSchema.new(properties: {
-            name: Meta::JsonSchema::BaseSchema.new,
-            age: Meta::JsonSchema::BaseSchema.new 
-          })
+          the_schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :name
+            property :age
+          end.to_schema
 
-          app = Class.new(Meta::Application)
-          app.route('/users', :post)
-            .params {
-              param :user, type: 'object', using: the_scope
-            }
-            .do_any { the_holder[:params] = params }
-          app
-        end
-
-        it '正确处理参数' do
-          post('/users', JSON.generate(user: { name: 'Jim', age: 18 }), { 'CONTENT_TYPE' => 'application/json' })
-          expect(@holder[:params]).to eq(user: { name: 'Jim', age: 18 })
-        end
-      end
-
-      context 'using: &:to_schema' do
-        def app
-          @holder = {}
-          the_holder = @holder
-
-          the_entity = Object.new
-          def the_entity.to_schema
-            Meta::JsonSchema::ObjectSchema.new(properties: {
-              name: Meta::JsonSchema::BaseSchema.new,
-              age: Meta::JsonSchema::BaseSchema.new 
-            })
+          Class.new(Meta::Application) do
+            route('/users', :post) do
+              params {
+                param :user, type: 'object', using: the_schema
+              }
+              action { the_holder[:params] = params }
+            end
           end
-
-          app = Class.new(Meta::Application)
-          app.route('/users', :post)
-            .params {
-              param :user, type: 'object', using: the_entity
-            }
-            .do_any { the_holder[:params] = params }
-          app
         end
 
         it '正确处理参数' do

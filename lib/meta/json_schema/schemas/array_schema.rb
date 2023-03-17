@@ -26,7 +26,7 @@ module Meta
       end
 
       def to_schema_doc(user_options = {})
-        stage_options = user_options[:stage] == :param ? @param_options : @render_options
+        stage_options = options
 
         schema = {
           type: 'array',
