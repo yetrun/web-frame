@@ -17,10 +17,10 @@ module Meta
         }
       end
 
-      def initialize(properties: {}, options: {}, locked_options: {}, schema_name_resolver: proc { nil })
+      def initialize(properties: nil, options: {}, locked_options: {}, schema_name_resolver: proc { nil })
         super(options)
 
-        @properties = properties || {} # property 包含 stage，stage 包含 scope、schema
+        @properties = properties || Properties.new({}) # property 包含 stage，stage 包含 scope、schema
         @properties = Properties.new(@properties) if @properties.is_a?(Hash)
         @locked_options = USER_OPTIONS_CHECKER.check(locked_options || {})
         @schema_name_resolver = schema_name_resolver || proc { nil }
@@ -42,43 +42,9 @@ module Meta
         user_options = USER_OPTIONS_CHECKER.check(user_options)
 
         object_value = super(object_value, user_options)
+
         return nil if object_value.nil?
-
-        # 第一步，根据 user_options[:scope] 需要过滤一些字段
-        stage = user_options[:stage]
-        # 传递一个数字；因为 scope 不能包含数字，这里传递一个数字，使得凡是配置 scope 的属性都会被过滤
-        user_scope = user_options[:scope] || [0]
-        exclude = user_options.delete(:exclude) # 这里删除 exclude 选项，不要传递给下一层
-        properties = @properties.filter_by(stage: stage, user_scope: user_scope)
-        filtered_properties = properties.filter do |name, property|
-          # 通过 discard_missing 过滤
-          next false if user_options[:discard_missing] && !object_value.key?(name.to_s)
-
-          # 通过 locked_exclude 选项过滤
-          next false if exclude && exclude.include?(name)
-
-          # 默认返回 true
-          next true
-        end
-
-        # 第二步，递归过滤每一个属性
-        object = {}
-        errors = {}
-        filtered_properties.each do |name, property_schema|
-          value = resolve_property_value(object_value, name, property_schema, stage)
-
-          begin
-            object[name] = property_schema.filter(value, **user_options, object_value: object_value)
-          rescue JsonSchema::ValidationErrors => e
-            errors.merge! e.prepend_root(name).errors
-          end
-        end.to_h
-
-        if errors.empty?
-          object
-        else
-          raise JsonSchema::ValidationErrors.new(errors)
-        end
+        @properties.filter(object_value, user_options)
       end
 
       # 合并其他的属性，并返回一个新的 ObjectSchema
@@ -94,16 +60,10 @@ module Meta
       def to_schema_doc(stage: nil, **user_options)
         locked_scopes = (locked_options || {})[:scope] || []
 
-        properties = @properties.filter_by(stage: stage, user_scope: locked_scopes)
-        required_keys = properties.filter do |key, property_schema|
-          property_schema.options[:required]
-        end.keys
-        properties = properties.transform_values do |property_schema |
-          property_schema.to_schema_doc(stage: stage, **user_options)
-        end
-
         schema = { type: 'object' }
         schema[:description] = options[:description] if options[:description]
+
+        properties, required_keys = @properties.to_swagger_doc(stage: stage, locked_scopes: locked_scopes, **user_options)
         schema[:properties] = properties unless properties.empty?
         schema[:required] = required_keys unless required_keys.empty?
         schema
@@ -116,18 +76,6 @@ module Meta
       def locked_exclude
         locked_options && locked_options[:exclude]
       end
-
-      private
-
-        def resolve_property_value(object_value, name, property_schema, stage)
-          if property_schema.value?
-            nil
-          elsif object_value.is_a?(Hash) || object_value.is_a?(ObjectWrapper)
-            object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
-          else
-            raise "不应该还有其他类型了，已经在类型转换中将其转换为 Meta::JsonSchema::ObjectWrapper 了"
-          end
-        end
     end
   end
 end
