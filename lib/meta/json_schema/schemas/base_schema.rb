@@ -19,22 +19,15 @@ module Meta
         @options = SchemaOptions.normalize(options)
       end
 
-      def filter(value, user_options = {})
-        user_options = Utils::KeywordArgs.check(
-          args: user_options,
-          schema: {
-            stage: nil,
-            execution: nil,
-            object_value: nil,
-            type_conversion: true,
-            validation: true,
+      USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
+        key :stage, :execution, :object_value, :type_conversion, :validation
 
-            # 以下三个是 ObjectSchema 需要的选项
-            discard_missing: false,
-            exclude: [],
-            scope: []
-          }
-        )
+        # 以下三个是 ObjectSchema 需要的选项
+        key :discard_missing, :exclude, :scope
+      end
+
+      def filter(value, user_options = {})
+        user_options = USER_OPTIONS_CHECKER.check(user_options)
 
         value = resolve_value(user_options) if options[:value]
         value = JsonSchema::Presenters.present(options[:presenter], value) if options[:presenter]
@@ -73,7 +66,13 @@ module Meta
         end
       end
 
-      def to_schema_doc(user_options = {})
+      # 生成 Swagger 文档的 schema 格式。
+      #
+      # 选项：
+      # - stage: 传递 :param 或 :render
+      # - schemas: 用于保存已经生成的 Schema
+      # - presenter: 兼容 Grape 框架的实体类
+      def to_schema_doc(**user_options)
         return Presenters.to_schema_doc(options[:presenter], options) if options[:presenter]
 
         schema = {}

@@ -24,7 +24,7 @@ module Meta
         schema_components = user_options[:schemas]
         unless schema_components.key?(schema_name)
           schema_components[schema_name] = nil # 首先设置 schemas 防止出现无限循环
-          schema_components[schema_name] = schema.to_schema_doc(user_options) # 原地修改 schemas，无妨
+          schema_components[schema_name] = schema.to_schema_doc(**user_options) # 原地修改 schemas，无妨
         end
 
         # 返回的是 $ref 结构

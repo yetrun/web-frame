@@ -25,12 +25,12 @@ module Meta
         end
       end
 
-      def to_schema_doc(user_options = {})
+      def to_schema_doc(**user_options)
         stage_options = options
 
         schema = {
           type: 'array',
-          items: @items ? @items.to_schema_doc(user_options) : {}
+          items: @items ? @items.to_schema_doc(**user_options) : {}
         }
         schema[:description] = stage_options[:description] if stage_options[:description]
         schema

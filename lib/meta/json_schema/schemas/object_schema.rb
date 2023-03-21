@@ -91,19 +91,7 @@ module Meta
         @schema_name_resolver.call(stage, locked_scopes)
       end
 
-      # 生成 Swagger 文档的 schema 格式。
-      #
-      # 选项：
-      # - stage: 传递 :param 或 :render
-      # - schemas: 用于保存已经生成的 Schema
-      #
-      def to_schema_doc(user_options)
-        Utils::KeywordArgs.check(
-          args: user_options,
-          schema: { stage: nil, scope: nil, schemas: nil }
-        )
-
-        stage = user_options[:stage]
+      def to_schema_doc(stage: nil, **user_options)
         locked_scopes = (locked_options || {})[:scope] || []
 
         properties = @properties.filter_by(stage: stage, user_scope: locked_scopes)
@@ -111,7 +99,7 @@ module Meta
           property_schema.options[:required]
         end.keys
         properties = properties.transform_values do |property_schema |
-          property_schema.to_schema_doc(user_options)
+          property_schema.to_schema_doc(stage: stage, **user_options)
         end
 
         schema = { type: 'object' }
