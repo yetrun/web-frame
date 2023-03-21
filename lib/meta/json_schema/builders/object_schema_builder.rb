@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../schemas/properties'
+require_relative '../schemas/ref_schema'
 
 module Meta
   module JsonSchema
@@ -51,9 +52,13 @@ module Meta
         if using.respond_to?(:to_schema)
           schema = using.to_schema
           if options[:type] == 'array'
-            @properties[name] = Properties.build_property(options, ->(options) { ArraySchema.new(schema, options) })
+            @properties[name] = Properties.build_property(options, ->(options) {
+              ArraySchema.new(RefSchema.new(schema), options)
+            })
           else
-            @properties[name] = Properties.build_property(options, ->(options) { schema.dup(options) })
+            @properties[name] = Properties.build_property(options, ->(options) {
+              RefSchema.new(schema, options)
+            })
           end
         elsif using.is_a?(Proc) || using.is_a?(Hash) || using.nil?
           @properties[name] = Properties.build_property(options, ->(options) { SchemaBuilderTool.build(options, &block) })

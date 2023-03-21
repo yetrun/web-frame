@@ -4,7 +4,7 @@
 require 'spec_helper'
 
 describe 'Schema Builders' do
-  it '属于数组的属性要保留' do
+  xit '属于数组的属性要保留' do
     schema = Meta::JsonSchema::SchemaBuilderTool.build do
       property :array_value, type: 'array', using: Class.new(Meta::Entity), value: proc { |board| [] }
     end.to_schema

@@ -55,12 +55,6 @@ module Meta
         # 第二步，做校验。
         validate!(value, options) unless user_options[:validation] == false
 
-        # 第三步，如果使用了 using 块，需要进一步解析
-        if options[:using] && options[:using].is_a?(Hash)
-          schema = options[:using][:resolve].call(value).to_schema
-          value = schema.filter(value, user_options)
-        end
-
         value
       end
 
@@ -86,12 +80,6 @@ module Meta
         schema[:type] = options[:type] if options[:type]
         schema[:description] = options[:description] if options[:description]
         schema[:enum] = options[:allowable] if options[:allowable]
-        if options[:using] && options[:using].is_a?(Hash)
-          using_options = options[:using]
-          schema[:oneOf] = using_options[:one_of].map do |schema|
-            schema.to_schema.to_schema_doc(user_options)
-          end if using_options[:one_of]
-        end
 
         schema
       end

@@ -7,7 +7,6 @@ module Meta
     module SchemaOptions
       OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         key :type, :items, :description, :presenter, :value, :format, :required, :default, :validate, :allowable, :properties, :convert
-        # key :scope, normalizer: ->(value) { value.is_a?(Array) ? value : [value] }
         key :using, normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
         key :param
         key :render

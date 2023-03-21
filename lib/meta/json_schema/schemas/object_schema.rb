@@ -86,43 +86,32 @@ module Meta
         ObjectSchema.new(properties: self.properties.merge(properties))
       end
 
+      def resolve_name(stage)
+        locked_scopes = (locked_options || {})[:scope] || []
+        @schema_name_resolver.call(stage, locked_scopes)
+      end
+
       # 生成 Swagger 文档的 schema 格式。
       #
       # 选项：
       # - stage: 传递 :param 或 :render
       # - schemas: 用于保存已经生成的 Schema
-      # - to_ref: 是否生成 $ref 格式，默认为“是”
-      #
-      # 提示：
-      # > 每个 ObjectSchema 拥有一个 @schema_name_resolver 实例变量，如果由它解析出来的名称不为 nil，
-      # > 则该 Schema 生成文档时会使用 $ref 格式。除非 to_ref 选项设置为 false.
       #
       def to_schema_doc(user_options)
         Utils::KeywordArgs.check(
           args: user_options,
-          schema: { stage: nil, scope: nil, to_ref: false, schemas: nil }
+          schema: { stage: nil, scope: nil, schemas: nil }
         )
 
         stage = user_options[:stage]
         locked_scopes = (locked_options || {})[:scope] || []
-        schema_name = @schema_name_resolver.call(stage, locked_scopes)
-        if schema_name && user_options[:to_ref] != false
-          # 首先将 Schema 写进 schemas 选项中去
-          schemas = user_options[:schemas]
-          unless schemas.key?(schema_name)
-            schemas[schema_name] = nil # 首先设置 schemas 防止出现无限循环
-            schemas[schema_name] = to_schema_doc(**user_options, to_ref: false) # 原地修改 schemas，无妨
-          end
-
-          return { '$ref': "#/components/schemas/#{schema_name}" }
-        end
 
         properties = @properties.filter_by(stage: stage, user_scope: locked_scopes)
         required_keys = properties.filter do |key, property_schema|
           property_schema.options[:required]
         end.keys
         properties = properties.transform_values do |property_schema |
-          property_schema.to_schema_doc(**user_options, to_ref: true)
+          property_schema.to_schema_doc(user_options)
         end
 
         schema = { type: 'object' }
