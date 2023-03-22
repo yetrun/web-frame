@@ -3,10 +3,10 @@ require_relative 'base_schema'
 module Meta
   module JsonSchema
     class DynamicSchema < BaseSchema
-      def initialize(resolve:, one_of: nil, **base_options)
+      def initialize(resolver, one_of: nil, **base_options)
         super(base_options)
 
-        @resolver = resolve
+        @resolver = resolver
         @one_of = one_of
       end
 

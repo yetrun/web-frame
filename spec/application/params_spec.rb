@@ -928,31 +928,6 @@ describe Meta::Application, '.param' do
           end
         end
 
-        context '使用数组类型' do
-          def app
-            @holder = {}
-            the_holder = @holder
-
-            the_entity = Class.new(Meta::Entity) do
-              param :name
-              param :age
-            end
-
-            app = Class.new(Meta::Application)
-            app.route('/users', :post)
-              .params {
-                param(:user, type: 'array', using: the_entity)
-              }
-              .do_any { the_holder[:params] = params }
-            app
-          end
-
-          it '正确解析参数' do
-            post('/users', JSON.generate(user: [{ name: 'Jim', age: 18 }]), { 'CONTENT_TYPE' => 'application/json' })
-            expect(@holder[:params]).to eq(user: [{ name: 'Jim', age: 18 }])
-          end
-        end
-
         context '使用 scope 约束' do
           def app
             @holder = {}

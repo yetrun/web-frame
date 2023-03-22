@@ -1,25 +1,31 @@
 # frozen_string_literal: true
 
-require_relative '../schemas/dynamic_schema'
+require_relative 'ref_schema_builder'
+require_relative 'dynamic_schema_builder'
+require_relative 'array_schema_builder'
+require_relative 'object_schema_builder'
 
 module Meta
   module JsonSchema
     class SchemaBuilderTool
       class << self
+        SCHEMA_BUILDER_OPTIONS = Utils::KeywordArgs::Builder.build do
+          permit_extras true
+
+          key :ref, alias_names: [:using]
+          key :dynamic_ref, alias_names: [:dynamic_using], normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
+        end
         def build(options = {}, &block)
+          options = SCHEMA_BUILDER_OPTIONS.check(options)
+
           if apply_array_schema?(options, block)
             ArraySchemaBuilder.new(options, &block).to_schema
+          elsif apply_ref_schema?(options, block)
+            RefSchemaBuilder.new(options).to_schema
+          elsif apply_dynamic_schema?(options, block)
+            DynamicSchemaBuilder.new(options).to_schema
           elsif apply_object_schema?(options, block)
             ObjectSchemaBuilder.new(options, &block).to_schema
-          elsif options[:using]
-            options = options.dup
-            using = options.delete(:using)
-            using = { resolve: using } if using.is_a?(Proc)
-            DynamicSchema.new(
-              resolve: using[:resolve],
-              one_of: using[:one_of] && using[:one_of].map { |schema| RefSchema.new(schema.to_schema) },
-              **options
-            )
           else
             BaseSchema.new(options)
           end
@@ -28,11 +34,19 @@ module Meta
         private
 
         def apply_array_schema?(options, block)
-          options[:type] == 'array' && (options[:items] || block)
+          options[:type] == 'array' && (options[:items] || options[:ref] || options[:dynamic_ref] || block)
         end
 
         def apply_object_schema?(options, block)
           (options[:type] == 'object' || options[:type].nil?) && (options[:properties] || block)
+        end
+
+        def apply_ref_schema?(options, block)
+          options[:ref] != nil
+        end
+
+        def apply_dynamic_schema?(options, block)
+          options[:dynamic_ref] != nil
         end
       end
     end

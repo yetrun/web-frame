@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../schemas/properties'
-require_relative '../schemas/ref_schema'
 
 module Meta
   module JsonSchema
@@ -44,27 +43,7 @@ module Meta
       end
 
       def property(name, options = {}, &block)
-        name = name.to_sym
-        # REVIEW: 为何要 dup，删掉试试
-        options = options.dup
-
-        using = options[:using]
-        if using.respond_to?(:to_schema)
-          schema = using.to_schema
-          if options[:type] == 'array'
-            @properties[name] = Properties.build_property(options, ->(options) {
-              ArraySchema.new(RefSchema.new(schema), options)
-            })
-          else
-            @properties[name] = Properties.build_property(options, ->(options) {
-              RefSchema.new(schema, options)
-            })
-          end
-        elsif using.is_a?(Proc) || using.is_a?(Hash) || using.nil?
-          @properties[name] = Properties.build_property(options, ->(options) { SchemaBuilderTool.build(options, &block) })
-        else
-          raise "非法的 `using` 选项，应传递具有 `to_schema` 方法（如 Entity、Schema 等）或 Hash、Proc（动态生成 Schema）。当前传递：#{block}"
-        end
+        @properties[name.to_sym] = Properties.build_property(options, ->(options) { SchemaBuilderTool.build(options, &block) })
       end
 
       alias expose property

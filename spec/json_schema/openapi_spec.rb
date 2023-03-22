@@ -101,8 +101,8 @@ describe 'openapi' do
       end
     end
 
-    context 'using: Hash' do
-      context 'Hash 中写有 one_of' do
+    context 'dynamic_ref' do
+      context '选项中写有 one_of' do
         let(:schema) do
           entity_one = Class.new(Meta::Entity) do
             schema_name param: 'EntityOne', render: 'EntityOne'
@@ -114,7 +114,7 @@ describe 'openapi' do
           end
 
           Meta::JsonSchema::SchemaBuilderTool.build do
-            param :nested, using: { one_of: [entity_one, entity_two] }
+            param :nested, dynamic_ref: { one_of: [entity_one, entity_two] }
           end.to_schema
         end
 
@@ -141,10 +141,10 @@ describe 'openapi' do
         end
       end
 
-      context 'Hash 中不写有 one_of' do
+      context '选项中不包含 one_of' do
         let(:schema) do
           Meta::JsonSchema::SchemaBuilderTool.build do
-            param :nested, using: {}
+            param :nested, dynamic_ref: {}
           end.to_schema
         end
 

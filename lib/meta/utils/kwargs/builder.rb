@@ -22,9 +22,10 @@
 module Meta
   module Utils
     class KeywordArgs
-      def initialize(arguments, permit_extras = false)
+      def initialize(arguments, permit_extras = false, final_consumer = nil)
         @arguments = arguments
         @permit_extras = permit_extras
+        @final_consumer = final_consumer
       end
 
       def check(args)
@@ -32,8 +33,11 @@ module Meta
         final_args = {}
 
         @arguments.each do |argument|
-          argument.consume!(final_args, args)
+          argument.consume(final_args, args)
         end
+
+        # 做最终的修饰
+        @final_consumer.call(final_args, args) if @final_consumer
 
         # 处理剩余字段
         unless args.keys.empty?
@@ -51,15 +55,26 @@ module Meta
       class Argument
         DEFAULT_TRANSFORMER = ->(value) { value }
 
-        def initialize(name:, normalizer: DEFAULT_TRANSFORMER)
-          @name = name
+        def initialize(name:, normalizer: DEFAULT_TRANSFORMER, alias_names: [])
+          @key_name = name
+          @consumer_names = [name] + alias_names
           @normalizer = normalizer
         end
 
-        def consume!(final_args, args)
-          if args.key?(@name)
-            value = @normalizer.call(args.delete(@name))
-            final_args[@name] = value
+        def consume(final_args, args)
+          @consumer_names.each do |name|
+            return true if consume_name(final_args, args, name)
+          end
+          return false
+        end
+
+        def consume_name(final_args, args, consumer_name)
+          if args.key?(consumer_name)
+            value = @normalizer.call(args.delete(consumer_name))
+            final_args[@key_name] = value
+            true
+          else
+            false
           end
         end
       end
@@ -68,6 +83,7 @@ module Meta
         def initialize
           @arguments = []
           @permit_extras = false
+          @final_consumer = nil
         end
 
         def key(*names, **options)
@@ -80,8 +96,12 @@ module Meta
           @permit_extras = value
         end
 
+        def final_consumer(&block)
+          @final_consumer = block
+        end
+
         def build
-          KeywordArgs.new(@arguments, @permit_extras)
+          KeywordArgs.new(@arguments, @permit_extras, @final_consumer)
         end
 
         def self.build(&block)

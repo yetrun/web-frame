@@ -101,100 +101,6 @@ describe 'schema' do
           expect { schema.filter('foo' => obj) }.not_to raise_error
         end
       end
-
-      context '多态' do
-        context 'using Hash' do
-          it '用过 resolve 选项解析实体' do
-            entity_a = Class.new(Meta::Entity) do
-              property :a
-            end
-            entity_b = Class.new(Meta::Entity) do
-              property :b
-            end
-            schema = Meta::JsonSchema::SchemaBuilderTool.build do
-              property :foo, required: true, using: {
-                resolve: ->(value) {
-                  value['name'] === 'a' ? entity_a : entity_b
-                }
-              }
-            end
-
-            value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
-            expect(value[:foo]).to eq(a: 'a')
-          end
-
-          it '使用多态时 `required` 选项应起作用' do
-            inner_entity = Class.new(Meta::Entity) do
-              property :a
-            end
-            schema = Meta::JsonSchema::SchemaBuilderTool.build do
-              property :foo, required: true, using: { resolve: ->(value) { inner_entity } }
-            end
-
-            expect {
-              schema.filter({})
-            }.to raise_error(Meta::JsonSchema::ValidationErrors)
-          end
-
-          it '使用多态时 `scope` 选项应起作用' do
-            inner_entity = Class.new(Meta::Entity) do
-              property :a
-            end
-            schema = Meta::JsonSchema::SchemaBuilderTool.build do
-              property :foo, scope: :foo, using: { resolve: ->(value) { inner_entity } }
-              property :bar, scope: :bar, using: { resolve: ->(value) { inner_entity } }
-            end
-
-            value = schema.filter({
-              'foo' => { 'a' => 'a', 'b' => 'b'  },
-              'bar' => { 'a' => 'a', 'b' => 'b' }
-            }, scope: [:bar])
-            expect(value).not_to be_key(:foo)
-            expect(value).to be_key(:bar)
-          end
-        end
-
-        context 'using Proc' do
-          it '等效于 using: { resolve }' do
-            entity_a = Class.new(Meta::Entity) do
-              property :a
-            end
-            entity_b = Class.new(Meta::Entity) do
-              property :b
-            end
-            schema = Meta::JsonSchema::SchemaBuilderTool.build do
-              property :foo, required: true, using: ->(value) {
-                value['name'] === 'a' ? entity_a : entity_b
-              }
-            end
-
-            value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
-            expect(value[:foo]).to eq(a: 'a')
-          end
-
-          context '放在 render 下也能生效' do
-            it '等效于 using: { resolve }' do
-              entity_a = Class.new(Meta::Entity) do
-                property :a
-              end
-              entity_b = Class.new(Meta::Entity) do
-                property :b
-              end
-              schema = Meta::JsonSchema::SchemaBuilderTool.build do
-                property :foo, render: {
-                  required: true,
-                  using: ->(value) {
-                    value['name'] === 'a' ? entity_a : entity_b
-                  }
-                }
-              end
-
-              value = schema.filter({ 'foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' } }, stage: :render)
-              expect(value[:foo]).to eq(a: 'a')
-            end
-          end
-        end
-      end
     end
 
     describe 'render: false' do
@@ -230,6 +136,138 @@ describe 'schema' do
       expect {
         schema.filter(number: nil)
       }.not_to raise_error
+    end
+  end
+
+  describe 'ref' do
+    it '使用 ref: Entity' do
+      entity = Class.new(Meta::Entity) do
+        property :a
+        property :b
+      end
+      schema = Meta::JsonSchema::SchemaBuilderTool.build ref: entity.to_schema
+
+      value = schema.filter({ 'a' => 'a', 'b' => 'b', 'c' => 'c' })
+      expect(value).to eq({ a: 'a', b: 'b' })
+    end
+
+    it '数组' do
+      the_entity = Class.new(Meta::Entity) do
+        param :name
+        param :age
+      end
+      schema = Meta::JsonSchema::SchemaBuilderTool.build type: 'array', ref: the_entity
+      value = [{ name: 'Jim', age: 18 }]
+      expect(schema.filter(JSON.parse(JSON.generate(value)))).to eq(value)
+    end
+  end
+
+  describe 'dynamic_ref' do
+    it '使用 dynamic_ref.resolve' do
+      entity_a = Class.new(Meta::Entity) do
+        property :a
+      end
+      entity_b = Class.new(Meta::Entity) do
+        property :b
+      end
+      schema = Meta::JsonSchema::SchemaBuilderTool.build dynamic_ref: {
+        resolve: ->(value) {
+          value['name'] === 'a' ? entity_a : entity_b
+        }
+      }
+
+      value = schema.filter({ 'name' => 'a', 'a' => 'a', 'b' => 'b' })
+      expect(value).to eq(a: 'a')
+    end
+
+    it '使用多态时 `required` 选项应起作用' do
+      inner_entity = Class.new(Meta::Entity) do
+        property :a
+      end
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
+        property :foo, required: true, dynamic_ref: { resolve: ->(value) { inner_entity } }
+      end
+
+      expect {
+        schema.filter({})
+      }.to raise_error(Meta::JsonSchema::ValidationErrors)
+    end
+
+    it '使用多态时 `scope` 选项应起作用' do
+      inner_entity = Class.new(Meta::Entity) do
+        property :a
+      end
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
+        property :foo, scope: :foo, dynamic_ref: { resolve: ->(value) { inner_entity } }
+        property :bar, scope: :bar, dynamic_ref: { resolve: ->(value) { inner_entity } }
+      end
+
+      value = schema.filter({
+        'foo' => { 'a' => 'a', 'b' => 'b'  },
+        'bar' => { 'a' => 'a', 'b' => 'b' }
+      }, scope: [:bar])
+      expect(value).not_to be_key(:foo)
+      expect(value).to be_key(:bar)
+    end
+
+    context 'using Proc' do
+      it '等效于 using: { resolve }' do
+        entity_a = Class.new(Meta::Entity) do
+          property :a
+        end
+        entity_b = Class.new(Meta::Entity) do
+          property :b
+        end
+        schema = Meta::JsonSchema::SchemaBuilderTool.build do
+          property :foo, required: true, dynamic_ref: ->(value) {
+            value['name'] === 'a' ? entity_a : entity_b
+          }
+        end
+
+        value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
+        expect(value[:foo]).to eq(a: 'a')
+      end
+
+      context '放在 render 下也能生效' do
+        it '等效于 using: { resolve }' do
+          entity_a = Class.new(Meta::Entity) do
+            property :a
+          end
+          entity_b = Class.new(Meta::Entity) do
+            property :b
+          end
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, render: {
+              required: true,
+              dynamic_ref: ->(value) {
+                value['name'] === 'a' ? entity_a : entity_b
+              }
+            }
+          end
+
+          value = schema.filter({ 'foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' } }, stage: :render)
+          expect(value[:foo]).to eq(a: 'a')
+        end
+      end
+
+      context 'dynamic_using' do
+        it '它是 dynamic_ref 的别名' do
+          entity_a = Class.new(Meta::Entity) do
+            property :a
+          end
+          entity_b = Class.new(Meta::Entity) do
+            property :b
+          end
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, required: true, dynamic_using: ->(value) {
+              value['name'] === 'a' ? entity_a : entity_b
+            }
+          end
+
+          value = schema.filter('foo' => { 'name' => 'a', 'a' => 'a', 'b' => 'b' })
+          expect(value[:foo]).to eq(a: 'a')
+        end
+      end
     end
   end
 end

@@ -4,21 +4,22 @@ module Meta
   module JsonSchema
     class ArraySchemaBuilder
       def initialize(options, &block)
-        raise 'type 选项必须是 array' if !options[:type].nil? && options[:type] != 'array'
-
-        options = options.merge(type: 'array')
-        @options = options
-
-        items_options = options.delete(:items) || {}
-        if object_property?(items_options, block)
-          @items = ObjectSchemaBuilder.new(items_options, &block).to_schema
+        options = options.dup
+        if options[:items]
+          items_options = options.delete(:items)
+        elsif options[:ref]
+          items_options = { ref: options.delete(:ref) }
+        elsif options[:dynamic_ref]
+          items_options = { dynamic_ref: options.delete(:dynamic_ref) }
         else
-          @items = BaseSchema.new(items_options)
+          items_options = {}
         end
+        @items_schema = SchemaBuilderTool.build(items_options, &block)
+        @base_options = options
       end
 
       def to_schema
-        ArraySchema.new(@items, @options)
+        ArraySchema.new(@items_schema, @base_options)
       end
 
       def object_property?(options, block)
