@@ -37,7 +37,7 @@ class NotesAPI < Meta::Application
   get '/notes' do
     title '查看笔记列表'
     status 200 do
-      expose :notes, type: 'array', using: NoteEntity
+      expose :notes, type: 'array', ref: NoteEntity
     end
     action do
       render :notes, Note.all
@@ -47,10 +47,10 @@ class NotesAPI < Meta::Application
   post '/notes' do
     title '创建新的笔记'
     params do
-      param :note, type: 'object', using: NoteEntity
+      param :note, type: 'object', ref: NoteEntity
     end
     status 201 do
-      expose :note, type: 'object', using: NoteEntity
+      expose :note, type: 'object', ref: NoteEntity
     end
     action do
       note = Note.create!(params[:note])
@@ -65,7 +65,7 @@ class NotesAPI < Meta::Application
       param :id, type: 'integer'
     end
     status 200 do
-      expose :note, type: 'object', using: NoteEntity
+      expose :note, type: 'object', ref: NoteEntity
     end
     action do
       note = Note.find(params[:id])
@@ -76,10 +76,10 @@ class NotesAPI < Meta::Application
   put '/notes/:id' do
     title '更新笔记'
     params do
-      param :note, type: 'object', using: NoteEntity
+      param :note, type: 'object', ref: NoteEntity
     end
     status 200 do
-      expose :note, type: 'object', using: NoteEntity
+      expose :note, type: 'object', ref: NoteEntity
     end
     action do
       note = Note.find(params[:id])
