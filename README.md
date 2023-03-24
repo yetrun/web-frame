@@ -26,6 +26,8 @@ gem 'meta-api', '~> 0.0.2' # Meta 框架处于快速开发阶段，引入时应�
 require 'meta/api'
 ```
 
+> 或者可嵌入到 Rails 项目中使用，参见[为 Rails 项目带来参数验证效果](docs/Rails.md)。
+
 ## 快速上手
 
 ### 定义 API
