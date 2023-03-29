@@ -4,10 +4,13 @@ module Meta
   module SwaggerDocUtil
     class << self
       def generate(application, info: {}, servers: [])
-        routes = get_paths_and_routes!(application)
+        paths_and_routes = get_paths_and_routes!(application)
+        return generate_from_paths_and_routes(paths_and_routes, info: info, servers: servers)
+      end
 
+      def generate_from_paths_and_routes(paths_and_routes, info: {}, servers: [])
         schemas = {}
-        paths = routes.group_by { |path, route| path }.map { |path, routes| [path, routes.map { |item| item[1] }]}.map do |path, routes|
+        paths = paths_and_routes.group_by { |path, route| path }.map { |path, routes| [path, routes.map { |item| item[1] }]}.map do |path, routes|
           operations = routes.map do |route|
             [route.method.downcase.to_sym, generate_operation_object(route, schemas)]
           end.to_h
