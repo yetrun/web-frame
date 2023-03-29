@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "articles#index"
 
-  post '/users', to: 'users#create'
-  put '/user', to: 'users#update'
+  post '/parse_params', to: 'demo#parse_params'
+  post '/render_hash', to: 'demo#render_hash'
+  post '/render_object', to: 'demo#render_object'
+  post '/render_with_options', to: 'demo#render_with_options'
 end

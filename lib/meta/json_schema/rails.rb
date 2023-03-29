@@ -3,12 +3,16 @@
 require_relative 'schemas'
 
 ActionController::Renderers.add :json_on_schema do |obj, options|
+  options = options.dup
+  status = options.delete(:status) || 200
+  scope = options.delete(:scope) || :all
+
   route_definitions = self.class.route_definitions
   route_definition = route_definitions[[self.class, params[:action].to_sym]]
-  if route_definition[:render]
-    render_schema = route_definition[:render]
-    str = render_schema.filter(obj)
-    render json: str
+  if route_definition[:status] && route_definition[:status][status]
+    render_schema = route_definition[:status][status]
+    str = render_schema.filter(obj, execution: self, stage: :render, scope: scope)
+    render json: str, **options
   end
 end
 
@@ -47,7 +51,7 @@ module Meta
             route_definition = route_definitions[[self.class, params[:action].to_sym]]
             if route_definition[:params]
               params_schema = route_definition[:params]
-              filtered_params = params_schema.filter(params.to_unsafe_hash)
+              filtered_params = params_schema.filter(params.to_unsafe_hash, stage: :param)
               self.params = { controller: params[:controller], action: params[:action] }.merge(filtered_params)
             end
           end
@@ -61,7 +65,8 @@ module Meta
 
           def status(code, &block)
             @current_route_definition ||= {}
-            @current_route_definition[:render] = ::Meta::JsonSchema::SchemaBuilderTool.build(&block)
+            @current_route_definition[:status] ||= {}
+            @current_route_definition[:status][code] = ::Meta::JsonSchema::SchemaBuilderTool.build(&block)
           end
         end
       end
