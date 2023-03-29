@@ -3,18 +3,20 @@ require 'rails_helper'
 RSpec.describe "DemoController", type: :request do
   describe "参数" do
     it "过滤参数到 params，原始参数存储到 raw_params" do
-      post '/parse_params', params: { user: {} }, as: :json
+      post '/parse_params', params: { q: 'q', user: {} }, as: :json
       expect(response.status).to eq(200)
 
       response_body = JSON.parse(response.body)
       # params 被修改，同时保留 controller 和 action 参数
       expect(response_body['params']).to eq(
+        'q' => 'q',
         'user' => { 'name' => 'Jim', 'age' => 18 },
         'controller' => 'demo',
         'action' => 'parse_params'
       )
       # 旧的 params 被存储到 raw_params 中
       expect(response_body['raw_params']).to include(
+        'q' => 'q',
         'user' => {},
         'controller' => 'demo',
         'action' => 'parse_params'
