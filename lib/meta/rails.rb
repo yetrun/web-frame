@@ -1,5 +1,6 @@
 # 作为 Rails 插件
 
+require_relative 'errors'
 require_relative 'json_schema/schemas'
 
 module Meta
@@ -21,13 +22,8 @@ module Meta
         render_schema = meta_definition[:responses][status]
         str = render_schema.filter(obj, execution: self, stage: :render, scope: scope)
         render json: str, **options
-      end
-
-      # 第二步，为 ActionController 引入模块 Plugin
-      if defined?(ActionController::API)
-        ActionController::API.send(:include, Plugin)
-      else
-        ActionController::Base.send(:include, Plugin)
+      rescue JsonSchema::ValidationErrors => e
+        raise Errors::RenderingInvalid.new(e.errors)
       end
     end
 
@@ -40,6 +36,9 @@ module Meta
       end
 
       def self.included(base)
+        # 已经被父类引入过，不再重复引入
+        return if self.respond_to?(:route_definitions)
+
         # 为 ActionController 引入宏命令，宏命令在子类中生效
         base.extend ClassMethods
 
@@ -60,7 +59,7 @@ module Meta
         end
 
         # 为 ActionController 定义一个方法，用于获取过滤后的参数
-        attr_accessor :raw_params
+        attr_accessor :params_on_schema
 
         # 为 ActionController 定义一个 before_action，用于过滤参数
         base.before_action do
@@ -71,7 +70,6 @@ module Meta
           meta_definition = route_definition.meta
           next if meta_definition[:parameters].empty? || meta_definition[:request_body].nil?
 
-          self.raw_params = self.params
           raw_params = self.params.to_unsafe_h
           final_params = {}
 
@@ -84,7 +82,9 @@ module Meta
             final_params.merge! params_schema.filter(raw_params, stage: :param)
           end
 
-          self.params = { controller: raw_params['controller'], action: raw_params['action'] }.merge(final_params)
+          self.params_on_schema = final_params
+        rescue JsonSchema::ValidationErrors => e
+          raise Errors::ParameterInvalid.new(e.errors)
         end
       end
 

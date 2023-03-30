@@ -1,4 +1,4 @@
-class DemoController < ApplicationController
+class DataController < ApplicationController
   route '/parse_params', :post do
     params do
       param :q, in: 'query'
@@ -10,7 +10,7 @@ class DemoController < ApplicationController
     end
   end
   def parse_params
-    render json: { params: self.params, raw_params: self.raw_params }
+    render json: { params_on_schema: params_on_schema }
   end
 
   route '/render_hash', :post do

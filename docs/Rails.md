@@ -1,40 +1,61 @@
-# 为 Rails 项目带来参数验证效果
+# 作为 Rails 插件
 
-Gemfile 中引入框架的新版本：
+## 安装
+
+首先，你需要将其安装在 Rails 项目中：
 
 ```ruby
 gem 'meta-api'
 ```
 
+在 config/initializers 目录下创建一个文件，例如 `meta_rails_plugin.rb`，并写入：
+
+```ruby
+require 'meta/rails'
+
+Meta::Rails.setup
+```
+
 在 `application_controller.rb` 下加入：
 
 ```ruby
-require 'meta/json_schema/rails'
-
 class ApplicationController < ActionController::API
-  include Meta::JsonSchema::Rails::Plugin
+  # 引入插件，同时引入 route 宏、params_on_schema 方法、json_on_schema 渲染器
+  include Meta::Rails::Plugin
 
-  rescue_from Meta::JsonSchema::ValidationErrors do |e|
+  # 处理参数验证错误
+  rescue_from Meta::Errors::ParameterInvalid do |e|
     render json: e.errors, status: :bad_request
   end
 end
 ```
 
-即可在控制器下开通参数验证效果。示例：
+这样，一切就准备好了。
+
+## 示例
+
+接口定义：
 
 ```ruby
 class UsersController < ApplicationController
-  params do
-    param :user, required: true do
-      param :name, type: 'string', default: 'Jim'
-      param :age, type: 'integer', default: 18
+  route '/users', :post do
+    params do
+      param :user, required: true do
+        param :name, type: 'string'
+        param :age, type: 'integer'
+      end
     end
   end
   def create
-    p params     # params 会被修改为验证后的参数
-    p raw_params # 原生的参数被保留到 raw_params 方法中
+    user = User.create!(params_on_schema[:user])
+    render json_on_schema: user
   end
 end
 ```
 
-详细语法规则参见[教程](教程.md)。
+生成 Swagger 文档：
+
+```ruby
+Rails.application.eager_load! # 需要提前加载所有常量
+Meta::Rails::Plugin.generate_swagger_doc(ApplicationController)
+```
