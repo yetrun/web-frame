@@ -2,7 +2,7 @@
 
 require_relative 'execution'
 require_relative 'path_matching_mod'
-require_relative 'meta'
+require_relative 'metadata'
 
 module Meta
   class Route
@@ -13,7 +13,7 @@ module Meta
     def initialize(path: '', method: :all, meta: {}, actions: [])
       @path = Utils::Path.normalize_path(path)
       @method = method
-      @meta = Meta.new(meta)
+      @meta = Metadata.new(meta)
       @actions = actions
     end
 

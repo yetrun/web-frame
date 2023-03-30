@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Meta
-  class Meta
+  class Metadata
     attr_reader :title, :description, :tags, :parameters, :request_body, :responses
 
     def initialize(title: nil, description: nil, tags: [], parameters: {}, request_body: nil, responses: nil)
@@ -65,7 +65,7 @@ module Meta
     end
 
     def self.new(meta = {})
-      meta.is_a?(Meta) ? meta : super(**meta)
+      meta.is_a?(Metadata) ? meta : super(**meta)
     end
   end
 end
