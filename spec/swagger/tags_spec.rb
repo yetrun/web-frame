@@ -9,12 +9,11 @@ describe 'Meta::SwaggerDocUtil.generate' do
 
   describe 'generating tags documentation' do
     let(:app) do
-      app = Class.new(Meta::Application)
-
-      app.route('/users', :get)
-        .tags(['users', 'user'])
-
-      app
+      Class.new(Meta::Application) do
+        get '/users' do
+          tags ['users', 'user']
+        end
+      end
     end
 
     it {

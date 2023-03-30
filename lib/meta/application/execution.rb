@@ -72,15 +72,7 @@ module Meta
 
     # 运行过程中首先会解析参数
     def parse_parameters(parameters_meta)
-      self.parameters = parameters_meta.map do |name, options|
-        schema = options[:schema]
-        value = if options[:in] == 'header'
-          schema.filter(request.get_header('HTTP_' + name.to_s.upcase.gsub('-', '_')))
-        else
-          schema.filter(request.params[name.to_s])
-        end
-        [name, value]
-      end.to_h.freeze
+      self.parameters = parameters_meta.filter(request).freeze
     end
 
     # parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量

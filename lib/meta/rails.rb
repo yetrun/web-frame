@@ -67,15 +67,7 @@ module Meta
 
           if meta_definition[:parameters]
             parameters_meta = meta_definition[:parameters]
-            final_params = parameters_meta.map do |name, options|
-              schema = options[:schema]
-              value = if options[:in] == 'header'
-                schema.filter(request.get_header('HTTP_' + name.to_s.upcase.gsub('-', '_')))
-              else
-                schema.filter(request.params[name.to_s])
-              end
-              [name, value]
-            end.to_h
+            final_params = parameters_meta.filter(request)
           end
           if meta_definition[:request_body]
             params_schema = meta_definition[:request_body]

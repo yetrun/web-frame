@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative '../application/parameters'
 
 module Meta
   module RouteDSL
@@ -17,7 +18,7 @@ module Meta
       end
 
       def build
-        @parameters
+        Parameters.new(@parameters)
       end
     end
   end

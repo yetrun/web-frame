@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative 'parameters'
 
 module Meta
   class Metadata
@@ -8,7 +9,7 @@ module Meta
       @title = title
       @description = description
       @tags = tags
-      @parameters = parameters
+      @parameters = parameters.is_a?(Parameters) ? parameters : Parameters.new(parameters)
       @request_body = request_body
       @responses = responses || { 204 => nil }
     end
@@ -24,18 +25,7 @@ module Meta
       operation_object[:tags] = tags unless tags.empty?
       operation_object[:description] = description if description
 
-      operation_object[:parameters] = parameters.map do |name, options|
-        property_options = options[:schema].options
-        {
-          name: name,
-          in: options[:in],
-          required: property_options[:required] || nil,
-          description: property_options[:description] || '',
-          schema: {
-            type: property_options[:type]
-          }
-        }.compact
-      end unless parameters.empty?
+      operation_object[:parameters] = parameters.to_swagger_doc
 
       if request_body
         schema = request_body.to_schema_doc(stage: :param, schemas: schemas)
