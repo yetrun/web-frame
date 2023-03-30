@@ -2,25 +2,35 @@
 
 require_relative 'json_schema/schemas'
 
-ActionController::Renderers.add :json_on_schema do |obj, options|
-  options = options.dup
-  status = options.delete(:status) || 200
-  scope = options.delete(:scope) || :all
-
-  route_definitions = self.class.route_definitions
-  route_definition = route_definitions[[self.class, params[:action].to_sym]]
-  raise '未绑定 Route 定义' unless route_definition
-
-  meta_definition = route_definition.meta
-  raise '未提供 status 宏定义' unless meta_definition[:responses] && meta_definition[:responses][status]
-
-  render_schema = meta_definition[:responses][status]
-  str = render_schema.filter(obj, execution: self, stage: :render, scope: scope)
-  render json: str, **options
-end
-
 module Meta
   module Rails
+    def self.setup
+      # 第一步，为 ActionController 添加一个新的 Renderer
+      ActionController::Renderers.add :json_on_schema do |obj, options|
+        options = options.dup
+        status = options.delete(:status) || 200
+        scope = options.delete(:scope) || :all
+
+        route_definitions = self.class.route_definitions
+        route_definition = route_definitions[[self.class, params[:action].to_sym]]
+        raise '未绑定 Route 定义' unless route_definition
+
+        meta_definition = route_definition.meta
+        raise '未提供 status 宏定义' unless meta_definition[:responses] && meta_definition[:responses][status]
+
+        render_schema = meta_definition[:responses][status]
+        str = render_schema.filter(obj, execution: self, stage: :render, scope: scope)
+        render json: str, **options
+      end
+
+      # 第二步，为 ActionController 引入模块 Plugin
+      if defined?(ActionController::API)
+        ActionController::API.send(:include, Plugin)
+      else
+        ActionController::Base.send(:include, Plugin)
+      end
+    end
+
     module Plugin
       def self.generate_swagger_doc(klass)
         paths_and_routes = klass.route_definitions.values.map do |route_definition|
@@ -61,8 +71,8 @@ module Meta
           meta_definition = route_definition.meta
           next if meta_definition[:parameters].empty? || meta_definition[:request_body].nil?
 
-          self.raw_params = params
-          raw_params = params.to_unsafe_h
+          self.raw_params = self.params
+          raw_params = self.params.to_unsafe_h
           final_params = {}
 
           if meta_definition[:parameters]
@@ -74,7 +84,7 @@ module Meta
             final_params.merge! params_schema.filter(raw_params, stage: :param)
           end
 
-          self.params = { controller: raw_params['controller'], action: raw_params['action'], **final_params }
+          self.params = { controller: raw_params['controller'], action: raw_params['action'] }.merge(final_params)
         end
       end
 

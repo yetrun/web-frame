@@ -10,7 +10,7 @@ class DemoController < ApplicationController
     end
   end
   def parse_params
-    render json: { params: params, raw_params: raw_params }
+    render json: { params: self.params, raw_params: self.raw_params }
   end
 
   route '/render_hash', :post do
