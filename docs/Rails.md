@@ -5,7 +5,7 @@
 首先，你需要将其安装在 Rails 项目中：
 
 ```ruby
-gem 'meta-api'
+gem 'meta-api', '~> 0.0.3' # 0.0.3 版本以上才提供 Rails 插件功能
 ```
 
 在 config/initializers 目录下创建一个文件，例如 `meta_rails_plugin.rb`，并写入：

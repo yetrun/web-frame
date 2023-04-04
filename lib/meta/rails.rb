@@ -28,11 +28,11 @@ module Meta
     end
 
     module Plugin
-      def self.generate_swagger_doc(klass)
+      def self.generate_swagger_doc(klass, **kwargs)
         paths_and_routes = klass.route_definitions.values.map do |route_definition|
           [route_definition.path, route_definition]
         end
-        SwaggerDocUtil.generate_from_paths_and_routes(paths_and_routes)
+        SwaggerDocUtil.generate_from_paths_and_routes(paths_and_routes, **kwargs)
       end
 
       def self.included(base)
@@ -68,7 +68,7 @@ module Meta
           next unless route_definition
 
           meta_definition = route_definition.meta
-          next if meta_definition[:parameters].empty? || meta_definition[:request_body].nil?
+          next if meta_definition[:parameters].empty? && meta_definition[:request_body].nil?
 
           raw_params = self.params.to_unsafe_h
           final_params = {}
