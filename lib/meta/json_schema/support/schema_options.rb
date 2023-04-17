@@ -5,13 +5,6 @@ require_relative '../../utils/kwargs/builder'
 module Meta
   module JsonSchema
     module SchemaOptions
-      OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
-        key :type, :items, :description, :presenter, :value, :format, :required, :default, :validate, :allowable, :properties, :convert
-        key :using, normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
-        key :param
-        key :render
-      end
-
       @default_options = {
         scope: [],
         required: false
@@ -34,8 +27,6 @@ module Meta
         end
 
         def normalize(options)
-          options = OPTIONS_CHECKER.check(options)
-
           # 只要 options 中设置为 nil 的选项没有明确的意义，则下行代码是永远有效的
           options = (@default_options.compact).merge(options.compact)
           if options[:using]

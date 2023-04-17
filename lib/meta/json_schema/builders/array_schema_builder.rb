@@ -5,15 +5,10 @@ module Meta
     class ArraySchemaBuilder
       def initialize(options, &block)
         options = options.dup
-        if options[:items]
-          items_options = options.delete(:items)
-        elsif options[:ref]
-          items_options = { ref: options.delete(:ref) }
-        elsif options[:dynamic_ref]
-          items_options = { dynamic_ref: options.delete(:dynamic_ref) }
-        else
-          items_options = {}
-        end
+        items_options = options.delete(:items) || {}
+        items_options[:ref] = options.delete(:ref) if options[:ref]
+        items_options[:dynamic_ref] = options.delete(:dynamic_ref) if options[:dynamic_ref]
+
         @items_schema = SchemaBuilderTool.build(items_options, &block)
         @base_options = options
       end

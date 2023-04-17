@@ -9,6 +9,15 @@ describe 'Schema Builders' do
       array_schema = Meta::JsonSchema::SchemaBuilderTool.build type: 'array', using: Class.new(Meta::Entity), value: proc { |board| [] }
       expect(array_schema.options[:value]).to be_a(Proc)
     end
+
+    it '同时使用 ref 和 items 不会报错' do
+      expect {
+        Meta::JsonSchema::SchemaBuilderTool.build \
+          type: 'array',
+          ref: Class.new(Meta::Entity),
+          items: { type: 'object' }
+      }.not_to raise_error
+    end
   end
 
   describe 'ObjectSchemaBuilder' do

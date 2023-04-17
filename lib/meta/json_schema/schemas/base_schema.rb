@@ -6,6 +6,12 @@ require_relative '../support/schema_options'
 module Meta
   module JsonSchema
     class BaseSchema
+      OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
+        key :type, :items, :description, :presenter, :value, :default, :properties, :convert
+        key :validate, :required, :format, :allowable
+        key :param, :render
+      end
+
       # `options` 包含了转换器、验证器、文档、选项。
       #
       # 由于本对象可继承，基于不同的继承可分别表示基本类型、对象和数组，所以该属
@@ -16,6 +22,7 @@ module Meta
       attr_reader :options
 
       def initialize(options = {})
+        options = OPTIONS_CHECKER.check(options)
         @options = SchemaOptions.normalize(options)
       end
 
