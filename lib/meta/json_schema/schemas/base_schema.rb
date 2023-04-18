@@ -27,7 +27,7 @@ module Meta
       end
 
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
-        key :stage, :execution, :object_value, :type_conversion, :validation
+        key :stage, :execution, :object_value, :type_conversion, :validation, :user_data
 
         # 以下三个是 ObjectSchema 需要的选项
         key :discard_missing, :exclude, :scope
@@ -64,7 +64,13 @@ module Meta
 
       def resolve_value(user_options)
         value_proc = options[:value]
-        value_proc_params = (value_proc.lambda? && value_proc.arity == 0) ?  [] : [user_options[:object_value]]
+        if value_proc.lambda?
+          value_proc_params = []
+          value_proc_params << user_options[:object_value] if value_proc.arity >= 1
+          value_proc_params << user_options[:user_data] if value_proc.arity >= 2
+        else
+          value_proc_params = [user_options[:object_value], user_options[:user_data]]
+        end
 
         if user_options[:execution]
           user_options[:execution].instance_exec(*value_proc_params, &value_proc)

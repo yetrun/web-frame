@@ -116,4 +116,24 @@ describe 'render' do
       Meta.config.render_validation = true
     end
   end
+
+  describe '传递用户数据' do
+    def app
+      Class.new(Meta::Application) do
+        post '/request' do
+          status 200 do
+            property :foo, value: Proc.new { |parent, user_data| parent['foo'] + user_data[:bar] }
+          end
+          action do
+            render({ 'foo' => '333' }, user_data: { bar: 'bar' })
+          end
+        end
+      end
+    end
+
+    it '默认情况执行验证器，遇到验证失败时报错' do
+      post('/request')
+      expect(JSON.parse(last_response.body)['foo']).to eq('333bar')
+    end
+  end
 end

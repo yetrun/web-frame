@@ -45,6 +45,28 @@ describe 'schema' do
           end
         end
       end
+
+      describe 'user_data:' do
+        it '传递用户数据' do
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, value: Proc.new { |parent, user_data| parent['foo'] + user_data[:bar] }
+          end.to_schema
+
+          filtered = schema.filter({ 'foo' => 'foo' }, user_data: { bar: 'bar' })
+          expect(filtered).to eq(foo: 'foobar')
+        end
+
+        it '在嵌套多层下，传递用户数据' do
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :nested do
+              property :foo, value: Proc.new { |parent, user_data| parent['foo'] + user_data[:bar] }
+            end
+          end.to_schema
+
+          filtered = schema.filter({ 'nested' => { 'foo' => 'foo' } }, user_data: { bar: 'bar' })
+          expect(filtered[:nested]).to eq(foo: 'foobar')
+        end
+      end
     end
 
     describe 'value' do
