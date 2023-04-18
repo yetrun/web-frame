@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    meta-api (0.0.3)
+    meta-api (0.0.4)
 
 GEM
   remote: https://gems.ruby-china.com/
