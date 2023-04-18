@@ -7,6 +7,7 @@ require_relative 'helpers'
 require_relative 'chain_builder'
 require_relative 'action_builder'
 require_relative 'meta_builder'
+require_relative 'around_action_builder'
 
 module Meta
   module RouteDSL
@@ -24,7 +25,7 @@ module Meta
         instance_exec &block if block_given?
       end
 
-      def build(parent_path: '', meta: {}, before_callbacks: [], after_callbacks: [])
+      def build(parent_path: '', meta: {}, callbacks: {})
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
         meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
@@ -45,15 +46,17 @@ module Meta
           end
         end
 
-        # 将 before_callbacks、action、after_callbacks 合并为 actions
-        action = @action_builder&.build
-        actions = before_callbacks + (action ? [action] : []) + after_callbacks
+        # 构建洋葱圈模型的 LinkedAction
+        action = AroundActionBuilder.build(
+          action: @action_builder&.build,
+          **callbacks
+        )
 
         Route.new(
           path: @path,
           method: @method,
           meta: meta2,
-          actions: actions
+          action: action
         )
       end
 

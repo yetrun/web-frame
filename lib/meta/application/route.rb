@@ -8,24 +8,23 @@ module Meta
   class Route
     include PathMatchingMod.new(path_method: :path, matching_mode: :full)
 
-    attr_reader :path, :method, :meta, :actions
+    attr_reader :path, :method, :meta, :action
 
-    def initialize(path: '', method: :all, meta: {}, actions: [])
+    def initialize(path: '', method: :all, meta: {}, action: nil)
       @path = Utils::Path.normalize_path(path)
       @method = method
       @meta = Metadata.new(meta)
-      @actions = actions
+      @action = action
     end
 
     def execute(execution, remaining_path)
       path_matching.merge_path_params(remaining_path, execution.request)
 
-      # 依次执行这个环境
       begin
         execution.parse_parameters(@meta[:parameters]) if @meta[:parameters]
         execution.parse_request_body(@meta[:request_body]) if @meta[:request_body]
 
-        actions.each { |b| execution.instance_eval(&b) }
+        action.execute(execution) if action
 
         render_entity(execution) if @meta[:responses]
       rescue Execution::Abort

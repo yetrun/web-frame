@@ -10,8 +10,7 @@ module Meta
 
       def initialize(prefix = nil, &block)
         @mod_prefix = prefix
-        @before_callbacks = []
-        @after_callbacks = []
+        @callbacks = { before: [], after: [], around: [] }
         @error_guards = []
         @meta_builder = MetaBuilder.new
         @mod_builders = []
@@ -20,7 +19,7 @@ module Meta
         instance_exec &block if block_given?
       end
 
-      def build(parent_path: '', meta: {}, before_callbacks: [], after_callbacks: [])
+      def build(parent_path: '', meta: {}, callbacks: {})
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
         meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
@@ -28,9 +27,12 @@ module Meta
         end
 
         # 构建子模块
-        before_callbacks += @before_callbacks
-        after_callbacks = @after_callbacks + after_callbacks
-        mods = @mod_builders.map { |builder| builder.build(parent_path: Utils::Path.join(parent_path, @mod_prefix), meta: meta2, before_callbacks: before_callbacks, after_callbacks: after_callbacks) }
+        callbacks = { # 合并父级传递过来的 callbacks
+          before: (callbacks[:before] || []) + @callbacks[:before],
+          around: (callbacks[:around] || []) + @callbacks[:around],
+          after: @callbacks[:after] + (callbacks[:after] || []),
+        }
+        mods = @mod_builders.map { |builder| builder.build(parent_path: Utils::Path.join(parent_path, @mod_prefix), meta: meta2, callbacks: callbacks) }
 
         Application.new(
           prefix: @mod_prefix,
@@ -64,11 +66,15 @@ module Meta
 
       # 定义模块内的公共逻辑
       def before(&block)
-        @before_callbacks << block
+        @callbacks[:before] << block
       end
 
       def after(&block)
-        @after_callbacks << block
+        @callbacks[:after] << block
+      end
+
+      def around(&block)
+        @callbacks[:around] << block
       end
 
       def rescue_error(error_class, &block)
@@ -94,13 +100,13 @@ module Meta
           @meta = meta
         end
 
-        def build(parent_path: '', meta: {}, before_callbacks: [], after_callbacks: [])
+        def build(parent_path: '', meta: {}, **kwargs)
           # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
           meta2 = (meta || {}).merge(@meta)
           if meta[:parameters] && meta2[:parameters]
             meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
           end
-          @builder.build(parent_path: parent_path, meta: meta2, before_callbacks: before_callbacks, after_callbacks: after_callbacks)
+          @builder.build(parent_path: parent_path, meta: meta2, **kwargs)
         end
       end
     end
