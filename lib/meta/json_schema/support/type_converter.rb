@@ -39,7 +39,7 @@ module Meta
       @boolean_converters = {
         [String] => lambda do |value|
           unless %w[true True TRUE false False FALSE].include?(value)
-            raise TypeConvertError, "类型转化失败，期望得到一个 `boolean` 类型，但值 `#{value}` 无法转化"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.basic', target_type: 'boolean', value: value)
           end
 
           value.downcase == 'true'
@@ -50,14 +50,14 @@ module Meta
         [String] => lambda do |value|
           # 允许的格式：+34、-34、34、34.0 等
           unless value =~ /^[+-]?\d+(\.0+)?$/
-            raise TypeConvertError, "类型转化失败，期望得到一个 `integer` 类型，但值 `#{value}` 无法转化"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.basic', target_type: 'integer', value: value)
           end
 
           value.to_i
         end,
         [Float] => lambda do |value|
           unless value.to_i == value
-            raise TypeConvertError, "类型转化失败，期望得到一个 `integer` 类型，但值 `#{value}` 无法转化"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.basic', target_type: 'integer', value: value)
           end
 
           value.to_i
@@ -67,7 +67,7 @@ module Meta
       @number_converters = {
         [String] => lambda do |value|
           unless value =~ /^[+-]?\d+(\.\d+)?$/
-            raise TypeConvertError, "类型转化失败，期望得到一个 `number` 类型，但值 `#{value}` 无法转化"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.basic', target_type: 'number', value: value)
           end
 
           float = value.to_f
@@ -84,7 +84,7 @@ module Meta
       @array_converters = {
         [Object] => lambda do |value|
           unless value.respond_to?(:to_a)
-            raise TypeConvertError, "转化为数组类型时期望对象拥有 `to_a` 方法"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.array')
           end
 
           value.to_a
@@ -94,9 +94,9 @@ module Meta
       @object_converters = {
         [Object] => lambda do |value|
           if [TrueClass, FalseClass, Integer, Float, String].any? { |ruby_type| value.is_a?(ruby_type) }
-            raise TypeConvertError, "类型转化失败，期望得到一个 `object` 类型，但值 `#{value}` 是一个基本类型"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.object', value: value, real_type: I18n.t(:'json_schema.type_description.basic'))
           elsif value.is_a?(Array)
-            raise TypeConvertError, "类型转化失败，期望得到一个 `object` 类型，但值 `#{value}` 是一个 `array` 类型"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.object', value: value, real_type: I18n.t(:'json_schema.type_description.array'))
           end
 
           ObjectWrapper.new(value)
@@ -106,7 +106,7 @@ module Meta
       class << self
         def convert_value(value, target_type)
           return nil if value.nil?
-          raise JsonSchema::TypeConvertError, "未知的目标类型 `#{target_type}`" unless @definity_types.keys.include?(target_type)
+          raise JsonSchema::TypeConvertError, I18n.t(:'json_schema.errors.type_convert.unknown') unless @definity_types.keys.include?(target_type)
           return value if match_definity_types?(value, target_type)
 
           convert_to_definity_type(value, target_type)
@@ -126,7 +126,7 @@ module Meta
                 return converter.call(value)
               end
             end
-            raise TypeConvertError, "类型转化失败，期望得到一个 `#{target_type}` 类型，但值 `#{value}` 无法转化"
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.basic', target_type: target_type, value: value)
           end
       end
     end

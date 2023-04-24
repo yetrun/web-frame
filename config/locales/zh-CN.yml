@@ -1,6 +1,14 @@
 zh-CN:
   json_schema:
+    type_names:
+      basic: "基本类型"
+      array: "数组类型"
     errors:
-      required: '未提供'
-      format: '格式不正确'
-      allowable: '不在允许的值范围内'
+      required: "未提供"
+      format: "格式不正确"
+      allowable: "不在允许的值范围内"
+      type_convert:
+        basic: "类型转化失败，期望得到一个 `%{target_type}` 类型，但值 `%{value}` 无法转化"
+        array: "转化为数组类型时期望对象拥有 `to_a` 方法"
+        object: "类型转化失败，期望得到一个 `object` 类型，但值 `%{value}` 是一个%{real_type}"
+        unknown: "未知的目标类型 `%{target_type}`"
