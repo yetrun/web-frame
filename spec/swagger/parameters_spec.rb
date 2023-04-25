@@ -31,12 +31,14 @@ describe 'Meta::SwaggerDocUtil.generate' do
           {
             name: :name,
             in: 'query',
+            required: false,
             description: 'the name',
             schema: { type: 'string' }
           },
           {
             name: :age,
             in: 'query',
+            required: false,
             description: 'the age',
             schema: { type: 'integer' }
           }
@@ -45,83 +47,97 @@ describe 'Meta::SwaggerDocUtil.generate' do
     end
 
     context '路径存在 path 参数，但参数宏中未提供 path 定义' do
-      def app
-        Class.new(Meta::Application) do
-          get '/users/:id'
+      context '单层示例' do
+        def app
+          Class.new(Meta::Application) do
+            get '/users/:id'
+          end
+        end
+
+        it '自动提供参数的文档' do
+          expect(subject[:paths]['/users/{id}'][:get][:parameters]).to eq [
+            {
+              name: :id,
+              in: 'path',
+              required: true,
+              description: '',
+              schema: {}
+            }
+          ]
         end
       end
 
-      it '自动提供参数的文档' do
-        expect(subject[:paths]['/users/{id}'][:get][:parameters]).to eq [
-          {
-            name: :id,
-            in: 'path',
-            required: true,
-            description: '',
-            schema: { type: nil }
-          }
-        ]
-      end
-    end
+      context '多层示例' do
+        def app
+          Class.new(Meta::Application) do
+            namespace '/:foo' do
+              get '/:bar'
+            end
+          end
+        end
 
-    context '路径存在 path 参数，但参数宏中未提供 path 定义（多层）' do
-      def app
-        Class.new(Meta::Application) do
-          namespace '/:foo' do
+        it '自动提供参数的文档' do
+          expect(subject[:paths]['/{foo}/{bar}'][:get][:parameters]).to eq [
+            {
+              name: :foo,
+              in: 'path',
+              required: true,
+              description: '',
+              schema: {}
+            },
+            {
+              name: :bar,
+              in: 'path',
+              required: true,
+              description: '',
+              schema: {}
+            }
+          ]
+        end
+      end
+
+      context 'apply 示例' do
+        def app
+          mod = Class.new(Meta::Application) do
             get '/:bar'
           end
+          Class.new(Meta::Application) do
+            namespace '/:foo' do
+              apply mod
+            end
+          end
         end
-      end
 
-      it '自动提供参数的文档' do
-        expect(subject[:paths]['/{foo}/{bar}'][:get][:parameters]).to eq [
-          {
-            name: :foo,
-            in: 'path',
-            required: true,
-            description: '',
-            schema: { type: nil }
-          },
-          {
-            name: :bar,
-            in: 'path',
-            required: true,
-            description: '',
-            schema: { type: nil }
-          }
-        ]
+        it '自动提供参数的文档' do
+          expect(subject[:paths]['/{foo}/{bar}'][:get][:parameters]).to eq [
+            {
+              name: :foo,
+              in: 'path',
+              required: true,
+              description: '',
+              schema: {}
+            },
+            {
+              name: :bar,
+              in: 'path',
+              required: true,
+              description: '',
+              schema: {}
+            }
+          ]
+        end
       end
     end
 
-    context '路径存在 path 参数，但参数宏中未提供 path 定义（apply）' do
+    context 'parameters 定义为空' do
       def app
-        mod = Class.new(Meta::Application) do
-          get '/:bar'
-        end
         Class.new(Meta::Application) do
-          namespace '/:foo' do
-            apply mod
-          end
+          get '/request'
         end
       end
 
-      it '自动提供参数的文档' do
-        expect(subject[:paths]['/{foo}/{bar}'][:get][:parameters]).to eq [
-          {
-            name: :foo,
-            in: 'path',
-            required: true,
-            description: '',
-            schema: { type: nil }
-          },
-          {
-            name: :bar,
-            in: 'path',
-            required: true,
-            description: '',
-            schema: { type: nil }
-          }
-        ]
+      it '不包含 parameters 块' do
+        expect(subject[:paths]['/request'][:get].keys).not_to include(:parameters)
       end
     end
   end

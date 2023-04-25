@@ -34,12 +34,14 @@ describe 'Meta::SwaggerDocUtil.generate' do
           {
             name: :name,
             in: 'query',
+            required: false,
             description: 'the name',
             schema: { type: 'string' }
           },
           {
             name: :age,
             in: 'query',
+            required: false,
             description: 'the age',
             schema: { type: 'integer' }
           }

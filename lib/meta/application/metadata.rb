@@ -51,7 +51,7 @@ module Meta
         }.compact
       end unless responses.empty?
 
-      operation_object
+      operation_object.compact
     end
 
     def self.new(meta = {})

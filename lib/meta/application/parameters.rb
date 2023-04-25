@@ -28,11 +28,11 @@ module Meta
         {
           name: name,
           in: options[:in],
-          required: property_options[:required] || nil,
+          required: property_options.key?(:required) ? property_options[:required] : false,
           description: property_options[:description] || '',
           schema: {
             type: property_options[:type]
-          }
+          }.compact
         }.compact
       end unless parameters.empty?
     end
