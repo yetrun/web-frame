@@ -123,7 +123,7 @@ module Meta
       if request_body.empty?
         json = {}
       elsif !request.content_type.start_with?('application/json')
-        raise Errors::UnsupportedContentType, "只接受 Content-Type 为 application/json 的请求参数"
+        raise Errors::UnsupportedContentType, "只接受 Content-Type 为 application/json 的请求参数，当前格式：#{request.content_type}"
       else
         json = JSON.parse(request_body)
       end
