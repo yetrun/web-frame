@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'bigdecimal'
+
 module Meta
   module JsonSchema
     class ObjectWrapper
@@ -29,7 +31,7 @@ module Meta
       @definity_types = {
         'boolean' => [TrueClass, FalseClass],
         'integer' => [Integer],
-        'number' => [Integer, Float],
+        'number' => [Integer, Float, BigDecimal],
         'string' => [String],
         'array' => [Array],
         'object' => [Hash, ObjectWrapper]
@@ -55,7 +57,7 @@ module Meta
 
           value.to_i
         end,
-        [Float] => lambda do |value|
+        [Float, BigDecimal] => lambda do |value|
           unless value.to_i == value
             raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.basic', target_type: 'integer', value: value)
           end
