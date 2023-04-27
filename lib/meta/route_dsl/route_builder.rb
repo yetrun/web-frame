@@ -47,10 +47,16 @@ module Meta
         end
 
         # 构建洋葱圈模型的 LinkedAction
-        action = AroundActionBuilder.build(
-          action: @action_builder&.build,
-          **callbacks
-        )
+        # 合并父级传递过来的 callbacks，将 before 和 around 放在前面，after 放在后面
+        parent_before = callbacks.filter { |cb| cb[:lifecycle] == :before || cb[:lifecycle] == :around }
+        parent_after = callbacks.filter { |cb| cb[:lifecycle] == :after }
+        callbacks = parent_before + [{ lifecycle: :before, proc: @action_builder&.build }] + parent_after
+        # 使用 AroundActionBuilder 构建洋葱圈模型
+        around_action_builder = AroundActionBuilder.new
+        callbacks.each do |cb|
+          around_action_builder.send(cb[:lifecycle], &cb[:proc]) if cb[:proc]
+        end
+        action = around_action_builder.build
 
         Route.new(
           path: @path,

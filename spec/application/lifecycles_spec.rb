@@ -109,7 +109,7 @@ describe Meta::Application, 'lifecycles' do
       get '/users'
 
       expect(last_response.status).to eq 200
-      expect(@holder).to eq ['before one', 'before two', 'around before', 'get users', 'around after', 'after one', 'after two']
+      expect(@holder).to eq ['before one', 'before two', 'around before', 'get users', 'after one', 'after two', 'around after']
     end
   end
 end

@@ -10,7 +10,7 @@ module Meta
 
       def initialize(prefix = nil, &block)
         @mod_prefix = prefix
-        @callbacks = { before: [], after: [], around: [] }
+        @callbacks = []
         @error_guards = []
         @meta_builder = MetaBuilder.new
         @mod_builders = []
@@ -19,7 +19,7 @@ module Meta
         instance_exec &block if block_given?
       end
 
-      def build(parent_path: '', meta: {}, callbacks: {})
+      def build(parent_path: '', meta: {}, callbacks: [])
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
         meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
@@ -27,11 +27,10 @@ module Meta
         end
 
         # 构建子模块
-        callbacks = { # 合并父级传递过来的 callbacks
-          before: (callbacks[:before] || []) + @callbacks[:before],
-          around: (callbacks[:around] || []) + @callbacks[:around],
-          after: @callbacks[:after] + (callbacks[:after] || []),
-        }
+        # 合并父级传递过来的 callbacks，将 before 和 around 放在前面，after 放在后面
+        parent_before = callbacks.filter { |cb| cb[:lifecycle] == :before || cb[:lifecycle] == :around }
+        parent_after = callbacks.filter { |cb| cb[:lifecycle] == :after }
+        callbacks = parent_before + @callbacks + parent_after
         mods = @mod_builders.map { |builder| builder.build(parent_path: Utils::Path.join(parent_path, @mod_prefix), meta: meta2, callbacks: callbacks) }
 
         Application.new(
@@ -66,15 +65,24 @@ module Meta
 
       # 定义模块内的公共逻辑
       def before(&block)
-        @callbacks[:before] << block
+        @callbacks << {
+          lifecycle: :before,
+          proc: block
+        }
       end
 
       def after(&block)
-        @callbacks[:after] << block
+        @callbacks << {
+          lifecycle: :after,
+          proc: block
+        }
       end
 
       def around(&block)
-        @callbacks[:around] << block
+        @callbacks << {
+          lifecycle: :around,
+          proc: block
+        }
       end
 
       def rescue_error(error_class, &block)

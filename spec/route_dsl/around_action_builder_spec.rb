@@ -30,6 +30,28 @@ describe 'RouteDSL::AroundActionBuilder' do
     expect(execution.holder).to eq([1, 2, 3, 4, 5])
   end
 
+  it '#build: 测试 around 的效果（结合 before 和 after）' do
+    action_builder = Meta::RouteDSL::AroundActionBuilder.new
+    action_builder.around do |next_action|
+      @holder << 1
+      next_action.execute(self)
+      @holder << 5
+    end
+    action_builder.before do
+      @holder << 2
+    end
+    action_builder.after do
+      @holder << 3
+    end
+    action_builder.after do
+      @holder << 4
+    end
+
+    action = action_builder.build
+    action.execute(execution)
+    expect(execution.holder).to eq([1, 2, 3, 4, 5])
+  end
+
   it '.build: 综合测试 before、after、around 的效果' do
     b1 = Proc.new { @holder << 1 }
     b2 = Proc.new { @holder << 2 }
