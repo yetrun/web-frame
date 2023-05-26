@@ -88,7 +88,8 @@ describe 'Meta::SwaggerDocUtil.generate' do
               },
               array: {
                 type: 'array',
-                description: '数组参数'
+                description: '数组参数',
+                items: {}
               },
               any: {}
             }

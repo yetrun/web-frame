@@ -11,15 +11,23 @@ module Meta
     end
 
     def filter(request)
-      parameters.map do |name, options|
+      errors = {}
+      final_value = {}
+
+      parameters.each do |name, options|
         schema = options[:schema]
         value = if options[:in] == 'header'
-          schema.filter(request.get_header('HTTP_' + name.to_s.upcase.gsub('-', '_')))
-        else
-          schema.filter(request.params[name.to_s])
-        end
-        [name, value]
-      end.to_h
+                  schema.filter(request.get_header('HTTP_' + name.to_s.upcase.gsub('-', '_')))
+                else
+                  schema.filter(request.params[name.to_s])
+                end
+        final_value[name] = value
+      rescue JsonSchema::ValidationError => e
+        errors[name] = e.message
+      end
+      raise Errors::ParameterInvalid.new(errors) unless errors.empty?
+
+      final_value
     end
 
     def to_swagger_doc

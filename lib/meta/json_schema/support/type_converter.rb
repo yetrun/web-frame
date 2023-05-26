@@ -96,9 +96,9 @@ module Meta
       @object_converters = {
         [Object] => lambda do |value|
           if [TrueClass, FalseClass, Integer, Float, String].any? { |ruby_type| value.is_a?(ruby_type) }
-            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.object', value: value, real_type: I18n.t(:'json_schema.type_description.basic'))
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.object', value: value, real_type: I18n.t(:'json_schema.type_names.basic'))
           elsif value.is_a?(Array)
-            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.object', value: value, real_type: I18n.t(:'json_schema.type_description.array'))
+            raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.object', value: value, real_type: I18n.t(:'json_schema.type_names.array'))
           end
 
           ObjectWrapper.new(value)

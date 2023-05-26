@@ -13,7 +13,7 @@ module Meta
     end
 
     class RenderingInvalid < JsonSchema::ValidationErrors
-      def initialize(errors)
+      def initialize(errors = {})
         super(errors, "渲染实体异常：#{errors}")
       end
     end

@@ -16,6 +16,7 @@ describe 'render' do
               property :name
               property :age
             end
+            property :status, type: 'integer'
           end
           action &the_render_call
         end
@@ -46,6 +47,23 @@ describe 'render' do
 
           response_json = JSON.parse(last_response.body)
           expect(response_json['user']).to eq('name' => 'Jim', 'age' => 18)
+        end
+      end
+
+      context '渲染的键名带错误提示消息' do
+        let(:render_call) do
+          proc {
+            render(:user, 'a string')
+            render(:status, "success")
+          }
+        end
+
+        it '正确渲染出结果' do
+          expect {
+            post('/request')
+          }.to raise_error(Meta::Errors::RenderingInvalid) do |e|
+            expect(e.errors.keys).to include(:user, :status)
+          end
         end
       end
 

@@ -100,20 +100,34 @@ module Meta
         end
 
         new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render, validation: ::Meta.config.render_validation, type_conversion: ::Meta.config.render_type_conversion)
+        response.content_type = 'application/json' if response.content_type.nil?
         response.body = [JSON.generate(new_hash)]
       else
         # 渲染多键值结点
-        new_hash = renders.map do |key, render_content|
+        errors = {}
+        final_value = {}
+        renders.each do |key, render_content|
           raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" unless entity_schema.properties.key?(key)
           schema = entity_schema.properties[key].schema(:render)
-
-          filtered = schema.filter(render_content[:value], **render_content[:options], execution: self, stage: :render)
-          [key, filtered]
+          final_value[key] = schema.filter(render_content[:value], **render_content[:options], execution: self, stage: :render)
+        rescue JsonSchema::ValidationErrors => e
+          # 错误信息再度绑定 key
+          errors.merge! e.errors.transform_keys! { |k| k.empty? ? key : "#{key}.#{k}" }
         end.to_h
-        response.body = [JSON.generate(new_hash)]
+
+        if errors.empty?
+          response.content_type = 'application/json' if response.content_type.nil?
+          response.body = [JSON.generate(final_value)]
+        else
+          raise Errors::RenderingInvalid.new(errors)
+        end
       end
     rescue JsonSchema::ValidationErrors => e
       raise Errors::RenderingInvalid.new(e.errors)
+    end
+
+    def abort_execution!
+      raise Abort
     end
 
     private
@@ -134,22 +148,18 @@ module Meta
     end
 
     def parse_request_body_for_replacing
-      begin
-        request_body_schema.filter(params(:raw), stage: :param)
-      rescue JsonSchema::ValidationErrors => e
-        raise Errors::ParameterInvalid.new(e.errors)
-      end
+      request_body_schema.filter(params(:raw), stage: :param)
+    rescue JsonSchema::ValidationErrors => e
+      raise Errors::ParameterInvalid.new(e.errors)
     end
 
     def parse_request_body_for_updating
-      begin
-        request_body_schema.filter(params(:raw), stage: :param, discard_missing: true)
-      rescue JsonSchema::ValidationErrors => e
-        raise Errors::ParameterInvalid.new(e.errors)
-      end
+      request_body_schema.filter(params(:raw), stage: :param, discard_missing: true)
+    rescue JsonSchema::ValidationErrors => e
+      raise Errors::ParameterInvalid.new(e.errors)
     end
 
-    class Abort < StandardError
+    class Abort < Exception
     end
 
     # 使得能够处理 Execution 的类作为 Rack 中间件
@@ -162,7 +172,6 @@ module Meta
         execute(execution, request.path)
 
         response = execution.response
-        response.content_type = 'application/json' unless response.no_content?
         response.to_a
       end
     end

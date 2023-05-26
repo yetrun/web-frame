@@ -3,6 +3,31 @@ require 'spec_helper'
 describe Meta::Application, '.rescue_error' do
   include Rack::Test::Methods
 
+  context '捕获通用异常' do
+    context '中断 Execution 的执行' do
+      def app
+        Class.new(Meta::Application) do
+          rescue_error StandardError do |e|
+            response.status = 500
+            response.body = ['Customized error!']
+          end
+
+          get '/request' do
+            action do
+              abort_execution!
+            end
+          end
+        end
+      end
+
+      it '不会捕获 Meta::Execution::Abort' do
+        get '/request'
+
+        expect(last_response.status).to eq 200
+      end
+    end
+  end
+
   context '捕获自定义异常' do
     let(:caught_error) { Class.new(StandardError) }
     let(:escaped_error) { Class.new(StandardError) }

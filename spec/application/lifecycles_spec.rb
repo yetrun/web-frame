@@ -79,37 +79,37 @@ describe Meta::Application, 'lifecycles' do
   context '加入 around 回调函数' do
     def app
       holder = @holder
+      Class.new(Meta::Application) do
+        before { holder << 1 }
+        before { holder << 2 }
 
-      app = Class.new(Meta::Application)
+        around do |next_action|
+          holder << 3
+          next_action.execute(self)
+          holder << 11
+        end
 
-      app.before { holder << 'before one' }
-      app.before { holder << 'before two' }
+        after { holder << 6 }
+        after { holder << 7 }
 
-      app.around do |next_action|
-        holder << 'around before'
-        next_action.execute(self)
-        holder << 'around after'
+        around do |next_action|
+          holder << 4
+          next_action.execute(self)
+          holder << 10
+        end
+
+        after { holder << 8 }
+        after { holder << 9 }
+
+        get('/users').action { holder << 5 }
       end
-
-      app.after { holder << 'after one' }
-      app.after { holder << 'after two' }
-
-      app.route('/users', :get)
-        .authorize { true }
-        .do_any { holder << 'get users' }
-
-      app.route('/posts', :get)
-        .authorize { false }
-        .do_any { holder << 'get posts' }
-
-      app
     end
 
     it 'executes lifecycles' do
       get '/users'
 
       expect(last_response.status).to eq 200
-      expect(@holder).to eq ['before one', 'before two', 'around before', 'get users', 'after one', 'after two', 'around after']
+      expect(@holder).to eq [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     end
   end
 end

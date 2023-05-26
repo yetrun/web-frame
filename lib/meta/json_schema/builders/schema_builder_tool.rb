@@ -34,7 +34,7 @@ module Meta
         private
 
         def apply_array_schema?(options, block)
-          options[:type] == 'array' && (options[:items] || options[:ref] || options[:dynamic_ref] || block)
+          options[:type] == 'array'
         end
 
         def apply_object_schema?(options, block)

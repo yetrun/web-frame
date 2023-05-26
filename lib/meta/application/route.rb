@@ -20,16 +20,14 @@ module Meta
     def execute(execution, remaining_path)
       path_matching.merge_path_params(remaining_path, execution.request)
 
-      begin
-        execution.parse_parameters(@meta[:parameters]) if @meta[:parameters]
-        execution.parse_request_body(@meta[:request_body]) if @meta[:request_body]
+      execution.parse_parameters(@meta[:parameters]) if @meta[:parameters]
+      execution.parse_request_body(@meta[:request_body]) if @meta[:request_body]
 
-        action.execute(execution) if action
+      action.execute(execution) if action
 
-        render_entity(execution) if @meta[:responses]
-      rescue Execution::Abort
-        execution
-      end
+      render_entity(execution) if @meta[:responses]
+    rescue Execution::Abort
+      nil
     end
 
     def match?(execution, remaining_path)

@@ -23,6 +23,8 @@ module Meta
 
       def initialize(options = {})
         options = OPTIONS_CHECKER.check(options)
+        raise '不允许 BaseSchema 直接接受 array 类型，必须通过继承使用 ArraySchema' if options[:type] == 'array' && self.class == BaseSchema
+
         @options = SchemaOptions.normalize(options)
       end
 

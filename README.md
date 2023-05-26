@@ -1,12 +1,12 @@
 # Meta 框架
 
-Meta 框架是一个适用于 Web API 的后端框架，采用 Ruby 语言编写。正如它的名字，它是用定义“元”信息的方式实现 API，同时一份符合 Open API 语义的文档也能同步生成。
+Meta 框架是一个用于开发 Web API 的后端框架，采用 Ruby 语言编写。正如它的名字，它是用定义“元”信息的方式实现 API，同时生成一份符合 Open API 规格的接口文档。
 
 > 有关框架名称的由来，阅读[框架的名称由来](docs/名称由来.md)。
 
 ## 脚手架
 
-你可直接使用我的脚手架项目上手体验：
+可直接使用我的[脚手架](https://github.com/yetrun/web-frame-example)项目上手体验：
 
 ```bash
 $ git clone https://github.com/yetrun/web-frame-example.git
@@ -26,9 +26,9 @@ gem 'meta-api', '~> 0.0.5' # Meta 框架处于快速开发阶段，引入时应�
 require 'meta/api'
 ```
 
-> 或者可嵌入到 Rails 项目中使用，参见[为 Rails 项目带来参数验证效果](docs/Rails.md)。
+> 或者可嵌入到 Rails 项目中使用，参考[为 Rails 项目带来参数验证效果](docs/Rails.md)。
 
-## 快速上手
+## 快速一览
 
 ### 定义 API
 
@@ -52,12 +52,12 @@ class NotesAPI < Meta::Application
       param :note, type: 'object', ref: NoteEntity
     end
     status 201 do
-      expose :note, type: 'object', ref: NoteEntity
+      expose :note, type: 'object', ref: NoteEntity.lock_scope('full')
     end
     action do
       note = Note.create!(params[:note])
       response.status = 201
-      render :note, note, scope: 'full'
+      render :note, note
     end
   end
 
@@ -67,7 +67,7 @@ class NotesAPI < Meta::Application
       param :id, type: 'integer'
     end
     status 200 do
-      expose :note, type: 'object', ref: NoteEntity
+      expose :note, type: 'object', ref: NoteEntity.lock_scope('full')
     end
     action do
       note = Note.find(params[:id])
@@ -81,7 +81,7 @@ class NotesAPI < Meta::Application
       param :note, type: 'object', ref: NoteEntity
     end
     status 200 do
-      expose :note, type: 'object', ref: NoteEntity
+      expose :note, type: 'object', ref: NoteEntity.lock_scope('full')
     end
     action do
       note = Note.find(params[:id])
@@ -92,6 +92,7 @@ class NotesAPI < Meta::Application
 
   delete '/notes/:id' do
     title '删除笔记'
+    status 204
     action do
       note = Note.find(params[:id])
       note.destroy!
@@ -107,17 +108,11 @@ end
 
 ```ruby
 class NoteEntity < Meta::Entity
-  property :id, type: 'integer', param: false
+  property :id, type: 'integer', param: false # 不作为参数传递
   property :title, type: 'string'
-  property :content, type: 'string', render: { scope: 'full' }
+  property :content, type: 'string', render: { scope: 'full' } # 列表页接口不返回此字段
 end
 ```
-
-我们发现了一些特殊的定义：
-
-- 标记 `id` 的 `param` 选项为 `false`，它不作为参数传递。
-
-- 标记 `content` 在 `render` 下的 `scope`，当且仅当显示传递 `scope` 为 `false` 时才会渲染此字段。（对比 *查看笔记列表* 和 *查看笔记* 接口）
 
 ### 生成 API 文档
 
@@ -127,19 +122,31 @@ end
 NotesAPI.to_swagger_doc
 ```
 
-该 Open API 文档是 JSON 格式，可以在 Swagger UI 下预览效果。如果你不想寻找提供 Swagger UI 服务的站点，也不想自己搭建，可以直接使用我的：
+该 Open API 文档是 JSON 格式，可以在 Swagger UI 下预览效果。如果也不乐意自己搭建 Swagger UI，可以直接使用在线的：
 
 > http://openapi.yet.run/playground
 
 ### 将模块挂载在 Rack 下运行
 
-API 模块同时也是一个 Rack 中间件，它可以挂载在 Rack 下运行：
+API 模块同时也是一个 Rack 中间件，它可以挂载在 Rack 下运行。假设以上文件分别位于 `notes_api.rb` 和 `note_entity.rb`，在项目下新建文件 `config.ru`，并写入：
 
 ```ruby
-# config.ru
+require 'meta/api'
+require_relative 'notes_api'
+require_relative 'note_entity'
 
+# 将文档挂载到 /api_spec 锚点下
+map '/api_spec' do
+  run ->(env) { 
+    [200, { 'CONTENT_TYPE' => 'application/json' }, [JSON.generate(NotesAPI.to_swagger_doc)]]
+    }
+end
+
+# 启动 NotesAPI 中定义的接口
 run NotesAPI
 ```
+
+然后执行命令：`bundle exec rackup`，接口即可启动。
 
 ## 文档
 
@@ -148,7 +155,11 @@ run NotesAPI
 
 ## 支持
 
-加 QQ 群（489579810）可获得实时答疑。
+你可以通过以下途径获得支持：
+
+1. 通过 GitHub 提交 [ISSUE](https://github.com/yetrun/web-frame/issues)
+2. 通过 QQ 群（489579810）获得实时答疑
+3. 对本项目提交 [Pull Request](https://github.com/yetrun/web-frame/pulls)
 
 ## License
 

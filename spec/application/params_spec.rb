@@ -1212,7 +1212,7 @@ describe Meta::Application, '.param' do
     end
   end
 
-  context '定义简单代码' do
+  context '定义简单类型' do
     def app
       @holder = {}
       the_holder = @holder
@@ -1230,6 +1230,33 @@ describe Meta::Application, '.param' do
     it '正确解析参数' do
       post('/users', JSON.generate('Jim'), { 'CONTENT_TYPE' => 'application/json' })
       expect(@holder[:request_body]).to eq 'Jim'
+    end
+  end
+
+  context '非 body 参数的异常捕获' do
+    def app
+      Class.new(Meta::Application) do
+        rescue_error Meta::Errors::ParameterInvalid do |e|
+          response.status = 400
+          response.body = [JSON.generate(e.errors)]
+        end
+
+        put '/user' do
+          parameters do
+            param :foo, type: 'integer', in: 'query', required: true
+            param :bar, type: 'integer', in: 'query', required: true
+            param :baz, type: 'integer', in: 'query', required: true
+          end
+        end
+      end
+    end
+
+    it '正确解析参数' do
+      put '/user', {}, { 'CONTENT_TYPE' => 'application/json' }
+      expect(last_response.status).to eq 400
+      expect(JSON.parse(last_response.body)['foo']).to eq('未提供')
+      expect(JSON.parse(last_response.body)['bar']).to eq('未提供')
+      expect(JSON.parse(last_response.body)['baz']).to eq('未提供')
     end
   end
 end
