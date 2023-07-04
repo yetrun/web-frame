@@ -259,7 +259,7 @@ describe 'Meta Builder' do
   end
 
   describe 'status' do
-    context '' do
+    context 'action 中未设置 response.status' do
       def app
         Class.new(Meta::Application) do
           get '/request' do
@@ -272,6 +272,25 @@ describe 'Meta Builder' do
       it '默认使用第一个 status' do
         get '/request'
         expect(last_response.status).to eq 201
+      end
+    end
+
+    context '在 status 顶层设置选项' do
+      def app
+        Class.new(Meta::Application) do
+          get '/request' do
+            status 201, type: 'integer'
+            action do
+              render 'string'
+            end
+          end
+        end
+      end
+
+      it '应用顶层选项' do
+        expect {
+          get '/request'
+        }.to raise_error
       end
     end
   end

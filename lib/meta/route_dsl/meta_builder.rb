@@ -33,9 +33,9 @@ module Meta
         @uniformed_params_builder = UniformedParamsBuilder.new(&block)
       end
 
-      def status(code, *other_codes, &block)
+      def status(code, *other_codes, **options, &block)
         codes = [code, *other_codes]
-        entity_schema = JsonSchema::SchemaBuilderTool.build(&block)
+        entity_schema = JsonSchema::SchemaBuilderTool.build(options, &block)
         @meta[:responses] = @meta[:responses] || {}
         codes.each { |code| @meta[:responses][code] = entity_schema }
       end
@@ -51,8 +51,8 @@ module Meta
       module Delegator
         method_names = MetaBuilder.public_instance_methods(false) - ['build']
         method_names.each do |method_name|
-          define_method(method_name) do |*args, &block|
-            @meta_builder.send(method_name, *args, &block) and self
+          define_method(method_name) do |*args, **kwargs, &block|
+            @meta_builder.send(method_name, *args, **kwargs, &block) and self
           end
         end
       end

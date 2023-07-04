@@ -24,13 +24,11 @@ describe 'config' do
       Class.new(Meta::Application) do
         post '/request' do
           request_body ref: entity
-          status 200 do
-            expose :nested, ref: entity
-          end
+          status 200, ref: entity
           action do
             holder[0] = params
             response.status = 200
-            render :nested, 'foo' => 'foo', 'bar' => 'bar'
+            render 'foo' => 'foo', 'bar' => 'bar'
           end
         end
       end
@@ -40,7 +38,7 @@ describe 'config' do
       # TODO: 使用元数据来测试更简单
       post('/request', JSON.generate('foo' => 'foo', 'bar' => 'bar'), { 'CONTENT_TYPE' => 'application/json' })
       expect(@holder[0]).to eq(foo: 'foo')
-      expect(JSON.parse(last_response.body)['nested']).to eq('foo' => 'foo')
+      expect(JSON.parse(last_response.body)).to eq('foo' => 'foo')
     end
 
     # config.render_type_conversion 和 config.render_validation 的测试见文件 spec/application/config_spec.rb
