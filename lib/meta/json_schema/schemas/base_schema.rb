@@ -31,8 +31,9 @@ module Meta
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         key :stage, :execution, :object_value, :type_conversion, :validation, :user_data
 
-        # 以下三个是 ObjectSchema 需要的选项
-        key :discard_missing, :exclude, :scope
+        # 以下是 ObjectSchema 需要的选项
+        # extra_properties 只能取值为 :ignore、:raise_error
+        key :discard_missing, :extra_properties, :exclude, :scope
       end
 
       def filter(value, user_options = {})

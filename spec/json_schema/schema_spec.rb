@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe 'schema' do
   describe '.filter' do
-    describe 'user options' do
+    describe '传递运行选项' do
       describe 'stage:' do
         context 'is :render' do
           it '过滤掉 render: false 的属性' do
@@ -42,6 +42,20 @@ describe 'schema' do
 
             filtered = schema.filter({ 'foo' => 'foo' }, discard_missing: false)
             expect(filtered).to eq(foo: 'foo', bar: nil)
+          end
+        end
+      end
+
+      describe 'extra_properties:' do
+        context 'set to "raise_error"' do
+          it '抛出异常' do
+            schema = Meta::JsonSchema::SchemaBuilderTool.build do
+              param :foo, type: 'string'
+            end.to_schema
+
+            expect {
+              schema.filter({ 'foo' => 'foo', 'bar' => 'bar' }, extra_properties: :raise_error)
+            }.to raise_error(Meta::JsonSchema::ValidationError)
           end
         end
       end

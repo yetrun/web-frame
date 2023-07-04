@@ -101,6 +101,11 @@ module Meta
           end
         end.to_h
 
+        # 第三步，检测是否有剩余的属性
+        if user_options[:extra_properties] == :raise_error && !(object_value.keys.map(&:to_sym) - properties.keys).empty?
+          raise JsonSchema::ValidationError, '遇到多余的属性'
+        end
+
         if errors.empty?
           object
         else

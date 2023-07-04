@@ -77,7 +77,7 @@ module Meta
 
     # parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量
     def parse_params(params_schema)
-      @params_schema = params_schema
+      @params_schema = params_schema # TODO: 到底是用 @params_schema 还是 @request_body
     end
 
     def parse_request_body(schema)
@@ -99,7 +99,14 @@ module Meta
           options = {}
         end
 
-        new_hash = entity_schema.filter(hash, **options, execution: self, stage: :render, validation: ::Meta.config.render_validation, type_conversion: ::Meta.config.render_type_conversion)
+        new_hash = entity_schema.filter(hash,
+          **options,
+          execution: self,
+          stage: :render,
+          extra_properties: Meta.config.handle_extra_properties, # TODO: 导出渲染时的 user_options. 注意解析参数时不一样。我在想是不是添加一个 config.json_schema_user_options 完事？
+          validation: Meta.config.render_validation,
+          type_conversion: ::Meta.config.render_type_conversion
+        )
         response.content_type = 'application/json' if response.content_type.nil?
         response.body = [JSON.generate(new_hash)]
       else
@@ -148,13 +155,13 @@ module Meta
     end
 
     def parse_request_body_for_replacing
-      request_body_schema.filter(params(:raw), stage: :param)
+      request_body_schema.filter(params(:raw), stage: :param, extra_properties: Meta.config.handle_extra_properties)
     rescue JsonSchema::ValidationErrors => e
       raise Errors::ParameterInvalid.new(e.errors)
     end
 
     def parse_request_body_for_updating
-      request_body_schema.filter(params(:raw), stage: :param, discard_missing: true)
+      request_body_schema.filter(params(:raw), stage: :param, discard_missing: true, extra_properties: Meta.config.handle_extra_properties)
     rescue JsonSchema::ValidationErrors => e
       raise Errors::ParameterInvalid.new(e.errors)
     end

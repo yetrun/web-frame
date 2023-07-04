@@ -290,7 +290,7 @@ describe 'Meta Builder' do
       it '应用顶层选项' do
         expect {
           get '/request'
-        }.to raise_error
+        }.to raise_error(Meta::Errors::RenderingInvalid)
       end
     end
   end
