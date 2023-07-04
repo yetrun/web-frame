@@ -28,7 +28,7 @@ module Meta
         },
         allowable: proc { |value, allowable_values|
           next if value.nil?
-          raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.allowable') unless allowable_values.include?(value)
+          raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.allowable', allowable_values: allowable_values) unless allowable_values.include?(value)
         }
       }
 

@@ -6,7 +6,7 @@ zh-CN:
     errors:
       required: "未提供"
       format: "格式不正确"
-      allowable: "不在允许的值范围内"
+      allowable: "不在允许的值范围内，允许的值包括 [%{allowable_values}]"
       type_convert:
         basic: "类型转化失败，期望得到一个 `%{target_type}` 类型，但值 `%{value}` 无法转化"
         array: "转化为数组类型时期望对象拥有 `to_a` 方法"
