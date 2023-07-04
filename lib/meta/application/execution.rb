@@ -9,7 +9,7 @@ module Meta
 
     def initialize(request)
       @request = request
-      @response = Rack::Response.new
+      @response = Rack::Response.new([], 0) # 状态码初始为 0，代表一个未设置状态
       @parameters = {}
     end
 

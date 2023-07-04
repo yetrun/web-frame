@@ -257,4 +257,22 @@ describe 'Meta Builder' do
       end
     end
   end
+
+  describe 'status' do
+    context '' do
+      def app
+        Class.new(Meta::Application) do
+          get '/request' do
+            status 201
+            action {}
+          end
+        end
+      end
+
+      it '默认使用第一个 status' do
+        get '/request'
+        expect(last_response.status).to eq 201
+      end
+    end
+  end
 end

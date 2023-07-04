@@ -343,6 +343,7 @@ describe 'Route Builder' do
 
       specify do
         get '/nesting/foo'
+        expect(last_response.status).to eq(200)
         expect(last_response.body).to eq('foo')
       end
     end

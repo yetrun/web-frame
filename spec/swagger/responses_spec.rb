@@ -308,6 +308,7 @@ describe 'Meta::SwaggerDocUtil.generate' do
     def app
       Class.new(Meta::Application) do
         get '/request' do
+          status 204
           action do
             response.status = 204
           end

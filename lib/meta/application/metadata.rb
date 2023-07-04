@@ -11,7 +11,7 @@ module Meta
       @tags = tags
       @parameters = parameters.is_a?(Parameters) ? parameters : Parameters.new(parameters)
       @request_body = request_body
-      @responses = responses || { 204 => nil }
+      @responses = responses || {} # || { 204 => nil }
     end
 
     def [](key)

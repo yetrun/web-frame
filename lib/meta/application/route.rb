@@ -25,9 +25,10 @@ module Meta
 
       action.execute(execution) if action
 
+      set_status(execution)
       render_entity(execution) if @meta[:responses]
     rescue Execution::Abort
-      nil
+      execution.response.status = 200 if execution.response.status == 0
     end
 
     def match?(execution, remaining_path)
@@ -42,14 +43,24 @@ module Meta
 
     private
 
-    def render_entity(execution)
-      responses = @meta[:responses]
-      status = execution.response.status
-      codes = responses.keys
-      return unless codes.include?(status)
+    def set_status(execution)
+      response_definitions = @meta[:responses]
+      response = execution.response
+      if response.status == 0
+        response.status = (response_definitions&.length > 0) ? response_definitions.keys[0] : 200
+      end
+    end
 
-      entity_schema = responses[status]
-      execution.render_entity(entity_schema) if entity_schema
+    def render_entity(execution)
+      response_definitions = @meta[:responses]
+      return if response_definitions.empty? # 未设定 status 宏时不需要执行 render_entity 方法
+
+      # 查找 entity schema
+      entity_schema = response_definitions[execution.response.status]
+      return if entity_schema.nil?
+
+      # 执行面向 schema 的渲染
+      execution.render_entity(entity_schema)
     end
   end
 end
