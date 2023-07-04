@@ -13,10 +13,10 @@ module Meta
         instance_exec &block if block_given?
       end
 
-      def build(path:)
+      def build(path:, method: nil)
         meta = @meta
-        meta[:parameters], meta[:request_body] = @uniformed_params_builder.build(path: path) if @uniformed_params_builder
-        meta[:parameters] = @parameters_builder.build(path: path) if meta[:parameters].nil?
+        meta[:parameters], meta[:request_body] = @uniformed_params_builder.build(path: path, method: method) if @uniformed_params_builder
+        meta[:parameters] = @parameters_builder.build(path: path, method: method) if meta[:parameters].nil?
         meta
       end
 

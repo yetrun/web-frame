@@ -14,7 +14,7 @@ module Meta
         @parameter_options[name] = options.dup
       end
 
-      def build(path:)
+      def build(path:, method:)
         raise ArgumentError, 'path 参数不能为空' if path.nil?
 
         # 修正 path 参数的选项
@@ -29,7 +29,7 @@ module Meta
 
         # 构建 Parameters 对象
         parameters = @parameter_options.map do |name, options|
-          in_op = options.delete(:in)
+          in_op = options.delete(:in) || 'query'
           parameter_options = { in: in_op, schema: JsonSchema::BaseSchema.new(options) }
           [name, parameter_options]
         end.to_h

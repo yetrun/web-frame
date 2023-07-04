@@ -197,34 +197,68 @@ describe 'Meta::SwaggerDocUtil.generate' do
     end
 
     describe '定义 query 参数' do
-      def app
-        Class.new(Meta::Application) do
-          get '/request' do
-            parameters do
-              param :name, type: 'string', in: 'query', description: 'the name'
-              param :age, type: 'integer', in: 'query', description: 'the age'
+      context '用 parameters 宏定义' do
+        def app
+          Class.new(Meta::Application) do
+            get '/request' do
+              parameters do
+                param :name, type: 'string', in: 'query', description: 'the name'
+                param :age, type: 'integer', in: 'query', description: 'the age'
+              end
             end
           end
         end
+
+        it '成功生成 path 和 query 参数的文档' do
+          expect(subject[:paths]['/request'][:get][:parameters]).to eq [
+            {
+              name: :name,
+              in: 'query',
+              required: false,
+              description: 'the name',
+              schema: { type: 'string' }
+            },
+            {
+              name: :age,
+              in: 'query',
+              required: false,
+              description: 'the age',
+              schema: { type: 'integer' }
+            }
+          ]
+        end
       end
 
-      it '成功生成 path 和 query 参数的文档' do
-        expect(subject[:paths]['/request'][:get][:parameters]).to eq [
-          {
-            name: :name,
-            in: 'query',
-            required: false,
-            description: 'the name',
-            schema: { type: 'string' }
-          },
-          {
-            name: :age,
-            in: 'query',
-            required: false,
-            description: 'the age',
-            schema: { type: 'integer' }
-          }
-        ]
+      context '用 params 宏定义' do
+        def app
+          Class.new(Meta::Application) do
+            get '/request' do
+              params do
+                param :name, type: 'string', description: 'the name'
+                param :age, type: 'integer', description: 'the age'
+              end
+            end
+          end
+        end
+
+        it '默认生成 query 参数' do
+          expect(subject[:paths]['/request'][:get][:parameters]).to eq [
+            {
+              name: :name,
+              in: 'query',
+              required: false,
+              description: 'the name',
+              schema: { type: 'string' }
+            },
+            {
+              name: :age,
+              in: 'query',
+              required: false,
+              description: 'the age',
+              schema: { type: 'integer' }
+            }
+          ]
+        end
       end
     end
   end

@@ -29,7 +29,7 @@ module Meta
         current_path = Utils::Path.join(parent_path, @path)
 
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
-        meta2 = (meta || {}).merge(@meta_builder.build(path: current_path))
+        meta2 = (meta || {}).merge(@meta_builder.build(path: current_path, method: @method))
         if meta[:parameters] && meta2[:parameters]
           meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
         end
