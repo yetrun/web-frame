@@ -7,7 +7,7 @@ module Meta
     attr_reader :parameters
 
     def initialize(parameters)
-      @parameters = parameters
+      @parameters = parameters.dup
     end
 
     def filter(request)

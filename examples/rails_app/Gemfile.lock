@@ -1,7 +1,7 @@
 PATH
   remote: /home/run/workspace/personal/web-frame
   specs:
-    meta-api (0.0.4)
+    meta-api (0.0.6)
 
 GEM
   remote: https://gems.ruby-china.com/

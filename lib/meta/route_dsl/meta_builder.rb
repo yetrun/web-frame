@@ -8,16 +8,20 @@ module Meta
     class MetaBuilder
       def initialize(&block)
         @meta = {}
+        @parameters_builder = ParametersBuilder.new # 默认给一个空的参数构建器，它只会处理 path 参数
 
         instance_exec &block if block_given?
       end
 
-      def build
-        @meta
+      def build(path:)
+        meta = @meta
+        meta[:parameters], meta[:request_body] = @uniformed_params_builder.build(path: path) if @uniformed_params_builder
+        meta[:parameters] = @parameters_builder.build(path: path) if meta[:parameters].nil?
+        meta
       end
 
       def parameters(&block)
-        @meta[:parameters] = ParametersBuilder.new(&block).build
+        @parameters_builder = ParametersBuilder.new(&block)
       end
 
       def request_body(options = {}, &block)
@@ -26,7 +30,7 @@ module Meta
 
       # params 宏是一个遗留的宏，它在一个宏定义块内同时定义 parameters 和 request_body
       def params(&block)
-        @meta[:parameters], @meta[:request_body] = UniformedParamsBuilder.new(&block).build
+        @uniformed_params_builder = UniformedParamsBuilder.new(&block)
       end
 
       def status(code, *other_codes, &block)

@@ -20,8 +20,10 @@ module Meta
       end
 
       def build(parent_path: '', meta: {}, callbacks: [])
+        current_path = Utils::Path.join(parent_path, @mod_prefix)
+
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
-        meta2 = (meta || {}).merge(@meta_builder.build)
+        meta2 = (meta || {}).merge(@meta_builder.build(path: current_path))
         if meta[:parameters] && meta2[:parameters]
           meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
         end
@@ -31,7 +33,7 @@ module Meta
         parent_before = callbacks.filter { |cb| cb[:lifecycle] == :before || cb[:lifecycle] == :around }
         parent_after = callbacks.filter { |cb| cb[:lifecycle] == :after }
         callbacks = parent_before + @callbacks + parent_after
-        mods = @mod_builders.map { |builder| builder.build(parent_path: Utils::Path.join(parent_path, @mod_prefix), meta: meta2, callbacks: callbacks) }
+        mods = @mod_builders.map { |builder| builder.build(parent_path: current_path, meta: meta2, callbacks: callbacks) }
 
         Application.new(
           prefix: @mod_prefix,

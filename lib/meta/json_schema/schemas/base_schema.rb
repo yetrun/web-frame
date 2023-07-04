@@ -25,7 +25,7 @@ module Meta
         options = OPTIONS_CHECKER.check(options)
         raise '不允许 BaseSchema 直接接受 array 类型，必须通过继承使用 ArraySchema' if options[:type] == 'array' && self.class == BaseSchema
 
-        @options = SchemaOptions.normalize(options)
+        @options = SchemaOptions.normalize(options).freeze
       end
 
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do

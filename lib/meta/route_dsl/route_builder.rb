@@ -26,24 +26,12 @@ module Meta
       end
 
       def build(parent_path: '', meta: {}, callbacks: {})
+        current_path = Utils::Path.join(parent_path, @path)
+
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
-        meta2 = (meta || {}).merge(@meta_builder.build)
+        meta2 = (meta || {}).merge(@meta_builder.build(path: current_path))
         if meta[:parameters] && meta2[:parameters]
           meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
-        end
-
-        # 合并 parameters 参数
-        meta2[:parameters] ||= {}
-        path_params = Utils::Path.join(parent_path, @path).split('/')
-          .filter { |part| part =~ /[:*].+/ }
-          .map { |part| part[1..-1].to_sym }
-        path_params.each do |name|
-          unless meta2[:parameters].key?(name)
-            meta2[:parameters][name] = {
-              in: 'path',
-              schema: JsonSchema::BaseSchema.new(required: true)
-            }
-          end
         end
 
         # 构建洋葱圈模型的 LinkedAction
