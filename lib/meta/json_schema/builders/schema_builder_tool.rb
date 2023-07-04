@@ -12,7 +12,13 @@ module Meta
         SCHEMA_BUILDER_OPTIONS = Utils::KeywordArgs::Builder.build do
           permit_extras true
 
-          key :ref, alias_names: [:using]
+          key :ref, alias_names: [:using], normalizer: ->(entity) {
+            if Meta.config.default_locked_scope && entity.is_a?(Class) && entity < Meta::Entity
+              entity.locked(scope: Meta.config.default_locked_scope)
+            else
+              entity
+            end
+          }
           key :dynamic_ref, alias_names: [:dynamic_using], normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
         end
         def build(options = {}, &block)

@@ -2,11 +2,12 @@
 
 module Meta
   class Config
-    attr_accessor :render_validation, :render_type_conversion
+    attr_accessor :render_validation, :render_type_conversion, :default_locked_scope
 
     def initialize
       @render_type_conversion = true
       @render_validation = true
+      @default_locked_scope = nil
     end
   end
 
