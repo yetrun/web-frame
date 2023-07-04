@@ -108,6 +108,20 @@ describe 'Schema Builders' do
         value = schema.filter(nil)
         expect(value.class).to be(FalseClass)
       end
+
+      it '使用引用对象时一般不会发生干扰' do
+        schema = Meta::JsonSchema::SchemaBuilderTool.build default: []
+
+        schema.filter(nil) << 'foo'
+        array = schema.filter(nil)
+        expect(array).to be_empty
+      end
+
+      it '支持使用块' do
+        schema = Meta::JsonSchema::SchemaBuilderTool.build default: ->{ [] }
+        array = schema.filter(nil)
+        expect(array).to eq []
+      end
     end
 
     describe 'value:' do

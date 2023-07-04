@@ -40,7 +40,7 @@ module Meta
 
         value = resolve_value(user_options) if options[:value]
         value = JsonSchema::Presenters.present(options[:presenter], value) if options[:presenter]
-        value = options[:default] if value.nil? && options.key?(:default)
+        value = resolve_default_value(options[:default]) if value.nil? && options.key?(:default)
         value = options[:convert].call(value) if options[:convert]
 
         # 第一步，转化值。
@@ -108,6 +108,16 @@ module Meta
           stage_options.each do |key, option|
             validator = JsonSchema::Validators[key]
             validator&.call(value, option, stage_options)
+          end
+        end
+
+        def resolve_default_value(default_resolver)
+          if default_resolver.respond_to?(:call)
+            default_resolver.call
+          elsif default_resolver.respond_to?(:dup)
+            default_resolver.dup
+          else
+            default_resolver
           end
         end
     end
