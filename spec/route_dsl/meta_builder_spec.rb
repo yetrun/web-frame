@@ -181,6 +181,30 @@ describe 'Meta Builder' do
       end
     end
 
+    describe '解析 request_body 时传递 execution: 选项' do
+      def app
+        the_entity = Class.new(Meta::Entity) do
+          property :foo, value: Proc.new { self.class.name }
+        end
+
+        Class.new(Meta::Application) do
+          post '/request' do
+            params do
+              param :nesting, ref: the_entity
+            end
+            action do
+              response.body = [params[:nesting][:foo]]
+            end
+          end
+        end
+      end
+
+      specify do
+        post '/request', JSON.generate('nesting' => { 'foo' => 'foo' }), { 'CONTENT_TYPE' => 'application/json' }
+        expect(last_response.body).to eq('Meta::Execution')
+      end
+    end
+
     context '遇到 `required: true` 时' do
       def app
         entity = Class.new(Meta::Entity) do

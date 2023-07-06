@@ -155,13 +155,13 @@ module Meta
     end
 
     def parse_request_body_for_replacing
-      request_body_schema.filter(params(:raw), stage: :param, extra_properties: Meta.config.handle_extra_properties)
+      request_body_schema.filter(params(:raw), execution: self, stage: :param, extra_properties: Meta.config.handle_extra_properties)
     rescue JsonSchema::ValidationErrors => e
       raise Errors::ParameterInvalid.new(e.errors)
     end
 
     def parse_request_body_for_updating
-      request_body_schema.filter(params(:raw), stage: :param, discard_missing: true, extra_properties: Meta.config.handle_extra_properties)
+      request_body_schema.filter(params(:raw), execution: self, stage: :param, discard_missing: true, extra_properties: Meta.config.handle_extra_properties)
     rescue JsonSchema::ValidationErrors => e
       raise Errors::ParameterInvalid.new(e.errors)
     end

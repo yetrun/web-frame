@@ -148,7 +148,7 @@ module Meta
         end
       end
 
-      def resolve_property_value(object_value, name, property_schema, stage)
+      def resolve_property_value(object_value, name, property_schema, stage) # TODO: stage 没用上？
         if property_schema.value?
           nil
         elsif object_value.is_a?(Hash) || object_value.is_a?(ObjectWrapper)
