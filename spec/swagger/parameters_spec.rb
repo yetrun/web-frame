@@ -261,5 +261,24 @@ describe 'Meta::SwaggerDocUtil.generate' do
         end
       end
     end
+
+    context '多层嵌套' do
+      def app
+        Class.new(Meta::Application) do
+          namespace '/foo/:p' do
+            namespace '/bar' do
+              namespace '/baz' do
+                get do
+                end
+              end
+            end
+          end
+        end
+      end
+
+      it '自动生成 parameters 块' do
+        expect(subject[:paths]['/foo/{p}/bar/baz'][:get][:parameters][0]).to match(a_hash_including(name: :p, in: 'path', required: true))
+      end
+    end
   end
 end

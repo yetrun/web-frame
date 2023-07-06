@@ -10,6 +10,7 @@ module Meta
 
     attr_reader :path, :method, :meta, :action
 
+    # path 是局部 path，不包含由父级定义的前缀
     def initialize(path: '', method: :all, meta: {}, action: nil)
       @path = Utils::Path.normalize_path(path)
       @method = method

@@ -16,20 +16,21 @@ module Meta
 
       alias :if_status :status
 
-      def initialize(path = '', method = :all, &block)
+      # 这里的 path 局部的路径，也就是由 route 宏命令定义的路径
+      def initialize(path, method = :all, parent_path: '',&block)
+        route_full_path = Utils::Path.join(parent_path, path)
+
         @path = path || ''
         @method = method || :all
         @action_builder = nil
-        @meta_builder = MetaBuilder.new
+        @meta_builder = MetaBuilder.new(route_full_path: route_full_path, route_method: method)
 
         instance_exec &block if block_given?
       end
 
       def build(parent_path: '', meta: {}, callbacks: {})
-        current_path = Utils::Path.join(parent_path, @path)
-
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
-        meta2 = (meta || {}).merge(@meta_builder.build(path: current_path, method: @method))
+        meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
           meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
         end
@@ -72,6 +73,7 @@ module Meta
 
       private
 
+      # TODO: 包装成 Metadata 类啊？
       def clone_meta(meta)
         meta = meta.clone
         meta[:responses] = meta[:responses].clone if meta[:responses]

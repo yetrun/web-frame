@@ -3,50 +3,49 @@
 module Meta
   module RouteDSL
     class UniformedParamsBuilder
-      def initialize(&block)
+      def initialize(route_full_path:, route_method:, &block)
+        @route_full_path = route_full_path
+        @route_method = route_method
+        @parameters_builder = ParametersBuilder.new(route_full_path: @route_full_path, route_method: @route_method)
+
         @parameter_options = {}
 
         instance_exec &block if block_given?
       end
 
       def param(name, options = {}, &block)
-        @parameter_options[name] = { options: options, block: block }
+        options = (options || {}).dup
+        in_op = options.delete(:in) || \
+          if path_param_names.include?(name)
+            'path'
+          elsif @route_method == :get
+            'query'
+          else
+            'body'
+          end
+
+        if in_op == 'body'
+          property name, options, &block
+        else
+          @parameters_builder.param name, options
+        end
       end
 
       def property(name, options = {}, &block)
-        @parameter_options[name] = { options: options.merge(in: 'body'), block: block }
+        @request_body_builder ||= JsonSchema::ObjectSchemaBuilder.new
+        @request_body_builder.property name, options, &block
       end
 
-      def build(path:, method:)
-        # 修正 path 参数的选项
-        path_params = path.split('/')
-                          .filter { |part| part =~ /[:*].+/ }
-                          .map { |part| part[1..-1].to_sym }
-        path_params.each do |name|
-          @parameter_options[name] ||= {}
-          @parameter_options[name][:in] = 'path'
-          @parameter_options[name][:required] = true
-        end
+      def build
+        [@parameters_builder.build, @request_body_builder&.to_schema]
+      end
 
-        # 分门别类构建 parameters 和 request body
-        parameters_builder = ParametersBuilder.new
-        request_body_builder = JsonSchema::ObjectSchemaBuilder.new
-        @parameter_options.each do |name, options|
-          param_options = (options[:options] || {}).dup
-          param_options[:in] ||= method == :get ? 'query' : 'body' # path 参数保证已处理
-          block = options[:block]
-          if param_options[:in] == 'body'
-            param_options.delete(:in)
-            request_body_builder.property name, param_options, &block
-          else
-            parameters_builder.param name, param_options
-          end
-        end
+      private
 
-        # 返回最终生成的 parameters 和 request body
-        parameters = parameters_builder.build(path: path, method: method)
-        request_body = request_body_builder.to_schema
-        [parameters, request_body.properties.empty? ? nil : request_body]
+      def path_param_names
+        @_path_param_names ||= @route_full_path.split('/')
+                                               .filter { |part| part =~ /[:*].+/ }
+                                               .map { |part| part[1..-1].to_sym }
       end
     end
   end

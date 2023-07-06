@@ -1,39 +1,44 @@
 # frozen_string_literal: true
+
 require_relative '../application/parameters'
 
 module Meta
   module RouteDSL
     class ParametersBuilder
-      def initialize(&block)
+      def initialize(route_full_path:, route_method:, &block)
+        @route_full_path = route_full_path || ''
+        @route_method = route_method
         @parameter_options = {}
 
         instance_exec &block if block_given?
       end
 
       def param(name, options = {})
-        @parameter_options[name] = options.dup
+        # 修正 path 参数的选项
+        if path_param_names.include?(name) # path 参数
+          options = options.merge(in: 'path', required: true)
+        else
+          options = options.dup
+        end
+        in_op = options.delete(:in) || 'query'
+        @parameter_options[name] = { in: in_op, schema: JsonSchema::BaseSchema.new(options) }
       end
 
-      def build(path:, method:)
-        raise ArgumentError, 'path 参数不能为空' if path.nil?
-
-        # 修正 path 参数的选项
-        path_params = path.split('/')
-          .filter { |part| part =~ /[:*].+/ }
-          .map { |part| part[1..-1].to_sym }
-        path_params.each do |name|
-          @parameter_options[name] ||= {}
-          @parameter_options[name][:in] = 'path'
-          @parameter_options[name][:required] = true
+      def build
+        # 补充未声明的 path 参数
+        (path_param_names - @parameter_options.keys).each do |name|
+          @parameter_options[name] = { in: 'path', schema: JsonSchema::BaseSchema.new(required: true) }
         end
 
-        # 构建 Parameters 对象
-        parameters = @parameter_options.map do |name, options|
-          in_op = options.delete(:in) || 'query'
-          parameter_options = { in: in_op, schema: JsonSchema::BaseSchema.new(options) }
-          [name, parameter_options]
-        end.to_h
-        Parameters.new(parameters)
+        Parameters.new(@parameter_options)
+      end
+
+      private
+
+      def path_param_names
+        @_path_param_names ||= @route_full_path.split('/')
+                                               .filter { |part| part =~ /[:*].+/ }
+                                               .map { |part| part[1..-1].to_sym }
       end
     end
   end

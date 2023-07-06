@@ -6,31 +6,34 @@ require_relative 'uniformed_params_builder'
 module Meta
   module RouteDSL
     class MetaBuilder
-      def initialize(&block)
+      def initialize(route_full_path:, route_method: :all, &block)
+        @route_full_path = route_full_path
+        @method = route_method
         @meta = {}
-        @parameters_builder = ParametersBuilder.new # 默认给一个空的参数构建器，它只会处理 path 参数
+        @parameters_builder = ParametersBuilder.new(route_full_path: route_full_path, route_method: route_method) # 默认给一个空的参数构建器，它只会处理 path 参数
 
         instance_exec &block if block_given?
       end
 
-      def build(path:, method: nil)
+      def build
         meta = @meta
-        meta[:parameters], meta[:request_body] = @uniformed_params_builder.build(path: path, method: method) if @uniformed_params_builder
-        meta[:parameters] = @parameters_builder.build(path: path, method: method) if meta[:parameters].nil?
+        if @meta[:parameters].nil? && @route_full_path =~ /[:*].+/
+          meta[:parameters] = ParametersBuilder.new(route_full_path: @route_full_path, route_method: @method).build
+        end
         meta
       end
 
       def parameters(&block)
-        @parameters_builder = ParametersBuilder.new(&block)
+        @meta[:parameters] = ParametersBuilder.new(route_full_path: @route_full_path, route_method: @method, &block).build
       end
 
       def request_body(options = {}, &block)
-        @meta[:request_body] = JsonSchema::SchemaBuilderTool.build(options, &block)
+        @meta[:request_body] = JsonSchema::SchemaBuilderTool.build(options, &block).to_schema
       end
 
       # params 宏是一个遗留的宏，它在一个宏定义块内同时定义 parameters 和 request_body
       def params(&block)
-        @uniformed_params_builder = UniformedParamsBuilder.new(&block)
+        @meta[:parameters], @meta[:request_body] = UniformedParamsBuilder.new(route_full_path: @route_full_path, route_method: @method, &block).build
       end
 
       def status(code, *other_codes, **options, &block)

@@ -8,11 +8,13 @@ module Meta
     class ApplicationBuilder
       include MetaBuilder::Delegator
 
-      def initialize(prefix = nil, &block)
+      # TODO: prefix 改为 ''
+      # prefix 貌似是完整的
+      def initialize(prefix = '', &block)
         @mod_prefix = prefix
         @callbacks = []
         @error_guards = []
-        @meta_builder = MetaBuilder.new
+        @meta_builder = MetaBuilder.new(route_full_path: prefix)
         @mod_builders = []
         @shared_mods = []
 
@@ -20,10 +22,8 @@ module Meta
       end
 
       def build(parent_path: '', meta: {}, callbacks: [])
-        current_path = Utils::Path.join(parent_path, @mod_prefix)
-
         # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
-        meta2 = (meta || {}).merge(@meta_builder.build(path: current_path))
+        meta2 = (meta || {}).merge(@meta_builder.build)
         if meta[:parameters] && meta2[:parameters]
           meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
         end
@@ -33,7 +33,7 @@ module Meta
         parent_before = callbacks.filter { |cb| cb[:lifecycle] == :before || cb[:lifecycle] == :around }
         parent_after = callbacks.filter { |cb| cb[:lifecycle] == :after }
         callbacks = parent_before + @callbacks + parent_after
-        mods = @mod_builders.map { |builder| builder.build(parent_path: current_path, meta: meta2, callbacks: callbacks) }
+        mods = @mod_builders.map { |builder| builder.build(parent_path: parent_path, meta: meta2, callbacks: callbacks) }
 
         Application.new(
           prefix: @mod_prefix,
@@ -50,7 +50,7 @@ module Meta
 
       # 定义路由块
       def route(path, method = nil, &block)
-        route_builder = RouteDSL::RouteBuilder.new(path, method, &block)
+        route_builder = RouteBuilder.new(path, method, parent_path: @mod_prefix, &block)
         @mod_builders << route_builder
         route_builder
       end
