@@ -54,8 +54,10 @@ module Meta
       operation_object.compact
     end
 
-    def self.new(meta = {})
-      meta.is_a?(Metadata) ? meta : super(**meta)
+    class << self
+      def new(meta = {})
+        meta.is_a?(Metadata) ? meta : super(**meta)
+      end
     end
   end
 end

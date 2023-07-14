@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+#
 
 module Meta
   module Utils
@@ -14,12 +15,10 @@ module Meta
         end
 
         # 合并两个 path. 有且只有一个例外，如果 p1 或 p2 其中之一为 '/'，则返回另一个。
-        def join(p1, p2)
-          p1 = normalize_path(p1)
-          p2 = normalize_path(p2)
-          return p2 if p1 == ''
-          return p1 if p2 == ''
-          return normalize_path(p1 + p2)
+        def join(*parts)
+          parts = parts.map { |p| (p || '').delete_prefix('/').delete_suffix('/') }
+          parts = parts.reject { |p| p.nil? || p.empty? }
+          '/' + parts.join('/')
         end
       end
     end

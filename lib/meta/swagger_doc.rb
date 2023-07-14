@@ -47,13 +47,13 @@ module Meta
       #     ]
       def get_paths_and_routes!(application, prefix = '', store_routes = [])
         if (application.is_a?(Class) && application < Application) || application.is_a?(Application)
-          prefix = RouteDSL::Helpers.join_path(prefix, application.prefix)
+          prefix = Utils::Path.join(prefix, application.prefix)
           (application.routes + application.applications).each do |mod|
             get_paths_and_routes!(mod, prefix, store_routes)
           end
         elsif application.is_a?(Route)
           route = application
-          route_path = route.path == :all ? prefix : RouteDSL::Helpers.join_path(prefix, route.path)
+          route_path = route.path == :all ? prefix : Utils::Path.join(prefix, route.path)
           store_routes << [route_path, route] unless route.method == :all
         else
           raise "Param application must be a Application instance, Application module or a Route instance, but it got a `#{application}`"

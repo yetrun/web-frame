@@ -2,6 +2,7 @@
 
 require_relative 'route_builder'
 require_relative 'meta_builder'
+require_relative '../utils/route_dsl_builders'
 
 module Meta
   module RouteDSL
@@ -21,19 +22,16 @@ module Meta
         instance_exec &block if block_given?
       end
 
-      def build(parent_path: '', meta: {}, callbacks: [])
-        # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
-        meta2 = (meta || {}).merge(@meta_builder.build)
-        if meta[:parameters] && meta2[:parameters]
-          meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
-        end
-
-        # 构建子模块
-        # 合并父级传递过来的 callbacks，将 before 和 around 放在前面，after 放在后面
-        parent_before = callbacks.filter { |cb| cb[:lifecycle] == :before || cb[:lifecycle] == :around }
-        parent_after = callbacks.filter { |cb| cb[:lifecycle] == :after }
-        callbacks = parent_before + @callbacks + parent_after
-        mods = @mod_builders.map { |builder| builder.build(parent_path: parent_path, meta: meta2, callbacks: callbacks) }
+      # TODO: parent_path 没有用的上, meta -> meta_options
+      # meta 和 callbacks 是父级传递过来的，需要合并到当前模块或子模块中。
+      #
+      # 为什么一定要动态传递 meta_options 参数？由于 OpenAPI 文档是面向路由的，parameters、request_body、
+      # responses 都存在于路由文档中，对应地 Metadata 对象最终只存在于路由文档中。因此，在构建过程中，需要将父
+      # 级传递过来的 Metadata 对象合并到当前模块，再层层合并到子模块。
+      def build(meta_options: {}, callbacks: [])
+        meta_options = Utils::RouteDSLBuilders.merge_meta_options(meta_options, @meta_builder.build)
+        callbacks = Utils::RouteDSLBuilders.merge_callbacks(callbacks, @callbacks)
+        mods = @mod_builders.map { |builder| builder.build(meta_options: meta_options, callbacks: callbacks) }
 
         Application.new(
           prefix: @mod_prefix,
@@ -110,13 +108,9 @@ module Meta
           @meta = meta
         end
 
-        def build(parent_path: '', meta: {}, **kwargs)
-          # 合并 meta 时不仅仅是覆盖，比如 parameters 参数需要合并
-          meta2 = (meta || {}).merge(@meta)
-          if meta[:parameters] && meta2[:parameters]
-            meta2[:parameters] = meta[:parameters].merge(meta2[:parameters])
-          end
-          @builder.build(parent_path: parent_path, meta: meta2, **kwargs)
+        def build(meta_options: {}, **kwargs)
+          meta_options = Utils::RouteDSLBuilders.merge_meta_options(meta_options, @meta)
+          @builder.build(meta_options: meta_options, **kwargs)
         end
       end
     end

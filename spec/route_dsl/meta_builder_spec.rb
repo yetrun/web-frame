@@ -66,7 +66,7 @@ describe 'Meta Builder' do
       end
     end
 
-    context '父级定义参数' do
+    context '定义两级参数' do
       def app
         Class.new(Meta::Application) do
           namespace '/foo' do
@@ -104,7 +104,7 @@ describe 'Meta Builder' do
       end
     end
 
-    context '父级定义参数（三级嵌套）' do
+    context '定义三级参数' do
       def app
         Class.new(Meta::Application) do
           namespace '/foo' do
@@ -160,7 +160,38 @@ describe 'Meta Builder' do
     end
   end
 
-  describe 'request and response body' do
+  describe 'params' do
+    context '定义两级参数' do
+      def app
+        Class.new(Meta::Application) do
+          namespace '/foo' do
+            params do
+              param :foo, type: 'string'
+            end
+
+            post '/bar' do
+              params do
+                param :bar, type: 'string'
+              end
+              action do
+                response.body = [params.to_json]
+              end
+            end
+          end
+        end
+      end
+
+      it '没有能够合并 request_body 的参数' do
+        post '/foo/bar', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+        expect(JSON.parse(last_response.body)).to eq({
+          'foo' => 'foo',
+          'bar' => 'bar'
+        })
+      end
+    end
+  end
+
+  describe 'request_body' do
     context '使用 request_body' do
       def app
         Class.new(Meta::Application) do
@@ -315,6 +346,29 @@ describe 'Meta Builder' do
         expect {
           get '/request'
         }.to raise_error(Meta::Errors::RenderingInvalid)
+      end
+    end
+
+    context '定义两级 status' do
+      def app
+        Class.new(Meta::Application) do
+          namespace '/foo' do
+            meta do
+              status 200, type: 'integer'
+            end
+            get '/bar' do
+              status 201, type: 'integer'
+              action do
+                response.status = 200
+                render 'string'
+              end
+            end
+          end
+        end
+      end
+
+      it '父子级的 responses 定义合并' do
+        expect { get '/foo/bar' }.to raise_error(Meta::Errors::RenderingInvalid)
       end
     end
   end
