@@ -9,20 +9,17 @@ module Meta
     class ApplicationBuilder
       include MetaBuilder::Delegator
 
-      # TODO: prefix 改为 ''
-      # prefix 貌似是完整的
-      def initialize(prefix = '', &block)
-        @mod_prefix = prefix
+      def initialize(full_prefix = '/', &block)
+        @full_prefix = full_prefix
         @callbacks = []
         @error_guards = []
-        @meta_builder = MetaBuilder.new(route_full_path: prefix)
+        @meta_builder = MetaBuilder.new(route_full_path: full_prefix)
         @mod_builders = []
         @shared_mods = []
 
         instance_exec &block if block_given?
       end
 
-      # TODO: parent_path 没有用的上, meta -> meta_options
       # meta 和 callbacks 是父级传递过来的，需要合并到当前模块或子模块中。
       #
       # 为什么一定要动态传递 meta_options 参数？由于 OpenAPI 文档是面向路由的，parameters、request_body、
@@ -34,7 +31,7 @@ module Meta
         mods = @mod_builders.map { |builder| builder.build(meta_options: meta_options, callbacks: callbacks) }
 
         Application.new(
-          prefix: @mod_prefix,
+          prefix: @full_prefix,
           mods: mods,
           shared_mods: @shared_mods,
           error_guards: @error_guards
@@ -48,7 +45,7 @@ module Meta
 
       # 定义路由块
       def route(path, method = nil, &block)
-        route_builder = RouteBuilder.new(path, method, parent_path: @mod_prefix, &block)
+        route_builder = RouteBuilder.new(path, method, parent_path: @full_prefix, &block)
         @mod_builders << route_builder
         route_builder
       end

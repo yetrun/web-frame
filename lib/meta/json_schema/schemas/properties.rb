@@ -92,7 +92,7 @@ module Meta
         object = {}
         errors = {}
         filtered_properties.each do |name, property_schema|
-          value = resolve_property_value(object_value, name, property_schema, stage)
+          value = resolve_property_value(object_value, name, property_schema)
 
           begin
             object[name] = property_schema.filter(value, **user_options, object_value: object_value)
@@ -152,7 +152,7 @@ module Meta
         end
       end
 
-      def resolve_property_value(object_value, name, property_schema, stage) # TODO: stage 没用上？
+      def resolve_property_value(object_value, name, property_schema)
         if property_schema.value?
           nil
         elsif object_value.is_a?(Hash) || object_value.is_a?(ObjectWrapper)

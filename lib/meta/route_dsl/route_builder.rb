@@ -55,15 +55,6 @@ module Meta
           self
         end
       end
-
-      private
-
-      # TODO: 包装成 Metadata 类啊？
-      def clone_meta(meta)
-        meta = meta.clone
-        meta[:responses] = meta[:responses].clone if meta[:responses]
-        meta
-      end
     end
   end
 end

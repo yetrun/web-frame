@@ -6,7 +6,7 @@ module Meta
     class Path
       class << self
         # 规范化 path 结构，确保 path 以 '/' 开头，不以 '/' 结尾。
-        # TODO: 仅有一个例外，如果 path 为 nil 或空字符串，则返回空字符串 ''.
+        # 仅有一个例外，如果 path 为 nil 或空字符串，则返回空字符串 ''.
         def normalize_path(path)
           path = '/' unless path
           path = '/' + path unless path.start_with?('/')

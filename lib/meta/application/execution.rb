@@ -75,11 +75,6 @@ module Meta
       self.parameters = parameters_meta.filter(request).freeze
     end
 
-    # parse_params 不再解析参数了，而只是设置 @params_schema，并清理父路由解析的变量
-    def parse_params(params_schema)
-      @params_schema = params_schema # TODO: 到底是用 @params_schema 还是 @request_body
-    end
-
     def parse_request_body(schema)
       @request_body_schema = schema
     end

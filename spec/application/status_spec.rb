@@ -56,7 +56,6 @@ describe Meta::Application do
 
   describe 'Meta::Execution#render' do
     describe 'scope 过滤' do
-      # TODO: 为啥这个地方能测出失败，JsonSchema 下面却测不出来？
       context '渲染时不传递 scope 选项' do
         def app
           app = Class.new(Meta::Application)
