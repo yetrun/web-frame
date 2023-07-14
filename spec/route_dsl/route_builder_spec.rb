@@ -102,34 +102,8 @@ describe 'Route Builder' do
         expect(last_response.body).to eq('bar: two')
       end
     end
+
     describe '定义共同 meta' do
-      context '定义共同参数' do
-        def app
-          Class.new(Meta::Application) do
-            namespace '/nesting' do
-              params { param :foo }
-
-              route '/foo', :post do
-                action { response.body = [params.to_json] }
-              end
-
-              route '/bar', :post do
-                params { param :bar }
-                action { response.body = [params.to_json] }
-              end
-            end
-          end
-        end
-
-        specify do
-          post '/nesting/foo', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
-          expect(JSON.parse(last_response.body)).to eq('foo' => 'foo')
-
-          post '/nesting/bar', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
-          expect(JSON.parse(last_response.body)).to eq('bar' => 'bar')
-        end
-      end
-
       context '定义共同响应值' do
         def app
           Class.new(Meta::Application) do

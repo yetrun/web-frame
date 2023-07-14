@@ -127,6 +127,10 @@ module Meta
       # 程序中有些地方用到了这三个方法
       def_delegators :@properties, :empty?, :key?, :[]
 
+      def merge(properties)
+        self.class.new(@properties.merge(properties.instance_eval { @properties }))
+      end
+
       def self.build_property(*args)
         StagingProperty.build(*args)
       end

@@ -48,7 +48,7 @@ module Meta
       end
 
       # 合并其他的属性，并返回一个新的 ObjectSchema
-      def merge(properties)
+      def merge_other_properties(properties)
         ObjectSchema.new(properties: self.properties.merge(properties))
       end
 
