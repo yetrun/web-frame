@@ -42,44 +42,67 @@ describe 'config' do
     end
   end
 
-  describe '设置处理额外参数的方式' do
+  describe 'json_schema_user_options' do
     before do
-      Meta.config.handle_extra_properties = :raise_error
+      Meta.config.json_schema_user_options = { type_conversion: false, validation: false }
+      Meta.config.json_schema_param_stage_options = { type_conversion: true, validation: false }
+      Meta.config.json_schema_render_stage_options = { type_conversion: false, validation: true }
     end
 
     after do
-      Meta.config.handle_extra_properties = :ignore
+      Meta.config.json_schema_user_options = {}
+      Meta.config.json_schema_param_stage_options = {}
+      Meta.config.json_schema_render_stage_options = {}
     end
 
     def app
       Class.new(Meta::Application) do
-        post '/request' do
-          params do
-            param :foo
-          end
-          status 200 do
-            expose :foo
+        post '/parse_params' do
+          request_body do
+            param :foo, type: 'integer', required: true
           end
           action do
-            params # 激活参数校验
-            render 'foo' => 'foo', 'bar' => 'bar'
+            response.body = [JSON.generate(params)]
+          end
+        end
+
+        post '/render_entity' do
+          status 200 do
+            expose :foo, type: 'integer', required: true
+          end
+          action do
+            render :foo => params(:raw)['foo']
           end
         end
       end
     end
 
-    it '参数不接受额外的属性' do
-      expect {
-        post '/request', JSON.generate(bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
-      }.to raise_error(Meta::Errors::ParameterInvalid)
+    describe '解析参数行为' do
+      it '参数应用类型转换' do
+        expect {
+          post '/parse_params', JSON.generate(foo: 'foo'), { 'CONTENT_TYPE' => 'application/json' }
+        }.to raise_error(Meta::Errors::ParameterInvalid)
+      end
+
+      it '参数没有应用数据验证' do
+        expect {
+          post '/parse_params', JSON.generate(foo: nil), { 'CONTENT_TYPE' => 'application/json' }
+        }.not_to raise_error
+      end
     end
 
-    it '渲染时不接受额外的属性' do
-      expect {
-        post '/request'
-      }.to raise_error(Meta::Errors::RenderingInvalid)
+    describe '渲染实体行为' do
+      it '渲染没有应用类型转换' do
+        expect {
+          post '/render_entity', JSON.generate(foo: 'foo'), { 'CONTENT_TYPE' => 'application/json' }
+        }.not_to raise_error
+      end
+
+      it '渲染应用数据验证' do
+        expect {
+          post '/render_entity', JSON.generate(foo: nil), { 'CONTENT_TYPE' => 'application/json' }
+        }.to raise_error(Meta::Errors::RenderingInvalid)
+      end
     end
   end
-
-  # config.render_type_conversion 和 config.render_validation 的测试见文件 spec/application/config_spec.rb
 end

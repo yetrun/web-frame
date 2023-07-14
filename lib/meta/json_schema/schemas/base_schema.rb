@@ -29,7 +29,8 @@ module Meta
       end
 
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
-        key :stage, :execution, :object_value, :type_conversion, :validation, :user_data
+        key :execution, :object_value, :type_conversion, :validation, :user_data
+        key :stage, validator: ->(value) { raise ArgumentError, "stage 只能取值为 :param 或 :render" unless [:param, :render].include?(value) }
 
         # 以下是 ObjectSchema 需要的选项
         # extra_properties 只能取值为 :ignore、:raise_error

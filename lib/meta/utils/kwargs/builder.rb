@@ -55,10 +55,11 @@ module Meta
       class Argument
         DEFAULT_TRANSFORMER = ->(value) { value }
 
-        def initialize(name:, normalizer: DEFAULT_TRANSFORMER, default: nil, alias_names: [])
+        def initialize(name:, normalizer: DEFAULT_TRANSFORMER, validator: nil, default: nil, alias_names: [])
           @key_name = name
           @consumer_names = [name] + alias_names
           @normalizer = default ? ->(value) { normalizer.call(value || default) } : normalizer
+          @validator = validator
         end
 
         def consume(final_args, args)
@@ -71,6 +72,7 @@ module Meta
         def consume_name(final_args, args, consumer_name)
           if args.key?(consumer_name)
             value = @normalizer.call(args.delete(consumer_name))
+            @validator.call(value) if @validator
             final_args[@key_name] = value
             true
           else

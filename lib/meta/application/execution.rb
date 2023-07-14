@@ -95,12 +95,10 @@ module Meta
         end
 
         new_hash = entity_schema.filter(hash,
+          **Meta.config.json_schema_user_options,
+          **Meta.config.json_schema_render_stage_options,
           **options,
-          execution: self,
-          stage: :render,
-          extra_properties: Meta.config.handle_extra_properties, # TODO: 导出渲染时的 user_options. 注意解析参数时不一样。我在想是不是添加一个 config.json_schema_user_options 完事？
-          validation: Meta.config.render_validation,
-          type_conversion: ::Meta.config.render_type_conversion
+          execution: self, stage: :render
         )
         response.content_type = 'application/json' if response.content_type.nil?
         response.body = [JSON.generate(new_hash)]
@@ -111,7 +109,12 @@ module Meta
         renders.each do |key, render_content|
           raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" unless entity_schema.properties.key?(key)
           schema = entity_schema.properties[key].schema(:render)
-          final_value[key] = schema.filter(render_content[:value], **render_content[:options], execution: self, stage: :render)
+          final_value[key] = schema.filter(render_content[:value],
+            **Meta.config.json_schema_user_options,
+            **Meta.config.json_schema_render_stage_options,
+            **render_content[:options],
+            execution: self, stage: :render
+          )
         rescue JsonSchema::ValidationErrors => e
           # 错误信息再度绑定 key
           errors.merge! e.errors.transform_keys! { |k| k.empty? ? key : "#{key}.#{k}" }
@@ -150,13 +153,23 @@ module Meta
     end
 
     def parse_request_body_for_replacing
-      request_body_schema.filter(params(:raw), execution: self, stage: :param, extra_properties: Meta.config.handle_extra_properties)
+      request_body_schema.filter(
+        params(:raw),
+        **Meta.config.json_schema_user_options,
+        **Meta.config.json_schema_param_stage_options,
+        execution: self, stage: :param
+      )
     rescue JsonSchema::ValidationErrors => e
       raise Errors::ParameterInvalid.new(e.errors)
     end
 
     def parse_request_body_for_updating
-      request_body_schema.filter(params(:raw), execution: self, stage: :param, discard_missing: true, extra_properties: Meta.config.handle_extra_properties)
+      request_body_schema.filter(
+        params(:raw),
+        **Meta.config.json_schema_user_options,
+        **Meta.config.json_schema_param_stage_options,
+        execution: self, stage: :param, discard_missing: true
+      )
     rescue JsonSchema::ValidationErrors => e
       raise Errors::ParameterInvalid.new(e.errors)
     end
