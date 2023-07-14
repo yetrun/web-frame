@@ -55,10 +55,10 @@ module Meta
       class Argument
         DEFAULT_TRANSFORMER = ->(value) { value }
 
-        def initialize(name:, normalizer: DEFAULT_TRANSFORMER, alias_names: [])
+        def initialize(name:, normalizer: DEFAULT_TRANSFORMER, default: nil, alias_names: [])
           @key_name = name
           @consumer_names = [name] + alias_names
-          @normalizer = normalizer
+          @normalizer = default ? ->(value) { normalizer.call(value || default) } : normalizer
         end
 
         def consume(final_args, args)

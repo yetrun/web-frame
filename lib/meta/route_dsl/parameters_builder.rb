@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../application/parameters'
+require_relative '../utils/kwargs/checker'
 
 module Meta
   module RouteDSL
@@ -15,12 +16,14 @@ module Meta
 
       def param(name, options = {})
         # 修正 path 参数的选项
+        options = options.dup
         if path_param_names.include?(name) # path 参数
-          options = options.merge(in: 'path', required: true)
+          options = Utils::KeywordArgs::Checker.fix!(options, in: 'path', required: true)
         else
-          options = options.dup
+          options = Utils::KeywordArgs::Checker.merge_defaults!(options, in: 'query')
         end
-        in_op = options.delete(:in) || 'query'
+
+        in_op = options.delete(:in)
         @parameter_options[name] = { in: in_op, schema: JsonSchema::BaseSchema.new(options) }
       end
 
