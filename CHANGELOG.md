@@ -1,5 +1,16 @@
 # 更新日志
 
+## 0.0.7（2023 年 7 月 14 日）
+
+1. 定义 parameters 宏时能够自动识别 `path` 参数。
+2. 定义 params 宏时能够自动识别 `GET` 路由，此时参数的 `in` 默认为 `query`.
+3. JsonSchema: `default:` 选项可以是一个块。
+4. 有且只有一个 `status` 宏定义时，不需要显示地设置 `response.status`.
+5. `Meta.config` 添加一个新的选析 `default_locked_scope`，借助它可以设置一个默认的 `locked_scope` 值。
+6. `JsonSchema` 的 `filter` 方法添加一个新的选项 `extra_properties:`，当设定值为 `:ignore` 时可以允许额外的属性。
+7. 添加新的选项 `config.json_schema_user_options`、`config.json_schema_param_stage_options`、`config.json_schema_render_stage_options`. 借助这三个选项可以对 `JsonSchema#filter` 方法的选项进行设置。同时废弃了 `render_type_conversion`、`render_validation` 等零散的选项。
+8. `meta` 宏的父级、子级的合并规则调整：parameters、params、responses 都有所合并。
+
 ## 0.0.6（2023 年 5 月 26 日）
 
 1. 添加了 Meta::Execution#abort_execution! 方法。
