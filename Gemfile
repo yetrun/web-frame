@@ -5,6 +5,7 @@ gemspec
 
 gem "rake", "~> 12.0"
 gem 'i18n'
+gem 'hash_to_struct'
 
 group :test do
   gem 'rspec'
