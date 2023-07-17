@@ -15,16 +15,16 @@ module Meta
 
       def param(name, options = {}, &block)
         options = (options || {}).dup
-        in_op = options.delete(:in) || \
           if path_param_names.include?(name)
-            'path'
+            options = Utils::KeywordArgs::Checker.fix!(options, in: 'path', required: true)
           elsif @route_method == :get
-            'query'
+            options = Utils::KeywordArgs::Checker.merge_defaults!(options, in: 'query')
           else
-            'body'
+            options = Utils::KeywordArgs::Checker.merge_defaults!(options, in: 'body')
           end
 
-        if in_op == 'body'
+        if options[:in] == 'body'
+          options.delete(:in)
           property name, options, &block
         else
           @parameters_builder.param name, options

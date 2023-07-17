@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'json'
 
-describe Meta::Application, '.param' do
+describe Meta::Application, '.params' do
   include Rack::Test::Methods
 
   let(:holder) { {} }
