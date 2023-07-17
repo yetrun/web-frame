@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "meta-api"
-  spec.version       = "0.0.7"
+  spec.version       = "0.0.8"
   spec.authors       = ["yetrun"]
   spec.email         = ["yetrun@foxmail.com"]
 

@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.0.8（2023 年 7 月 17 日）
+
+1. `Meta.config` 添加 `initialize_configuration` 方法，用于接受若干个 Hash 初始化配置。
+2. 修复 GET 请求下会将 `header` 参数覆盖为 `query` 参数的 bug.
+
 ## 0.0.7（2023 年 7 月 14 日）
 
 1. 定义 parameters 宏时能够自动识别 `path` 参数。
