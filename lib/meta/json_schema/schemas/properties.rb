@@ -91,12 +91,14 @@ module Meta
         # 第二步，递归过滤每一个属性
         object = {}
         errors = {}
+        cause = nil
         filtered_properties.each do |name, property_schema|
           value = resolve_property_value(object_value, name, property_schema)
 
           begin
             object[name] = property_schema.filter(value, **user_options, object_value: object_value)
           rescue JsonSchema::ValidationErrors => e
+            cause = e.cause || e if cause.nil? # 将第一次出现的错误作为 cause
             errors.merge! e.prepend_root(name).errors
           end
         end.to_h
@@ -108,6 +110,12 @@ module Meta
 
         if errors.empty?
           object
+        elsif cause
+          begin
+            raise cause
+          rescue
+            raise JsonSchema::ValidationErrors.new(errors)
+          end
         else
           raise JsonSchema::ValidationErrors.new(errors)
         end
