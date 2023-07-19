@@ -9,11 +9,6 @@ module Meta
         scope: [],
         required: false
       }
-      @allowable_options = (
-        %i[type description in value using default presenter convert scope items using] +
-        @default_options.keys + 
-        JsonSchema::Validators.keys
-      ).uniq
 
       class << self
         def divide_to_param_and_render(options)
@@ -36,10 +31,6 @@ module Meta
               raise "当使用 using 时，type 必须声明为 object 或 array"
             end
           end
-
-          # 处理 validators
-          unknown_validators = options.keys - @allowable_options
-          raise "未知的选项：#{unknown_validators.join(', ')}" unless unknown_validators.empty?
 
           options
         end
