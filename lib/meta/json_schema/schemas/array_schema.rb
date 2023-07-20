@@ -11,20 +11,6 @@ module Meta
         @items = items
       end
 
-      def filter(array_value, options = {})
-        array_value = super(array_value, options)
-        return nil if array_value.nil?
-        raise ValidationError.new('参数应该传递一个数组') unless array_value.respond_to?(:each_with_index)
-
-        array_value.each_with_index.map do |item, index|
-          begin
-            @items.filter(item, **options)
-          rescue ValidationErrors => e
-            raise e.prepend_root("[#{index}]")
-          end
-        end
-      end
-
       def to_schema_doc(**user_options)
         stage_options = options
 
@@ -34,6 +20,19 @@ module Meta
         }
         schema[:description] = stage_options[:description] if stage_options[:description]
         schema
+      end
+
+      private
+
+      def filter_inner_elements(array_value, user_options)
+        raise ValidationError.new('参数应该传递一个数组') unless array_value.respond_to?(:each_with_index)
+        array_value.each_with_index.map do |item, index|
+          begin
+            @items.filter(item, user_options)
+          rescue ValidationErrors => e
+            raise e.prepend_root("[#{index}]")
+          end
+        end
       end
     end
   end

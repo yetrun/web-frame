@@ -3,8 +3,69 @@
 require 'spec_helper'
 
 describe 'schema' do
+  # 这个测试合集主要测试 schema 的 filter 方法。
+  # 有关 SchemaBuilder 的构建选项，如 value:, default: 等，参见 schema_builder_spec.rb
   describe '.filter' do
-    describe '传递运行选项' do
+    describe '传递特殊的 value' do
+      context 'value is nil' do
+        shared_examples '过滤 nil 得到 nil' do
+          specify do
+            expect(schema.filter(nil)).to be nil
+          end
+        end
+
+        context '定义标量数组' do
+          let(:schema) do
+            Meta::JsonSchema::SchemaBuilderTool.build type: 'array'
+          end
+
+          include_examples '过滤 nil 得到 nil'
+        end
+
+        context '定义对象数组' do
+          let(:schema) do
+            Meta::JsonSchema::SchemaBuilderTool.build type: 'array' do
+              property :foo
+              property :bar
+            end
+          end
+
+          include_examples '过滤 nil 得到 nil'
+        end
+      end
+
+      context 'value is not a Hash' do
+        let(:value) {
+          obj = Object.new
+          def obj.a; 'a' end
+          def obj.b; 'b' end
+          obj
+        }
+
+        it '调用对象的方法获取值' do
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            property :a
+            property :b
+          end
+          expect(schema.filter(value)).to eq(a: 'a', b: 'b')
+        end
+      end
+
+      context 'value is not an array' do
+        let(:value) do
+          arr = Object.new
+          def arr.to_a; [1, 2, 3] end
+          arr
+        end
+
+        it '调用 to_a 获取数组元素' do
+          schema = Meta::JsonSchema::SchemaBuilderTool.build type: 'array'
+          expect(schema.filter(value)).to eq([1, 2, 3])
+        end
+      end
+    end
+
+    describe '传递运行时选项' do
       describe 'stage:' do
         context 'is :render' do
           it '过滤掉 render: false 的属性' do
@@ -79,65 +140,6 @@ describe 'schema' do
 
           filtered = schema.filter({ 'nested' => { 'foo' => 'foo' } }, user_data: { bar: 'bar' })
           expect(filtered[:nested]).to eq(foo: 'foobar')
-        end
-      end
-    end
-
-    describe 'value' do
-      context 'value is nil' do
-        shared_examples '过滤 nil 得到 nil' do
-          specify do
-            expect(schema.filter(nil)).to be nil
-          end
-        end
-
-        context '定义标量数组' do
-          let(:schema) do
-            Meta::JsonSchema::SchemaBuilderTool.build type: 'array'
-          end
-
-          include_examples '过滤 nil 得到 nil'
-        end
-
-        context '定义对象数组' do
-          let(:schema) do
-            Meta::JsonSchema::SchemaBuilderTool.build type: 'array' do
-              property :foo
-              property :bar
-            end
-          end
-
-          include_examples '过滤 nil 得到 nil'
-        end
-      end
-
-      context 'value is not a Hash' do
-        let(:value) {
-          obj = Object.new
-          def obj.a; 'a' end
-          def obj.b; 'b' end
-          obj
-        }
-
-        it '调用对象的方法获取值' do
-          schema = Meta::JsonSchema::SchemaBuilderTool.build do
-            property :a
-            property :b
-          end
-          expect(schema.filter(value)).to eq(a: 'a', b: 'b')
-        end
-      end
-
-      context 'value is not an array' do
-        let(:value) do
-          arr = Object.new
-          def arr.to_a; [1, 2, 3] end
-          arr
-        end
-
-        it '调用 to_a 获取数组元素' do
-          schema = Meta::JsonSchema::SchemaBuilderTool.build type: 'array'
-          expect(schema.filter(value)).to eq([1, 2, 3])
         end
       end
     end

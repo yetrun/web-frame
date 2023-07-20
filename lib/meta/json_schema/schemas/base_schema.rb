@@ -10,6 +10,7 @@ module Meta
         key :type, :items, :description, :presenter, :value, :default, :properties, :convert
         key :validate, :required, :format, :allowable
         key :param, :render
+        key :before, :after
       end
 
       # `options` 包含了转换器、验证器、文档、选项。
@@ -40,7 +41,8 @@ module Meta
       def filter(value, user_options = {})
         user_options = USER_OPTIONS_CHECKER.check(user_options)
 
-        value = resolve_value(user_options) if options[:value]
+        value = value_callback(user_options) if options[:value]
+        value = before_callback(value, user_options) if options[:before]
         value = JsonSchema::Presenters.present(options[:presenter], value) if options[:presenter]
         value = resolve_default_value(options[:default]) if value.nil? && options.key?(:default)
         value = options[:convert].call(value) if options[:convert]
@@ -59,28 +61,16 @@ module Meta
         # 第二步，做校验。
         validate!(value, options) unless user_options[:validation] == false
 
+        # 第三步，如果存在内部属性，递归调用。
+        value = filter_inner_elements(value, user_options) unless value.nil?
+
+        # 最后，返回 value
+        value = after_callback(value, user_options) if options[:after]
         value
       end
 
       def value?
         options[:value] != nil
-      end
-
-      def resolve_value(user_options)
-        value_proc = options[:value]
-        if value_proc.lambda?
-          value_proc_params = []
-          value_proc_params << user_options[:object_value] if value_proc.arity >= 1
-          value_proc_params << user_options[:user_data] if value_proc.arity >= 2
-        else
-          value_proc_params = [user_options[:object_value], user_options[:user_data]]
-        end
-
-        if user_options[:execution]
-          user_options[:execution].instance_exec(*value_proc_params, &value_proc)
-        else
-          value_proc.call(*value_proc_params)
-        end
       end
 
       # 生成 Swagger 文档的 schema 格式。
@@ -106,22 +96,51 @@ module Meta
 
       private
 
-        def validate!(value, stage_options)
-          stage_options.each do |key, option|
-            validator = JsonSchema::Validators[key]
-            validator&.call(value, option, stage_options)
-          end
+      def validate!(value, stage_options)
+        stage_options.each do |key, option|
+          validator = JsonSchema::Validators[key]
+          validator&.call(value, option, stage_options)
         end
+      end
 
-        def resolve_default_value(default_resolver)
-          if default_resolver.respond_to?(:call)
-            default_resolver.call
-          elsif default_resolver.respond_to?(:dup)
-            default_resolver.dup
-          else
-            default_resolver
-          end
+      def resolve_value(value, user_options, value_proc, arguments)
+        if value_proc.lambda?
+          value_proc_params = arguments[0...value_proc.arity]
+        else
+          value_proc_params = arguments
         end
+        if user_options[:execution]
+          user_options[:execution].instance_exec(*value_proc_params, &value_proc)
+        else
+          value_proc.call(*value_proc_params)
+        end
+      end
+
+      def resolve_default_value(default_resolver)
+        if default_resolver.respond_to?(:call)
+          default_resolver.call
+        elsif default_resolver.respond_to?(:dup)
+          default_resolver.dup
+        else
+          default_resolver
+        end
+      end
+
+      def filter_inner_elements(value, user_options)
+        value
+      end
+
+      def before_callback(value, user_options)
+        resolve_value(value, user_options, options[:before], [value, user_options[:object_value], user_options[:user_data]])
+      end
+
+      def after_callback(value, user_options)
+        resolve_value(value, user_options, options[:after], [value, user_options[:object_value], user_options[:user_data]])
+      end
+
+      def value_callback(user_options)
+        resolve_value(nil, user_options, options[:value], [user_options[:object_value], user_options[:user_data]])
+      end
     end
   end
 end

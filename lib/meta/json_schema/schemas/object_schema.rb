@@ -40,11 +40,7 @@ module Meta
         # 合并 user_options
         user_options = user_options.merge(locked_options) if locked_options
         user_options = USER_OPTIONS_CHECKER.check(user_options)
-
-        object_value = super(object_value, user_options)
-
-        return nil if object_value.nil?
-        @properties.filter(object_value, user_options)
+        super
       end
 
       # 合并其他的属性，并返回一个新的 ObjectSchema
@@ -75,6 +71,12 @@ module Meta
 
       def locked_exclude
         locked_options && locked_options[:exclude]
+      end
+
+      private
+
+      def filter_inner_elements(object_value, user_options)
+        @properties.filter(object_value, user_options)
       end
     end
   end
