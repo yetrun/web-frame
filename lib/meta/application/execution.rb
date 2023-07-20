@@ -108,7 +108,7 @@ module Meta
         final_value = {}
         renders.each do |key, render_content|
           raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" unless entity_schema.properties.key?(key)
-          schema = entity_schema.properties[key].schema(:render)
+          schema = entity_schema.properties[key].staged(:render)
           final_value[key] = schema.filter(render_content[:value],
             **Meta.config.json_schema_user_options,
             **Meta.config.json_schema_render_stage_options,

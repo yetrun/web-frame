@@ -34,5 +34,8 @@ module Meta
         errors['']
       end
     end
+
+    class UnsupportedError < StandardError
+    end
   end
 end

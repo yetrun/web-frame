@@ -5,12 +5,34 @@ require_relative '../support/schema_options'
 
 module Meta
   module JsonSchema
+    # 表示一个基本类型的 Schema，或继承自该类表示一个拥有其他扩展能力的 Schema.
+    #
+    # 该类包含了通用 JsonSchema 思维的基本逻辑，比如 stage 和 scope. 其他 Schema 类应当主动地继
+    # 承自该类，这样就会自动获得 stage 和 scope 的能力。
+    #
+    # 该类剩余的逻辑是提供一个 `options` 属性，用于描述该 Schema. 因此，直接实例化该类可以用于表示
+    # 基本类型，而继承该类可以用于表示还有内部递归处理的对象和数组类型。这时，应当在子类的构造函数中调
+    # 用父类的构造方法，以便初始化 `options` 属性。并且在子类中重写 `filter_internal` 方法，实现
+    # 内部递归处理的逻辑。这种模式的案例主要是 `ObjectSchema` 和 `ArraySchema`.
+    #
+    # 如果是组合模式，也应当继承自该类，以便获得 stage 和 scope 的能力。但是，组合模式的 `options`
+    # 调用是非法的，因此不应当在构造函数中调用父类的构造方法。此时 options 为 nil，这样用到 options
+    # 的地方都会抛出异常（NoMethodError: undefined method `[]' for nil:NilClass）。这种模式
+    # 的案例很多，包括 StagingSchema、RefSchema 等。
     class BaseSchema
       OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         key :type, :items, :description, :presenter, :value, :default, :properties, :convert
         key :validate, :required, :format, :allowable
-        key :param, :render
         key :before, :after
+      end
+
+      USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
+        key :execution, :object_value, :type_conversion, :validation, :user_data
+        key :stage, validator: ->(value) { raise ArgumentError, "stage 只能取值为 :param 或 :render" unless [:param, :render].include?(value) }
+
+        # 以下是 ObjectSchema 需要的选项
+        # extra_properties 只能取值为 :ignore、:raise_error
+        key :discard_missing, :extra_properties, :exclude, :scope
       end
 
       # `options` 包含了转换器、验证器、文档、选项。
@@ -23,19 +45,15 @@ module Meta
       attr_reader :options
 
       def initialize(options = {})
+        raise ArgumentError, 'options 必须是 Hash 类型' unless options.is_a?(Hash)
         options = OPTIONS_CHECKER.check(options)
         raise '不允许 BaseSchema 直接接受 array 类型，必须通过继承使用 ArraySchema' if options[:type] == 'array' && self.class == BaseSchema
 
         @options = SchemaOptions.normalize(options).freeze
       end
 
-      USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
-        key :execution, :object_value, :type_conversion, :validation, :user_data
-        key :stage, validator: ->(value) { raise ArgumentError, "stage 只能取值为 :param 或 :render" unless [:param, :render].include?(value) }
-
-        # 以下是 ObjectSchema 需要的选项
-        # extra_properties 只能取值为 :ignore、:raise_error
-        key :discard_missing, :extra_properties, :exclude, :scope
+      def filter?
+        true
       end
 
       def filter(value, user_options = {})
@@ -62,11 +80,26 @@ module Meta
         validate!(value, options) unless user_options[:validation] == false
 
         # 第三步，如果存在内部属性，递归调用。
-        value = filter_inner_elements(value, user_options) unless value.nil?
+        value = filter_internal(value, user_options) unless value.nil?
 
         # 最后，返回 value
         value = after_callback(value, user_options) if options[:after]
         value
+      end
+
+      # 返回能够处理 scope 和 stage 的 schema（可以是 self），否则应返回 UnsupportedStageSchema 或 nil.
+      def find_schema(scope:, stage:)
+        staged(stage)&.scoped(scope)
+      end
+
+      # 返回能够处理 stage 的 schema（可以是 self），否则返回 UnsupportedStageSchema.
+      def staged(stage)
+        self
+      end
+
+      # 返回能够处理 scope 的 schema（可以是 self），否则返回 nil.
+      def scoped(scope)
+        self
       end
 
       def value?
@@ -126,8 +159,12 @@ module Meta
         end
       end
 
-      def filter_inner_elements(value, user_options)
+      def filter_internal(value, user_options)
         value
+      end
+
+      def value_callback(user_options)
+        resolve_value(nil, user_options, options[:value], [user_options[:object_value], user_options[:user_data]])
       end
 
       def before_callback(value, user_options)
@@ -136,10 +173,6 @@ module Meta
 
       def after_callback(value, user_options)
         resolve_value(value, user_options, options[:after], [value, user_options[:object_value], user_options[:user_data]])
-      end
-
-      def value_callback(user_options)
-        resolve_value(nil, user_options, options[:value], [user_options[:object_value], user_options[:user_data]])
       end
     end
   end

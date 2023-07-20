@@ -261,14 +261,14 @@ describe 'Schema Builders' do
               property :a
             end
             schema = Meta::JsonSchema::SchemaBuilderTool.build do
-              property :foo, scope: :foo, dynamic_ref: { resolve: ->(value) { inner_entity } }
-              property :bar, scope: :bar, dynamic_ref: { resolve: ->(value) { inner_entity } }
+              property :foo, scope: 'foo', dynamic_ref: { resolve: ->(value) { inner_entity } }
+              property :bar, scope: 'bar', dynamic_ref: { resolve: ->(value) { inner_entity } }
             end
 
             value = schema.filter({
               'foo' => { 'a' => 'a', 'b' => 'b'  },
               'bar' => { 'a' => 'a', 'b' => 'b' }
-            }, scope: [:bar])
+            }, scope: 'bar')
             expect(value).not_to be_key(:foo)
             expect(value).to be_key(:bar)
           end

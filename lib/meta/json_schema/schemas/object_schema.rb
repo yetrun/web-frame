@@ -75,7 +75,7 @@ module Meta
 
       private
 
-      def filter_inner_elements(object_value, user_options)
+      def filter_internal(object_value, user_options)
         @properties.filter(object_value, user_options)
       end
     end

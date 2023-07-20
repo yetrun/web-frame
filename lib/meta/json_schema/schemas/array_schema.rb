@@ -24,7 +24,7 @@ module Meta
 
       private
 
-      def filter_inner_elements(array_value, user_options)
+      def filter_internal(array_value, user_options)
         raise ValidationError.new('参数应该传递一个数组') unless array_value.respond_to?(:each_with_index)
         array_value.each_with_index.map do |item, index|
           begin

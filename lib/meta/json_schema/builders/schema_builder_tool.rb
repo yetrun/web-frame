@@ -4,6 +4,7 @@ require_relative 'ref_schema_builder'
 require_relative 'dynamic_schema_builder'
 require_relative 'array_schema_builder'
 require_relative 'object_schema_builder'
+require_relative '../schemas/staging_schema'
 
 module Meta
   module JsonSchema
@@ -33,7 +34,7 @@ module Meta
           elsif apply_object_schema?(options, block)
             ObjectSchemaBuilder.new(options, &block).to_schema
           else
-            BaseSchema.new(options)
+            StagingSchema.build_from_options(options)
           end
         end
 
