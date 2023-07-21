@@ -98,6 +98,18 @@ describe 'Schema Builders' do
         )
       end
     end
+
+    describe 'option if:' do
+      it 'Object 内的属性可配置一个 if 动态地决定是否渲染该属性' do
+        schema = Meta::JsonSchema::SchemaBuilderTool.build do
+          property :foo, if: ->{ self == 'foo' }
+          property :bar, if: ->{ self == 'bar' }
+        end
+
+        value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' }, execution: 'foo')
+        expect(value).to eq({ foo: 'foo' })
+      end
+    end
   end
 
   describe 'options' do

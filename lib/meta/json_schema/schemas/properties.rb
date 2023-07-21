@@ -18,12 +18,15 @@ module Meta
         user_scope = user_options[:scope] || [0]
         exclude = user_options.delete(:exclude) # 这里删除 exclude 选项，不要传递给下一层
         properties = filter_by(stage: stage, user_scope: user_scope)
-        filtered_properties = properties.filter do |name, property|
+        filtered_properties = properties.filter do |name, property_schema|
           # 通过 discard_missing 过滤
           next false if user_options[:discard_missing] && !object_value.key?(name.to_s)
 
           # 通过 locked_exclude 选项过滤
           next false if exclude && exclude.include?(name)
+
+          # 通过 if 选项过滤
+          next false unless property_schema.if?(user_options)
 
           # 默认返回 true
           next true

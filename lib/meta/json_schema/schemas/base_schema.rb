@@ -24,6 +24,7 @@ module Meta
         key :type, :items, :description, :presenter, :value, :default, :properties, :convert
         key :validate, :required, :format, :allowable
         key :before, :after
+        key :if
       end
 
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
@@ -100,6 +101,18 @@ module Meta
       # 返回能够处理 scope 的 schema（可以是 self），否则返回 nil.
       def scoped(scope)
         self
+      end
+
+      # 执行 if: 选项，返回 true 或 false
+      def if?(user_options)
+        return true if options[:if].nil?
+
+        execution = user_options[:execution]
+        if execution
+          execution.instance_exec(&options[:if])
+        else
+          options[:if]&.call
+        end
       end
 
       def value?
