@@ -5,6 +5,103 @@ require 'spec_helper'
 describe 'Meta Builder' do
   include Rack::Test::Methods
 
+  describe 'scope' do
+    context '在路由中定义 scope' do
+      def app
+        Class.new(Meta::Application) do
+          post '/request' do
+            scope 'foo'
+            params do
+              param :foo, scope: 'foo'
+              param :bar, scope: 'bar'
+            end
+            action do
+              response.body = [JSON.generate(params)]
+            end
+          end
+        end
+      end
+
+      it '渲染参数时应用 scope' do
+        post '/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+        expect(JSON.parse(last_response.body)).to eq({ 'foo' => 'foo' })
+      end
+    end
+
+    context '在 namespace 中定义 scope' do
+      def app
+        Class.new(Meta::Application) do
+          meta do
+            scope 'foo'
+          end
+
+          post '/request' do
+            params do
+              param :foo, scope: 'foo'
+              param :bar, scope: 'bar'
+            end
+            action do
+              response.body = [JSON.generate(params)]
+            end
+          end
+        end
+      end
+
+      it '向下传递到路由的 meta' do
+        post '/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+        expect(JSON.parse(last_response.body)).to eq({ 'foo' => 'foo' })
+      end
+
+      context '路由中继续定义' do
+        def app
+          Class.new(Meta::Application) do
+            meta do
+              scope 'foo'
+            end
+
+            post '/request' do
+              scope 'bar'
+              params do
+                param :foo, scope: 'foo'
+                param :bar, scope: 'bar'
+              end
+              action do
+                response.body = [JSON.generate(params)]
+              end
+            end
+          end
+        end
+
+        it '路由中的 scope 与 namespace 的合并' do
+          post '/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+          expect(JSON.parse(last_response.body)).to eq({ 'foo' => 'foo', 'bar' => 'bar' })
+        end
+      end
+    end
+
+    context 'HTTP 方法自动定义 scope' do
+      def app
+        Class.new(Meta::Application) do
+          post '/request' do
+            scope 'foo'
+            params do
+              param :foo, scope: :post
+              param :bar, scope: :put
+            end
+            action do
+              response.body = [JSON.generate(params)]
+            end
+          end
+        end
+      end
+
+      it '渲染参数时应用 scope' do
+        post '/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
+        expect(JSON.parse(last_response.body)).to eq({ 'foo' => 'foo' })
+      end
+    end
+  end
+
   describe 'parameters' do
     context '定义 query 参数' do
       def app

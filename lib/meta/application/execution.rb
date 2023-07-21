@@ -4,13 +4,17 @@ require 'rack'
 
 module Meta
   class Execution
-    attr_reader :request, :response, :params_schema, :request_body_schema
-    attr_accessor :parameters
+    attr_reader :request, :response
+    attr_accessor :route_meta
 
     def initialize(request)
       @request = request
       @response = Rack::Response.new([], 0) # 状态码初始为 0，代表一个未设置状态
       @parameters = {}
+    end
+
+    def parameters
+      @_parameters || @_parameters = route_meta.parse_parameters(self)
     end
 
     # 调用方式：
@@ -23,9 +27,9 @@ module Meta
 
       case mode
       when :keep_missing
-        @_request_body[:keep_missing] || @_request_body[:keep_missing] = parse_request_body_for_replacing.freeze
+        @_request_body[:keep_missing] || @_request_body[:keep_missing] = route_meta.parse_request_body(self).freeze
       when :discard_missing
-        @_request_body[:discard_missing] || @_request_body[:discard_missing] = parse_request_body_for_updating.freeze
+        @_request_body[:discard_missing] || @_request_body[:discard_missing] = route_meta.parse_request_body(self, discard_missing: true).freeze
       else
         raise NameError, "未知的 mode 参数：#{mode}"
       end
@@ -45,7 +49,7 @@ module Meta
         @_params[:raw] = parse_raw_params.freeze
       else
         params = parameters
-        params = params.merge(request_body(mode) || {}) if @request_body_schema
+        params = params.merge(request_body(mode) || {}) if route_meta.request_body
         @_params[mode] = params
       end
 
@@ -70,15 +74,6 @@ module Meta
       @renders[key] = { value: value, options: options || {} }
     end
 
-    # 运行过程中首先会解析参数
-    def parse_parameters(parameters_meta)
-      self.parameters = parameters_meta.filter(request).freeze
-    end
-
-    def parse_request_body(schema)
-      @request_body_schema = schema
-    end
-
     def render_entity(entity_schema)
       # 首先获取 JSON 响应值
       renders = @renders || {}
@@ -94,12 +89,7 @@ module Meta
           options = {}
         end
 
-        new_hash = entity_schema.filter(hash,
-          **Meta.config.json_schema_user_options,
-          **Meta.config.json_schema_render_stage_options,
-          **options,
-          execution: self, stage: :render
-        )
+        new_hash = route_meta.render_entity(self, entity_schema, hash, options)
         response.content_type = 'application/json' if response.content_type.nil?
         response.body = [JSON.generate(new_hash)]
       else
@@ -109,12 +99,7 @@ module Meta
         renders.each do |key, render_content|
           raise Errors::RenderingError, "渲染的键名 `#{key}` 不存在，请检查实体定义以确认是否有拼写错误" unless entity_schema.properties.key?(key)
           schema = entity_schema.properties[key].staged(:render)
-          final_value[key] = schema.filter(render_content[:value],
-            **Meta.config.json_schema_user_options,
-            **Meta.config.json_schema_render_stage_options,
-            **render_content[:options],
-            execution: self, stage: :render
-          )
+          final_value[key] = route_meta.render_entity(self, schema, render_content[:value], render_content[:options])
         rescue JsonSchema::ValidationErrors => e
           # 错误信息再度绑定 key
           errors.merge! e.errors.transform_keys! { |k| k.empty? ? key : "#{key}.#{k}" }
@@ -150,28 +135,6 @@ module Meta
 
       request.body.rewind
       json
-    end
-
-    def parse_request_body_for_replacing
-      request_body_schema.filter(
-        params(:raw),
-        **Meta.config.json_schema_user_options,
-        **Meta.config.json_schema_param_stage_options,
-        execution: self, stage: :param
-      )
-    rescue JsonSchema::ValidationErrors => e
-      raise Errors::ParameterInvalid.new(e.errors)
-    end
-
-    def parse_request_body_for_updating
-      request_body_schema.filter(
-        params(:raw),
-        **Meta.config.json_schema_user_options,
-        **Meta.config.json_schema_param_stage_options,
-        execution: self, stage: :param, discard_missing: true
-      )
-    rescue JsonSchema::ValidationErrors => e
-      raise Errors::ParameterInvalid.new(e.errors)
     end
 
     class Abort < Exception

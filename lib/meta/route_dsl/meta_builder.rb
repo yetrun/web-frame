@@ -9,7 +9,7 @@ module Meta
       def initialize(route_full_path:, route_method: :all, &block)
         @route_full_path = route_full_path
         @method = route_method
-        @meta = {}
+        @meta = { scope: [] }
         @parameters_builder = ParametersBuilder.new(route_full_path: route_full_path, route_method: route_method) # 默认给一个空的参数构建器，它只会处理 path 参数
 
         instance_exec &block if block_given?
@@ -43,7 +43,7 @@ module Meta
         codes.each { |code| @meta[:responses][code] = entity_schema }
       end
 
-      [:tags, :title, :description].each do |method_name|
+      [:tags, :title, :description, :scope].each do |method_name|
         define_method(method_name) do |value|
           @meta[method_name] = value
         end

@@ -85,8 +85,7 @@ describe 'Meta::SwaggerDocUtil.generate' do
       expect(components[:schemas]['UserEntity']).to eq(
         type: 'object',
         properties: {
-          name: { type: 'string' },
-          age: { type: 'integer' }
+          name: { type: 'string' }
         }
       )
     end

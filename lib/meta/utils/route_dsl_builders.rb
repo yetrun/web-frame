@@ -15,6 +15,7 @@ module Meta
           if options1[:responses] && options2[:responses]
             final_options[:responses] = options1[:responses].merge(options2[:responses])
           end
+          final_options[:scope] = [options1[:scope] || [], options2[:scope] || []].flatten.uniq
           final_options
         end
 

@@ -1247,6 +1247,9 @@ describe Meta::Application, '.params' do
             param :bar, type: 'integer', in: 'query', required: true
             param :baz, type: 'integer', in: 'query', required: true
           end
+          action do
+            parameters
+          end
         end
       end
     end
