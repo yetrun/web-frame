@@ -71,6 +71,13 @@ module Meta
       end
 
       @renders ||= {}
+      raise '同一种 render 方式只能调用一次，请检查是否重复使用相同的 key 渲染，或者重复调用 render(value) 的方式' if @renders.key?(key)
+      if key == :__root__ && @renders.keys.any? { |key| key != :__root__ }
+        raise '已使用 render(:key, value) 的方式调用过，不能再使用 render(value) 的方式'
+      elsif key != :__root__ && @renders.key?(:__root__)
+        raise '已使用 render(value) 的方式调用过，不能再使用 render(:key, value) 的方式'
+      end
+
       @renders[key] = { value: value, options: options || {} }
     end
 
