@@ -42,16 +42,15 @@ module Meta
       end
 
       def self.build_from_options(options, build_schema = ->(opts) { BaseSchema.new(opts) })
-        if (options[:param].is_a?(Hash) || options[:param] == false) ||
-           (options[:render].is_a?(Hash) || options[:render] == false)
-          param_opts, render_opts, common_opts = SchemaOptions.divide_to_param_and_render(options)
-          StagingSchema.new(
-            param_schema: options[:param] === false ? UnsupportedSchema.new(:stage, :param) : ScopingSchema.build_from_options(param_opts, build_schema),
-            render_schema: options[:render] === false ? UnsupportedSchema.new(:stage, :render) : ScopingSchema.build_from_options(render_opts, build_schema),
-            default_schema: ScopingSchema.build_from_options(common_opts, build_schema),
-          )
+        param_opts, render_opts, common_opts = SchemaOptions.divide_to_param_and_render(options)
+        if param_opts == common_opts && render_opts == common_opts
+          return ScopingSchema.build_from_options(common_opts, build_schema)
         else
-          return ScopingSchema.build_from_options(options, build_schema)
+          StagingSchema.new(
+            param_schema: param_opts ? ScopingSchema.build_from_options(param_opts, build_schema) : UnsupportedSchema.new(:stage, :param),
+            render_schema: render_opts ? ScopingSchema.build_from_options(render_opts, build_schema) : UnsupportedSchema.new(:stage, :render),
+            default_schema: ScopingSchema.build_from_options(common_opts, build_schema),
+            )
         end
       end
     end

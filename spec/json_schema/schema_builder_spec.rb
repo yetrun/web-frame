@@ -347,5 +347,15 @@ describe 'Schema Builders' do
         end
       end
     end
+
+    describe 'param' do
+      it '可以设置 param 为 true' do
+        expect {
+          Meta::JsonSchema::SchemaBuilderTool.build do
+            property :foo, param: true
+          end
+        }.not_to raise_error
+      end
+    end
   end
 end
