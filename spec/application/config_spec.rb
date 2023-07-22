@@ -45,14 +45,14 @@ describe 'config' do
   describe 'json_schema_user_options' do
     before do
       Meta.config.json_schema_user_options = { type_conversion: false, validation: false }
-      Meta.config.json_schema_param_stage_options = { type_conversion: true, validation: false }
-      Meta.config.json_schema_render_stage_options = { type_conversion: false, validation: true }
+      Meta.config.json_schema_param_stage_user_options = { type_conversion: true, validation: false }
+      Meta.config.json_schema_render_stage_user_options = { type_conversion: false, validation: true }
     end
 
     after do
       Meta.config.json_schema_user_options = {}
-      Meta.config.json_schema_param_stage_options = {}
-      Meta.config.json_schema_render_stage_options = {}
+      Meta.config.json_schema_param_stage_user_options = {}
+      Meta.config.json_schema_render_stage_user_options = {}
     end
 
     def app

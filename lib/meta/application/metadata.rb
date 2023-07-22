@@ -15,7 +15,7 @@ module Meta
         request_body.filter(
           execution.params(:raw),
           **Meta.config.json_schema_user_options,
-          **Meta.config.json_schema_param_stage_options,
+          **Meta.config.json_schema_param_stage_user_options,
           **{ execution: execution, stage: :param, scope: @scope.concat([method]), discard_missing: discard_missing }.compact
         )
       rescue JsonSchema::ValidationErrors => e
@@ -26,7 +26,7 @@ module Meta
         method = execution.request.request_method.downcase.to_sym
         entity_schema.filter(value,
           **Meta.config.json_schema_user_options,
-          **Meta.config.json_schema_render_stage_options,
+          **Meta.config.json_schema_render_stage_user_options,
           **{ execution: execution, stage: :render, scope: @scope.concat([method]) }.compact,
           **user_options,
         )

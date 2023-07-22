@@ -6,8 +6,8 @@ module Meta
   DEFAULT_OPTIONS = {
     default_locked_scope: nil,
     json_schema_user_options: {},
-    json_schema_param_stage_options: {},
-    json_schema_render_stage_options: {}
+    json_schema_param_stage_user_options: {},
+    json_schema_render_stage_user_options: {}
   }
 
   class << self
