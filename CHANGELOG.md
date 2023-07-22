@@ -1,5 +1,14 @@
 # 更新日志
 
+## 0.0.9（2023 年 7 月 22 日）
+
+1. JsonSchema 添加 before:、after: 选项，用于在过滤前后执行一些操作。
+2. 新添加一个 if: 选项用在属性上，它能够作为一个条件，当条件为 false 时，该属性不会被包含在结果内。
+3. 属性的 scope: 选项改名为 on: 选项。
+4. MetaBuilder 添加一个 scope 宏。
+5. Meta.config 的 JsonSchema 相关配置项改名。
+6. 优化异常的捕获。
+
 ## 0.0.8（2023 年 7 月 17 日）
 
 1. `Meta.config` 添加 `initialize_configuration` 方法，用于接受若干个 Hash 初始化配置。

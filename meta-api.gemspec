@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "meta-api"
-  spec.version       = "0.0.8"
+  spec.version       = "0.0.9"
   spec.authors       = ["yetrun"]
   spec.email         = ["yetrun@foxmail.com"]
 
@@ -14,10 +14,11 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/yetrun/web-frame.git"
 
+  spec.add_dependency "hash_to_struct", "~> 1.0.0"
+
   # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  spec.files         = Dir.chdir(File.expand_path('..', __FILE__)) do
-    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  end
+  spec.files = Dir.glob("{config,lib}/{.rb,/**/*}", File::FNM_DOTMATCH).reject {|f| File.directory?(f) }
+  spec.files += %w[CHANGELOG.md LICENSE.txt meta-api.gemspec]
+
   spec.require_paths = ["lib"]
 end
