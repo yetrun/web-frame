@@ -62,7 +62,7 @@ module Meta
 
     include ExecutionMethods
 
-    attr_reader :title, :description, :tags, :parameters, :request_body, :responses
+    attr_reader :title, :description, :tags, :parameters, :request_body, :responses, :scope
 
     def initialize(title: nil, description: nil, tags: [], parameters: {}, request_body: nil, responses: nil, scope: nil)
       @title = title
@@ -78,7 +78,7 @@ module Meta
       send(key)
     end
 
-    def generate_operation_doc(schemas)
+    def generate_operation_doc(schemas, scope: [])
       operation_object = {}
 
       operation_object[:summary] = title if title
@@ -88,7 +88,7 @@ module Meta
       operation_object[:parameters] = parameters.to_swagger_doc
 
       if request_body
-        schema = request_body.to_schema_doc(stage: :param, schemas: schemas)
+        schema = request_body.to_schema_doc(stage: :param, scope: self.scope + scope, schemas: schemas)
         if schema || true
           operation_object[:requestBody] = {
             content: {
@@ -105,7 +105,7 @@ module Meta
           description: '', # description 属性必须存在
           content: schema ? {
             'application/json' => {
-              schema: schema.to_schema_doc(stage: :render, schemas: schemas)
+              schema: schema.to_schema_doc(stage: :render, scope: self.scope + scope, schemas: schemas)
             }
           } : nil
         }.compact

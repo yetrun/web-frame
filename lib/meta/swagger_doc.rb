@@ -32,7 +32,7 @@ module Meta
 
       # 生成单个路由的文档
       def generate_operation_object(route, schemas)
-        route.meta.generate_operation_doc(schemas)
+        route.generate_operation_doc(schemas)
       end
 
       private

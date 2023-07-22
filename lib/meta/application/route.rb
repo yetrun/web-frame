@@ -37,5 +37,9 @@ module Meta
       return false unless @method == :all || @method.to_s.upcase == method
       return true
     end
+
+    def generate_operation_doc(schemas)
+      meta.generate_operation_doc(schemas, scope: [method])
+    end
   end
 end

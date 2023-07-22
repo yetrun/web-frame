@@ -38,8 +38,8 @@ module Meta
 
       def filter(object_value, user_options = {})
         # 合并 user_options
-        user_options = user_options.merge(locked_options) if locked_options
         user_options = USER_OPTIONS_CHECKER.check(user_options)
+        user_options = merge_user_options(user_options, locked_options) if locked_options
         super
       end
 
@@ -53,13 +53,14 @@ module Meta
         @schema_name_resolver.call(stage, locked_scopes)
       end
 
-      def to_schema_doc(stage: nil, **user_options)
-        locked_scopes = (locked_options || {})[:scope] || []
+      def to_schema_doc(user_options = {})
+        user_options = USER_OPTIONS_CHECKER.check(user_options)
+        user_options = merge_user_options(user_options, locked_options) if locked_options
 
         schema = { type: 'object' }
         schema[:description] = options[:description] if options[:description]
 
-        properties, required_keys = @properties.to_swagger_doc(stage: stage, locked_scopes: locked_scopes, **user_options)
+        properties, required_keys = @properties.to_swagger_doc(**user_options)
         schema[:properties] = properties unless properties.empty?
         schema[:required] = required_keys unless required_keys.empty?
         schema
@@ -77,6 +78,16 @@ module Meta
 
       def filter_internal(object_value, user_options)
         @properties.filter(object_value, user_options)
+      end
+
+      def merge_user_options(user_options, locked_options)
+        user_options.merge(locked_options) do |key, user_value, locked_value|
+          if key == :scope
+            user_value + locked_value
+          else
+            locked_value
+          end
+        end
       end
     end
   end

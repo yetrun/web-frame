@@ -41,11 +41,11 @@ describe 'Schema Builders' do
         )
       end
 
-      it '即使传递了其他的 scope，调用 filter 仍相当于传递了锁住的 scope' do
+      it '传递了其他的 scope，调用 filter 相当于传递了锁住的 scope 加上传递的 scope' do
         expect(
           scoped_schema.filter(input_value, scope: 'yyy')
         ).to eq(
-          normal_schema.filter(input_value, scope: 'xxx')
+          normal_schema.filter(input_value, scope: ['xxx', 'yyy'])
         )
       end
 

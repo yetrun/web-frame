@@ -65,13 +65,14 @@ module Meta
         end
       end
 
-      def to_swagger_doc(locked_scopes:, stage:, **user_options)
+      def to_swagger_doc(scope: [], stage: nil, **user_options)
+        locked_scopes = scope
         properties = filter_by(stage: stage, user_scope: locked_scopes)
         required_keys = properties.filter do |key, property_schema|
           property_schema.options[:required]
         end.keys
         properties = properties.transform_values do |property_schema |
-          property_schema.to_schema_doc(stage: stage, **user_options)
+          property_schema.to_schema_doc(stage: stage, scope: scope, **user_options)
         end
         [properties, required_keys]
       end

@@ -26,6 +26,31 @@ describe 'Meta Builder' do
         post '/request', JSON.generate(foo: 'foo', bar: 'bar'), { 'CONTENT_TYPE' => 'application/json' }
         expect(JSON.parse(last_response.body)).to eq({ 'foo' => 'foo' })
       end
+
+      context '请求体 lock_scope' do
+        def app
+          entity_class = Class.new(Meta::Entity) do
+            property :foo, scope: 'foo'
+            property :bar, scope: 'bar'
+            property :foobar, scope: ['foo', 'bar']
+          end
+
+          Class.new(Meta::Application) do
+            post '/request' do
+              scope 'foo'
+              request_body ref: entity_class.lock_scope('bar')
+              action do
+                response.body = [JSON.generate(params)]
+              end
+            end
+          end
+        end
+
+        it '实体锁定的 scope 与路由声明的 scope 合并' do
+          post '/request', JSON.generate(foo: 'foo', bar: 'bar', 'foobar' => 'foobar'), { 'CONTENT_TYPE' => 'application/json' }
+          expect(JSON.parse(last_response.body)).to eq({ 'foo' => 'foo', 'bar' => 'bar', 'foobar' => 'foobar' })
+        end
+      end
     end
 
     context '在 namespace 中定义 scope' do
@@ -83,7 +108,6 @@ describe 'Meta Builder' do
       def app
         Class.new(Meta::Application) do
           post '/request' do
-            scope 'foo'
             params do
               param :foo, scope: :post
               param :bar, scope: :put

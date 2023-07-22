@@ -286,5 +286,41 @@ describe 'Meta::SwaggerDocUtil.generate' do
                                                       )
       end
     end
+
+    describe 'route scope' do
+      subject(:doc) do
+        Meta::SwaggerDocUtil.generate(app)
+      end
+
+      subject(:schema) do
+        Meta::SwaggerDocUtil.generate(app)[:paths]['/request'][:post][:requestBody][:content]['application/json'][:schema]
+      end
+
+      subject(:components) do
+        doc[:components]
+      end
+
+      def app
+        Class.new(Meta::Application) do
+          post '/request' do
+            scope 'foo'
+            params do
+              param :foo, scope: 'foo'
+              param :bar, scope: :post
+            end
+          end
+        end
+      end
+
+      it do
+        expect(schema).to eq(
+                            type: 'object',
+                            properties: {
+                              foo: {},
+                              bar: {}
+                            }
+                          )
+      end
+    end
   end
 end

@@ -171,7 +171,7 @@ describe 'openapi' do
         param :foo
         param :bar, scope: 'bar'
         param :baz, scope: 'baz'
-      end.to_schema(scope: 'bar')
+      end.locked(scope: 'bar').to_schema
 
       expect(schema.to_schema_doc(stage: :param)).to eq(
         type: 'object',
@@ -229,6 +229,29 @@ describe 'openapi' do
                 enum: %w[Jim Jack James]
               },
               age: {}
+            }
+          }
+        }
+      )
+    end
+  end
+
+  describe 'to_schema_doc' do
+    it '接受 scope 选项' do
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
+        property :foo, scope: 'foo' do
+          param :foo2, scope: 'foo'
+          param :bar2, scope: 'bar'
+        end
+        property :bar, scope: 'bar'
+      end
+      expect(schema.to_schema_doc(scope: 'foo')).to eq(
+        type: 'object',
+        properties: {
+          foo: {
+            type: 'object',
+            properties: {
+              foo2: {}
             }
           }
         }
