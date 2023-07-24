@@ -1,39 +1,32 @@
 # frozen_string_literal: true
 
+require_relative '../support/scope_matcher'
+
 module Meta
   module JsonSchema
     class ScopingSchema < BaseSchema
-      attr_reader :on, :schema
+      attr_reader :scope_matcher, :schema
 
-      def initialize(required_scope: [], schema:)
-        raise ArgumentError, 'required_scope 选项不可传递 nil' if required_scope.nil?
-        required_scope = [required_scope] unless required_scope.is_a?(Array)
-
-        @on = required_scope
+      def initialize(scope_matcher_options: , schema:)
+        @scope_matcher = ScopeMatcher.new(scope_matcher_options)
         @schema = schema
       end
 
       def scoped(user_scopes)
-        return schema if (on - user_scopes).empty? # required_scopes 应被消耗殆尽
-
-        UnsupportedSchema.new(:on, user_scopes)
+        @scope_matcher.match?(user_scopes) ? schema : unsupported_schema(user_scopes)
       end
 
-      STAGING_SCHEMA_OPTIONS = Utils::KeywordArgs::Builder.build do
-        permit_extras true
+      private
 
-        # TODO: 如果我想把 on 改名为 require_scopes，关键字参数的机制是否支持？
-        key :on, alias_names: [:scope], default: [], normalizer: ->(required_scopes) {
-          required_scopes = [] if required_scopes.nil?
-          required_scopes = [required_scopes] unless required_scopes.is_a?(Array)
-          required_scopes
-        }
+      def unsupported_schema(user_scopes)
+        UnsupportedSchema.new(:scope, user_scopes)
       end
+
       def self.build_from_options(options, build_schema)
-        options = STAGING_SCHEMA_OPTIONS.check(options)
-        required_scope = options.delete(:on) || []
+        options = options.dup
+        scope_matcher_options = options.delete(:scope)
         schema = build_schema.call(options)
-        schema = ScopingSchema.new(required_scope: required_scope, schema: schema) unless required_scope.empty?
+        schema = ScopingSchema.new(scope_matcher_options: scope_matcher_options, schema: schema) if scope_matcher_options
         schema
       end
     end
