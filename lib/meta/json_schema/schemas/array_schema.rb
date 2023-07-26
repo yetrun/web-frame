@@ -25,7 +25,14 @@ module Meta
       private
 
       def filter_internal(array_value, user_options)
-        raise ValidationError.new('参数应该传递一个数组') unless array_value.respond_to?(:each_with_index)
+        if array_value.respond_to?(:each_with_index)
+          array_value = array_value
+        elsif array_value.respond_to?(:to_a)
+          array_value = array_value.to_a
+        else
+          raise ValidationError.new('参数应该传递一个数组或者数组 Like 的对象（实现了 each_with_index 或者 to_a 方法）')
+        end
+
         array_value.each_with_index.map do |item, index|
           begin
             @items.filter(item, user_options)

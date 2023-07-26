@@ -12,6 +12,9 @@ module Meta
       end
 
       def filter(object_value, user_options = {})
+        # 首先，要将 object_value 转化为 ObjectWrapper
+        object_value = JsonObject.wrap(object_value)
+
         # 第一步，根据 user_options[:scope] 需要过滤一些字段
         stage = user_options[:stage]
         # 传递一个数字；因为 scope 不能包含数字，这里传递一个数字，使得凡是配置 scope 的属性都会被过滤
@@ -101,7 +104,7 @@ module Meta
       def resolve_property_value(object_value, name, property_schema)
         if property_schema.value?
           nil
-        elsif object_value.is_a?(Hash) || object_value.is_a?(ObjectWrapper)
+        elsif object_value.is_a?(Hash) || object_value.is_a?(JsonObject)
           object_value.key?(name.to_s) ? object_value[name.to_s] : object_value[name.to_sym]
         else
           raise "不应该还有其他类型了，已经在类型转换中将其转换为 Meta::JsonSchema::ObjectWrapper 了"

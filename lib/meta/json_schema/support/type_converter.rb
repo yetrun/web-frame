@@ -1,31 +1,10 @@
 # frozen_string_literal: true
 
 require 'bigdecimal'
+require_relative 'json_object'
 
 module Meta
   module JsonSchema
-    class ObjectWrapper
-      def initialize(target)
-        @target = target
-      end
-
-      def __target__
-        @target
-      end
-
-      def key?(key)
-        @target.respond_to?(key)
-      end
-
-      def [](key)
-        @target.__send__(key)
-      end
-
-      def method_missing(method, *args)
-        @target.__send__(method, *args)
-      end
-    end
-
     module TypeConverter
       # 定义客户类型对应的 Ruby 类型
       @definity_types = {
@@ -34,7 +13,7 @@ module Meta
         'number' => [Integer, Float, BigDecimal],
         'string' => [String],
         'array' => [Array],
-        'object' => [Hash, ObjectWrapper]
+        'object' => [Hash, JsonObject]
       }
 
       # 定义从 Ruby 类型转化为对应类型的逻辑
@@ -101,7 +80,7 @@ module Meta
             raise TypeConvertError, I18n.t(:'json_schema.errors.type_convert.object', value: value, real_type: I18n.t(:'json_schema.type_names.array'))
           end
 
-          ObjectWrapper.new(value)
+          JsonObject.new(value)
         end
       }
 
