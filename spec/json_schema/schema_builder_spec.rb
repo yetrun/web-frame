@@ -21,81 +21,103 @@ describe 'Schema Builders' do
   end
 
   describe 'ObjectSchemaBuilder' do
-    describe 'lock scope' do
-      let(:builder) do
-        Meta::JsonSchema::ObjectSchemaBuilder.new do
-          property :xxx, scope: 'xxx'
-          property :yyy, scope: 'yyy'
-          property :zzz
-        end
-      end
-      let(:normal_schema) { builder.to_schema }
-      let(:scoped_schema) { builder.lock_scope('xxx').to_schema }
-      let(:input_value) { { 'xxx' => 'xxx', 'yyy' => 'yyy', 'zzz' => 'zzz' } }
-
-      it '当不传递 scope 时，调用 filter 相当于传递了锁住的 scope' do
-        expect(
-          scoped_schema.filter(input_value)
-        ).to eq(
-          normal_schema.filter(input_value, scope: 'xxx')
-        )
-      end
-
-      it '传递了其他的 scope，调用 filter 相当于传递了锁住的 scope 加上传递的 scope' do
-        expect(
-          scoped_schema.filter(input_value, scope: 'yyy')
-        ).to eq(
-          normal_schema.filter(input_value, scope: ['xxx', 'yyy'])
-        )
-      end
-
-      context '定义更深层次' do
-        let(:builder) {
+    describe '#locked' do
+      describe 'lock scope' do
+        let(:builder) do
           Meta::JsonSchema::ObjectSchemaBuilder.new do
             property :xxx, scope: 'xxx'
             property :yyy, scope: 'yyy'
-            property :zzz do
-              property :xx, scope: 'xxx'
-              property :yy, scope: 'yyy'
-            end
+            property :zzz
           end
-        }
-        let(:input_value) { { 'xxx' => 'xxx', 'yyy' => 'yyy', 'zzz' => { 'xx' => 'xx', 'yy' => 'yy' } } }
+        end
+        let(:normal_schema) { builder.to_schema }
+        let(:scoped_schema) { builder.lock_scope('xxx').to_schema }
+        let(:input_value) { { 'xxx' => 'xxx', 'yyy' => 'yyy', 'zzz' => 'zzz' } }
 
-        it '对内部模块仍然有用' do
+        it '当不传递 scope 时，调用 filter 相当于传递了锁住的 scope' do
           expect(
             scoped_schema.filter(input_value)
           ).to eq(
             normal_schema.filter(input_value, scope: 'xxx')
           )
         end
-      end
-    end
-    describe 'lock exclude' do
-      let(:builder) do
-        Meta::JsonSchema::ObjectSchemaBuilder.new do
-          property :xxx
-          property :yyy
+
+        it '传递了其他的 scope，调用 filter 相当于传递了锁住的 scope 加上传递的 scope' do
+          expect(
+            scoped_schema.filter(input_value, scope: 'yyy')
+          ).to eq(
+            normal_schema.filter(input_value, scope: ['xxx', 'yyy'])
+          )
+        end
+
+        context '定义更深层次' do
+          let(:builder) {
+            Meta::JsonSchema::ObjectSchemaBuilder.new do
+              property :xxx, scope: 'xxx'
+              property :yyy, scope: 'yyy'
+              property :zzz do
+                property :xx, scope: 'xxx'
+                property :yy, scope: 'yyy'
+              end
+            end
+          }
+          let(:input_value) { { 'xxx' => 'xxx', 'yyy' => 'yyy', 'zzz' => { 'xx' => 'xx', 'yy' => 'yy' } } }
+
+          it '对内部模块仍然有用' do
+            expect(
+              scoped_schema.filter(input_value)
+            ).to eq(
+              normal_schema.filter(input_value, scope: 'xxx')
+            )
+          end
         end
       end
-      let(:normal_schema) { builder.to_schema }
-      let(:excluded_schema) { builder.lock_exclude([:yyy]).to_schema }
-      let(:input_value) { { 'xxx' => 'xxx', 'yyy' => 'yyy' } }
 
-      it '当不传递 exclude 时，相当于传递了锁住的 exclude' do
-        expect(
-          excluded_schema.filter(input_value)
-        ).to eq(
-          normal_schema.filter(input_value, exclude: [:yyy])
-        )
+      describe 'lock exclude' do
+        let(:builder) do
+          Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :xxx
+            property :yyy
+          end
+        end
+        let(:normal_schema) { builder.to_schema }
+        let(:excluded_schema) { builder.lock_exclude([:yyy]).to_schema }
+        let(:input_value) { { 'xxx' => 'xxx', 'yyy' => 'yyy' } }
+
+        it '当不传递 exclude 时，相当于传递了锁住的 exclude' do
+          expect(
+            excluded_schema.filter(input_value)
+          ).to eq(
+            normal_schema.filter(input_value, exclude: [:yyy])
+          )
+        end
+
+        it '当传递了 exclude 时，仍相当于传递了锁住的 exclude' do
+          expect(
+            excluded_schema.filter(input_value, exclude: [:xxx])
+          ).to eq(
+            normal_schema.filter(input_value, exclude: [:yyy])
+          )
+        end
       end
 
-      it '当传递了 exclude 时，仍相当于传递了锁住的 exclude' do
-        expect(
-          excluded_schema.filter(input_value, exclude: [:xxx])
-        ).to eq(
-          normal_schema.filter(input_value, exclude: [:yyy])
-        )
+      describe '连续 lock' do
+        let(:builder) do
+          Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :xxx, scope: 'xxx'
+            property :yyy, scope: 'yyy'
+            property :zzz
+          end.locked(scope: 'xxx').locked(scope: 'yyy')
+        end
+
+        it '合并 lock 的效果' do
+          schema = builder.to_schema
+          expect(
+            schema.filter({ 'xxx' => 'xxx', 'yyy' => 'yyy', 'zzz' => 'zzz' })
+          ).to eq(
+            { xxx: 'xxx', yyy: 'yyy', zzz: 'zzz' }
+          )
+        end
       end
     end
 

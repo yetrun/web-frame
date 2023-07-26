@@ -5,6 +5,30 @@ require_relative '../schemas/properties'
 module Meta
   module JsonSchema
     class ObjectSchemaBuilder
+      module LockedMethodAlias
+        # 我在这里说明一下 lock_scope 的逻辑。
+        # 1. lock_scope 实际上是将 scope 传递到当前的 ObjectSchema 和它的子 Schema 中。
+        # 2. lock_scope 会叠加，也就是如果子 schema 也有 lock_scope，那么子 Schema 会将两个 Schema 合并起来。
+        # 3. 调用 filter(scope:) 和 to_schema_doc(scope:) 时，可以传递 scope 参数，这个 scope 遇到 lock_scope 时会合并。
+        # 4. 这也就是说，在路由级别定义的 scope 宏会传递到下面的 Schema 中去。
+        def add_scope(scope)
+          lock_scope(scope)
+        end
+
+        def lock(key, value)
+          locked(key => value)
+        end
+
+        def method_missing(method, *args)
+          if method =~ /^lock_(\w+)$/
+            key = Regexp.last_match(1)
+            lock(key.to_sym, *args)
+          else
+            super
+          end
+        end
+      end
+
       def initialize(options = {}, &)
         raise 'type 选项必须是 object' if !options[:type].nil? && options[:type] != 'object'
 
@@ -59,13 +83,10 @@ module Meta
         ObjectSchema.new(properties: @properties, options: @options, locked_options: locked_options, schema_name_resolver: @schema_name_resolver)
       end
 
-      def lock(key, value)
-        locked(key => value)
-      end
-
       def locked(options)
         Locked.new(self, options)
       end
+      include LockedMethodAlias
 
       private
 
@@ -77,29 +98,24 @@ module Meta
         (options[:type] == 'object' || block) && (options[:properties] || block)
       end
 
-      def method_missing(method, *args)
-        if method =~ /^lock_(\w+)$/
-          key = Regexp.last_match(1)
-          lock(key.to_sym, *args)
-        else
-          super
-        end
-      end
-
       class Locked
-        attr_reader :builder, :locked_options
+        attr_reader :object_schema_builder, :locked_options
 
         def initialize(builder, locked_options)
-          @builder = builder
-          @locked_options = locked_options
+          @object_schema_builder = builder
+          @locked_options = ObjectSchema::USER_OPTIONS_CHECKER.check(locked_options)
         end
 
-        # 当调用 Entity.locked 方法后，生成 schema 的方法会掉到这里面来。
-        # 在生成 schema 时，locked_options 会覆盖；当生成 schema 文档时，由于缺失 schema_name 的
-        # 信息，故而 schema_name 相关的影响就消失不见了。
         def to_schema
-          builder.to_schema(locked_options)
+          object_schema_builder.to_schema(locked_options)
         end
+
+        def locked(options)
+          options = ObjectSchema::USER_OPTIONS_CHECKER.check(options)
+          options = ObjectSchema.merge_user_options(locked_options, options)
+          Locked.new(self.object_schema_builder, options)
+        end
+        include LockedMethodAlias
       end
     end
   end

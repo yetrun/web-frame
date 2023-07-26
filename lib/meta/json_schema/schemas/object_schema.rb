@@ -5,7 +5,10 @@ require_relative '../../utils/kwargs/check'
 module Meta
   module JsonSchema
     class ObjectSchema < BaseSchema
-      attr_reader :properties, :locked_options
+      attr_reader :properties
+      # 只有 ObjectSchema 对象才有 locked_options，因为 locked_options 多是用来锁定属性的行为的，包括：
+      # scope:、discard_missing:、exclude: 等
+      attr_reader :locked_options
 
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         permit_extras true
@@ -39,7 +42,7 @@ module Meta
       def filter(object_value, user_options = {})
         # 合并 user_options
         user_options = USER_OPTIONS_CHECKER.check(user_options)
-        user_options = merge_user_options(user_options, locked_options) if locked_options
+        user_options = self.class.merge_user_options(user_options, locked_options) if locked_options
         super
       end
 
@@ -48,14 +51,15 @@ module Meta
         ObjectSchema.new(properties: self.properties.merge(properties))
       end
 
-      def resolve_name(stage)
+      def resolve_name(stage, user_scope)
         locked_scopes = (locked_options || {})[:scope] || []
-        @schema_name_resolver.call(stage, locked_scopes)
+        scope = user_scope + locked_scopes
+        @schema_name_resolver.call(stage, scope)
       end
 
       def to_schema_doc(user_options = {})
         user_options = USER_OPTIONS_CHECKER.check(user_options)
-        user_options = merge_user_options(user_options, locked_options) if locked_options
+        user_options = self.class.merge_user_options(user_options, locked_options) if locked_options
 
         schema = { type: 'object' }
         schema[:description] = options[:description] if options[:description]
@@ -80,7 +84,7 @@ module Meta
         @properties.filter(object_value, user_options)
       end
 
-      def merge_user_options(user_options, locked_options)
+      def self.merge_user_options(user_options, locked_options)
         user_options.merge(locked_options) do |key, user_value, locked_value|
           if key == :scope
             user_value + locked_value
