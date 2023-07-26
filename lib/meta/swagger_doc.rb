@@ -5,7 +5,7 @@ module Meta
     class << self
       def generate(application, info: {}, servers: [])
         paths_and_routes = get_paths_and_routes!(application)
-        return generate_from_paths_and_routes(paths_and_routes, info: info, servers: servers)
+        generate_from_paths_and_routes(paths_and_routes, info: info, servers: servers)
       end
 
       def generate_from_paths_and_routes(paths_and_routes, info: {}, servers: [])
@@ -60,29 +60,6 @@ module Meta
         end
 
         store_routes
-      end
-    end
-
-    class Path
-      def initialize(parts = [])
-        @parts = parts.freeze
-      end
-
-      def append(part)
-        part = part[1..-1] if part.start_with?('/')
-        parts = part.split('/')
-
-        self.class.new(@parts + parts)
-      end
-
-      def to_s
-        '/' + @parts.join('/')
-      end
-
-      def self.from_string(path)
-        path = path[1..-1] if path.start_with?('/')
-        parts = path.split('/')
-        self.class.new(parts)
       end
     end
   end

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'parameters'
+require_relative 'responses'
 
 module Meta
   class Metadata
@@ -70,7 +71,7 @@ module Meta
       @tags = tags
       @parameters = parameters.is_a?(Parameters) ? parameters : Parameters.new(parameters)
       @request_body = request_body
-      @responses = responses || {} # || { 204 => nil }
+      @responses = responses.is_a?(Responses) ? responses : Responses.new(responses)
       @scope = scope
     end
 
@@ -100,16 +101,7 @@ module Meta
         end
       end
 
-      operation_object[:responses] = responses.transform_values do |schema|
-        {
-          description: '', # description 属性必须存在
-          content: schema ? {
-            'application/json' => {
-              schema: schema.to_schema_doc(stage: :render, scope: self.scope + scope, schemas: schemas)
-            }
-          } : nil
-        }.compact
-      end unless responses.empty?
+      operation_object[:responses] = responses.to_swagger_doc(schemas, scope: self.scope + scope)
 
       operation_object.compact
     end
