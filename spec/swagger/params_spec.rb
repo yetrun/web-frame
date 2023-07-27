@@ -254,7 +254,7 @@ describe 'Meta::SwaggerDocUtil.generate' do
 
       def app
         user_entity = Class.new(Meta::Entity) do
-          schema_name 'UserParams'
+          schema_name 'User'
 
           property :name, type: 'string'
           property :age, type: 'integer'
@@ -270,20 +270,20 @@ describe 'Meta::SwaggerDocUtil.generate' do
 
       it do
         expect(schema).to eq(
-                            type: 'object',
-                            properties: {
-                              user: {
-                                '$ref': '#/components/schemas/UserParams'
-                              }
-                            }
-                          )
-        expect(components[:schemas]['UserParams']).to eq(
-                                                        type: 'object',
-                                                        properties: {
-                                                          name: { type: 'string' },
-                                                          age: { type: 'integer' }
-                                                        }
-                                                      )
+          type: 'object',
+          properties: {
+            user: {
+              '$ref': '#/components/schemas/UserParams_post'
+            }
+          }
+        )
+        expect(components[:schemas]['UserParams_post']).to eq(
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            age: { type: 'integer' }
+          }
+        )
       end
     end
 

@@ -51,17 +51,17 @@ describe 'schema#to_schema_doc' do
 
       it 'scope: 选项对 ref 的影响' do
         foo_entity = Class.new(Meta::Entity) do
-          schema_name ->(stage, scope) { "FooEntity_#{scope.join('_')}" }
+          schema_name 'FooEntity'
 
           property :foo2, scope: 'foo'
         end
         bar_entity = Class.new(Meta::Entity) do
-          schema_name ->(stage, scope) { "BarEntity_#{scope.join('_')}" }
+          schema_name 'BarEntity'
 
           property :bar2, scope: 'bar'
         end
         baz_entity = Class.new(Meta::Entity) do
-          schema_name ->(stage, scope) { "BazEntity_#{scope.join('_')}" }
+          schema_name 'BazEntity'
 
           property :foo, ref: foo_entity
           property :bar, ref: bar_entity
@@ -73,7 +73,7 @@ describe 'schema#to_schema_doc' do
           property :baz, ref: baz_entity
         end
         schemas = {}
-        schema.to_schema_doc(scope: ['foo', 'bar', 'baz'], schemas: schemas)
+        schema.to_schema_doc(scope: ['foo', 'bar', 'baz'], schemas: schemas, stage: :render)
 
         expect(schemas.keys).to eq(['FooEntity_foo_bar_baz', 'BarEntity_foo_bar_baz', 'BazEntity_foo_bar_baz'])
       end
@@ -102,7 +102,7 @@ describe 'schema#to_schema_doc' do
         end
 
         it '正确生成 schema 文档不报错' do
-          entity.to_schema.to_schema_doc(schemas: {})
+          entity.to_schema.to_schema_doc(schemas: {}, stage: :render)
         end
       end
     end
@@ -113,7 +113,7 @@ describe 'schema#to_schema_doc' do
       context 'using: Entity' do
         let(:user_entity) do
           Class.new(Meta::Entity) do
-            schema_name param: 'UserParams', render: 'UserEntity'
+            schema_name 'UserEntity'
 
             property :name
             property :age
@@ -188,11 +188,11 @@ describe 'schema#to_schema_doc' do
         context '选项中写有 one_of' do
           let(:schema) do
             entity_one = Class.new(Meta::Entity) do
-              schema_name param: 'EntityOne', render: 'EntityOne'
+              schema_name 'One'
               property :one
             end
             entity_two = Class.new(Meta::Entity) do
-              schema_name param: 'EntityTwo', render: 'EntityTwo'
+              schema_name 'Two'
               property :two
             end
 
@@ -212,10 +212,10 @@ describe 'schema#to_schema_doc' do
                   type: 'object',
                   oneOf: [
                     {
-                      '$ref': '#/components/schemas/EntityOne'
+                      '$ref': '#/components/schemas/OneEntity'
                     },
                     {
-                      '$ref': '#/components/schemas/EntityTwo'
+                      '$ref': '#/components/schemas/TwoEntity'
                     }
                   ]
                 }

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../utils/kwargs/check'
+require_relative 'named_properties'
 
 module Meta
   module JsonSchema
@@ -20,22 +21,24 @@ module Meta
         }
       end
 
-      def initialize(properties: nil, options: {}, locked_options: {}, schema_name_resolver: proc { nil })
+      def initialize(properties:, options: {}, locked_options: {})
+        raise ArgumentError, 'properties 必须是 Properties 实例' unless properties.is_a?(Properties)
+
         super(options)
 
         @properties = properties || Properties.new({}) # property 包含 stage，stage 包含 scope、schema
         @properties = Properties.new(@properties) if @properties.is_a?(Hash)
         @locked_options = USER_OPTIONS_CHECKER.check(locked_options || {})
-        @schema_name_resolver = schema_name_resolver || proc { nil }
       end
 
       # 复制一个新的 ObjectSchema，只有 options 不同
       def dup(options)
+        raise UnsupportedError, 'dup 不应该再执行了'
+
         self.class.new(
           properties: properties,
           options: options,
           locked_options: locked_options,
-          schema_name_resolver: @schema_name_resolver
         )
       end
 
@@ -49,13 +52,27 @@ module Meta
       # 合并其他的属性，并返回一个新的 ObjectSchema. 注意，这个方法会丢弃 ObjectSchema 原本的 options、locked_options 等，
       # 只保留了合并后的 properties.
       def merge_other_properties(properties)
+        raise UnsupportedError, 'merge_other_properties 不应该再执行了'
+
         ObjectSchema.new(properties: self.properties.merge(properties))
       end
 
+      def naming?
+        properties.is_a?(NamedProperties)
+      end
+
       def resolve_name(stage, user_scope)
+        # 先合成外面传进来的 scope
         locked_scopes = (locked_options || {})[:scope] || []
         scope = user_scope + locked_scopes
-        @schema_name_resolver.call(stage, scope)
+
+        # 再根据 stage 和 scope 生成为当前的 Schema 生成一个合适的名称，要求保证唯一性
+        stage = :render if stage.nil?
+        schema_name = properties.schema_name
+        schema_name += 'Params' if stage == :param
+        schema_name += 'Entity' if stage == :render
+        schema_name += "_#{scope.join('_')}" unless scope.empty?
+        schema_name
       end
 
       def to_schema_doc(user_options = {})

@@ -47,23 +47,10 @@ module Meta
         instance_exec(&) if block_given?
       end
 
-      # 设置 schema_name.
-      #
-      # 一、可以传递一个块，该块会接收 locked_scope 参数，需要返回一个带有 param 和 render 键的 Hash.
-      # 二、可以传递一个 Hash，它包含 param 和 render 键。
-      # 三、可以传递一个字符串。
-      def schema_name(schema_name_resolver)
-        if schema_name_resolver.is_a?(Proc)
-          @schema_name_resolver = schema_name_resolver
-        elsif schema_name_resolver.is_a?(Hash)
-          @schema_name_resolver = proc { |stage, locked_scopes| schema_name_resolver[stage] }
-        elsif schema_name_resolver.is_a?(String)
-          @schema_name_resolver = proc { |stage, locked_scopes| schema_name_resolver }
-        elsif schema_name_resolver.nil?
-          @schema_name_resolver = proc { nil }
-        else
-          raise TypeError, "schema_name_resolver 必须是一个 Proc、Hash 或 String，当前是：#{schema_name_resolver.class}"
-        end
+      def schema_name(schema_base_name)
+        raise TypeError, "schema_base_name 必须是一个 String，当前是：#{schema_base_name.class}" unless schema_base_name.is_a?(String)
+
+        @schema_name = schema_base_name
       end
 
       def property(name, options = {}, &block)
@@ -80,7 +67,8 @@ module Meta
       end
 
       def to_schema(locked_options = nil)
-        ObjectSchema.new(properties: @properties, options: @options, locked_options: locked_options, schema_name_resolver: @schema_name_resolver)
+        properties = @schema_name ? NamedProperties.new(@properties, @schema_name) : Properties.new(@properties)
+        ObjectSchema.new(properties: properties, options: @options, locked_options: locked_options)
       end
 
       def locked(options)

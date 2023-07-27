@@ -20,6 +20,8 @@ module Meta
       end
 
       def to_schema_doc(user_options)
+        raise '引用的 ObjectSchema 没有包含命名逻辑，无法生成文档' unless object_schema.naming?
+
         schema_name = object_schema.resolve_name(user_options[:stage], user_options[:scope])
 
         # 首先将 Schema 写进 schemas 选项中去
