@@ -109,8 +109,8 @@ describe 'Meta Builder' do
         Class.new(Meta::Application) do
           post '/request' do
             params do
-              param :foo, scope: :post
-              param :bar, scope: :put
+              param :foo, scope: '$post'
+              param :bar, scope: '$put'
             end
             action do
               response.body = [JSON.generate(params)]

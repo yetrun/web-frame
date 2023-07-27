@@ -39,7 +39,7 @@ module Meta
     end
 
     def generate_operation_doc(schemas)
-      meta.generate_operation_doc(schemas, scope: [method])
+      meta.generate_operation_doc(schemas, scope: ["$#{method}"])
     end
   end
 end

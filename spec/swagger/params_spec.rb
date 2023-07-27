@@ -306,7 +306,7 @@ describe 'Meta::SwaggerDocUtil.generate' do
             scope 'foo'
             params do
               param :foo, scope: 'foo'
-              param :bar, scope: :post
+              param :bar, scope: '$post'
             end
           end
         end
@@ -314,12 +314,12 @@ describe 'Meta::SwaggerDocUtil.generate' do
 
       it do
         expect(schema).to eq(
-                            type: 'object',
-                            properties: {
-                              foo: {},
-                              bar: {}
-                            }
-                          )
+          type: 'object',
+          properties: {
+            foo: {},
+            bar: {}
+          }
+        )
       end
     end
   end

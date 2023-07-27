@@ -17,7 +17,7 @@ module Meta
           execution.params(:raw),
           **Meta.config.json_schema_user_options,
           **Meta.config.json_schema_param_stage_user_options,
-          **{ execution: execution, stage: :param, scope: @scope.concat([method]), discard_missing: discard_missing }.compact
+          **{ execution: execution, stage: :param, scope: @scope.concat(["$#{method}"]), discard_missing: discard_missing }.compact
         )
       rescue JsonSchema::ValidationErrors => e
         raise Errors::ParameterInvalid.new(e.errors)
