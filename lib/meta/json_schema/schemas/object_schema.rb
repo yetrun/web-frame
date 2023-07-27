@@ -11,14 +11,17 @@ module Meta
       # scope:、discard_missing:、exclude: 等
       attr_reader :locked_options
 
+      # TODO: 将 filter 和 to_schema_doc 的 user_options 和 locked_options 区分
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
-        permit_extras true
-
+        key :stage
         key :scope, normalizer: ->(value) {
           raise ArgumentError, 'scope 选项不可传递 nil' if value.nil?
           value = [value] unless value.is_a?(Array)
           value
         }
+        key :discard_missing, :exclude, :extra_properties, :type_conversion, :validation
+        key :execution, :user_data, :object_value
+        key :schema_docs_mapping, :defined_scopes_mapping
       end
 
       def initialize(properties:, options: {}, locked_options: {})
@@ -49,29 +52,20 @@ module Meta
         super
       end
 
-      # 合并其他的属性，并返回一个新的 ObjectSchema. 注意，这个方法会丢弃 ObjectSchema 原本的 options、locked_options 等，
-      # 只保留了合并后的 properties.
-      def merge_other_properties(properties)
-        raise UnsupportedError, 'merge_other_properties 不应该再执行了'
-
-        ObjectSchema.new(properties: self.properties.merge(properties))
-      end
-
       def naming?
         properties.is_a?(NamedProperties)
       end
 
       def resolve_name(stage, user_scope)
+        raise ArgumentError, 'stage 不能为 nil' if stage.nil?
+
         # 先合成外面传进来的 scope
         locked_scopes = (locked_options || {})[:scope] || []
         scope = user_scope + locked_scopes
 
         # 再根据 stage 和 scope 生成为当前的 Schema 生成一个合适的名称，要求保证唯一性
-        stage = :render if stage.nil?
-        schema_name = properties.schema_name
-        schema_name += 'Params' if stage == :param
-        schema_name += 'Entity' if stage == :render
-        schema_name += "_#{scope.join('_')}" unless scope.empty?
+        schema_name = properties.schema_name(stage)
+        schema_name += "__#{scope.join('__')}" unless scope.empty? # TODO: 用双下划线
         schema_name
       end
 

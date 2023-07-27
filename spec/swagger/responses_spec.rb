@@ -126,11 +126,11 @@ describe 'Meta::SwaggerDocUtil.generate' do
         type: 'object',
         properties: {
           user: {
-            '$ref': '#/components/schemas/UserEntity_get_bar'
+            '$ref': '#/components/schemas/UserEntity__bar'
           }
         }
       )
-      expect(components[:schemas]['UserEntity_get_bar']).to eq(
+      expect(components[:schemas]['UserEntity__bar']).to eq(
         type: 'object',
         properties: {
           foo: {},
@@ -173,11 +173,11 @@ describe 'Meta::SwaggerDocUtil.generate' do
         type: 'object',
         properties: {
           user: {
-            '$ref': '#/components/schemas/UserEntity_get'
+            '$ref': '#/components/schemas/UserEntity'
           }
         }
       )
-      expect(components[:schemas]['UserEntity_get']).to eq(
+      expect(components[:schemas]['UserEntity']).to eq(
         type: 'object',
         properties: {
           name: { type: 'string' },
@@ -221,11 +221,11 @@ describe 'Meta::SwaggerDocUtil.generate' do
         type: 'object',
         properties: {
           user: {
-            '$ref': '#/components/schemas/TheEntity_get_bar'
+            '$ref': '#/components/schemas/TheEntity__bar'
           }
         }
       )
-      expect(components[:schemas]['TheEntity_get_bar']).to eq(
+      expect(components[:schemas]['TheEntity__bar']).to eq(
         type: 'object',
         properties: {
           foo: {},

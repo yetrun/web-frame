@@ -3,6 +3,8 @@
 module Meta
   module JsonSchema
     class ArraySchema < BaseSchema
+      extend Forwardable
+
       attr_reader :items
 
       def initialize(items, options = {})
@@ -21,6 +23,8 @@ module Meta
         schema[:description] = stage_options[:description] if stage_options[:description]
         schema
       end
+
+      def_delegator :@items, :defined_scopes
 
       private
 

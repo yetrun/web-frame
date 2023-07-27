@@ -11,6 +11,7 @@ module Meta
         @properties = properties
       end
 
+      # user_options 包括 stage, scope, extra_properties, discard_missing, exclude、execution、user_data
       def filter(object_value, user_options = {})
         # 首先，要将 object_value 转化为 ObjectWrapper
         object_value = JsonObject.wrap(object_value)
@@ -68,6 +69,7 @@ module Meta
         end
       end
 
+      # user_options 包括 stage, scope, schema_docs_mapping, defined_scopes_mapping
       def to_swagger_doc(scope: [], stage: nil, **user_options)
         locked_scopes = scope
         properties = filter_by(stage: stage, user_scope: locked_scopes)
@@ -81,7 +83,7 @@ module Meta
       end
 
       # 程序中有些地方用到了这三个方法
-      def_delegators :@properties, :empty?, :key?, :[]
+      def_delegators :@properties, :empty?, :key?, :[], :each
 
       def merge(properties)
         self.class.new(@properties.merge(properties.instance_eval { @properties }))

@@ -10,7 +10,7 @@ module Meta
             final_options[:parameters] = options1[:parameters].merge(options2[:parameters])
           end
           if options1[:request_body].is_a?(Meta::JsonSchema::ObjectSchema) && options2[:request_body].is_a?(Meta::JsonSchema::ObjectSchema)
-            final_options[:request_body] = options1[:request_body].merge_other_properties(options2[:request_body].properties)
+            final_options[:request_body] = options1[:request_body].properties.merge(options2[:request_body].properties)
           end
           if options1[:responses] && options2[:responses]
             final_options[:responses] = options1[:responses].merge(options2[:responses])

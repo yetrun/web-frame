@@ -16,6 +16,10 @@ module Meta
         @scope_matcher.match?(user_scopes) ? schema : unsupported_schema(user_scopes)
       end
 
+      def defined_scopes(**kwargs)
+        scope_matcher.defined_scopes
+      end
+
       private
 
       def unsupported_schema(user_scopes)

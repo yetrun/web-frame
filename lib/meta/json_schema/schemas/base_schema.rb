@@ -103,6 +103,10 @@ module Meta
         self
       end
 
+      def defined_scopes(stage:, defined_scopes_mapping:)
+        []
+      end
+
       # 执行 if: 选项，返回 true 或 false
       def if?(user_options)
         return true if options[:if].nil?
@@ -123,7 +127,8 @@ module Meta
       #
       # 选项：
       # - stage: 传递 :param 或 :render
-      # - schemas: 用于保存已经生成的 Schema
+      # - schema_docs_mapping: 用于保存已经生成的 Schema
+      # - defined_scopes_mapping: 用于缓存已经定义的 scopes
       # - presenter: 兼容 Grape 框架的实体类
       def to_schema_doc(**user_options)
         return Presenters.to_schema_doc(options[:presenter], options) if options[:presenter]

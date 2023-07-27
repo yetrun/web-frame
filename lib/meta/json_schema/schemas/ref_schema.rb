@@ -22,18 +22,36 @@ module Meta
       def to_schema_doc(user_options)
         raise '引用的 ObjectSchema 没有包含命名逻辑，无法生成文档' unless object_schema.naming?
 
-        schema_name = object_schema.resolve_name(user_options[:stage], user_options[:scope])
-
-        # 首先将 Schema 写进 schemas 选项中去
-        schema_components = user_options[:schemas]
+        # 首先，要求出 defined_scopes
+        defined_scopes = self.defined_scopes(stage: user_options[:stage], defined_scopes_mapping: user_options[:defined_scopes_mapping])
+        # 然后，求出 schema_name
+        schema_name = object_schema.resolve_name(user_options[:stage], user_options[:scope] & defined_scopes)
+        # 接着将 Schema 写进 schemas 选项中去
+        schema_components = user_options[:schema_docs_mapping] || {}
         unless schema_components.key?(schema_name)
           schema_components[schema_name] = nil # 首先设置 schemas 防止出现无限循环
           schema_components[schema_name] = object_schema.to_schema_doc(**user_options) # 原地修改 schemas，无妨
         end
 
-        # 返回的是 $ref 结构
+        # 最后，返回这个 $ref 结构
         { '$ref': "#/components/schemas/#{schema_name}" }
       end
+
+      def defined_scopes(stage:, defined_scopes_mapping:)
+        defined_scopes_mapping ||= {}
+
+        schema_name = object_schema.properties.schema_name(stage)
+        return defined_scopes_mapping[schema_name] if defined_scopes_mapping.key?(schema_name)
+
+        defined_scopes_mapping[schema_name] = []
+        defined_scopes = object_schema.properties.each.map do |name, property|
+          property.defined_scopes(stage: stage, defined_scopes_mapping: defined_scopes_mapping)
+        end.flatten.uniq.sort
+        defined_scopes_mapping[schema_name] = defined_scopes
+        defined_scopes
+      end
+
+      private
 
       # # TODO: 这种带有组合方式的 Schema，让我联想到，每次 BaseSchema 新增一个方法都要在子 Schema 中加一遍，很烦！
       # def defined_scopes

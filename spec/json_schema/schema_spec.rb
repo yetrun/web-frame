@@ -79,25 +79,6 @@ describe 'schema' do
             expect(value.keys).to eq([:a, :b])
           end
         end
-
-        context '在顶层设置 render: false' do
-          it '抛出异常' do
-            schema = Meta::JsonSchema::SchemaBuilderTool.build render: false
-
-            expect {
-              schema.filter('foo', stage: :render)
-            }.to raise_error(Meta::JsonSchema::UnsupportedError)
-          end
-        end
-
-        context '为 render: 设置一些选项' do
-          it '应用 render 的选项' do
-            schema = Meta::JsonSchema::SchemaBuilderTool.build render: { value: ->{ 'bar' }}
-
-            value = schema.filter('foo', stage: :render)
-            expect(value).to eq('bar')
-          end
-        end
       end
 
       describe 'discard_missing:' do

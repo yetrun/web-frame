@@ -89,7 +89,7 @@ module Meta
       operation_object[:parameters] = parameters.to_swagger_doc
 
       if request_body
-        schema = request_body.to_schema_doc(stage: :param, scope: self.scope + scope, schemas: schemas)
+        schema = request_body.to_schema_doc(stage: :param, scope: self.scope + scope, schema_docs_mapping: schemas)
         if schema || true
           operation_object[:requestBody] = {
             content: {

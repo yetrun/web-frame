@@ -9,16 +9,14 @@ module Meta
   module JsonSchema
     # 内含 param_schema, render_schema, default_schema，分别用于不同的阶段。
     class StagingSchema < BaseSchema
-      attr_reader :param_schema, :render_schema, :default_schema
+      attr_reader :param_schema, :render_schema
 
-      def initialize(param_schema:, render_schema:, default_schema:)
+      def initialize(param_schema:, render_schema:)
         raise ArgumentError, 'param_schema 选项重复提交为 StagingSchema' if param_schema.is_a?(StagingSchema)
         raise ArgumentError, 'render_schema 选项重复提交为 StagingSchema' if render_schema.is_a?(StagingSchema)
-        raise ArgumentError, 'default_schema 选项重复提交为 StagingSchema' if default_schema.is_a?(StagingSchema)
 
         @param_schema = param_schema
         @render_schema = render_schema
-        @default_schema = default_schema
       end
 
       def filter(value, user_options = {})
@@ -27,7 +25,7 @@ module Meta
         elsif user_options[:stage] == :render
           render_schema.filter(value, user_options)
         else
-          default_schema.filter(value, user_options)
+          raise ArgumentError, "stage 选项必须是 :param 或 :render"
         end
       end
 
@@ -37,8 +35,12 @@ module Meta
         elsif stage == :render
           render_schema
         else
-          default_schema
+          raise ArgumentError, "stage 选项必须是 :param 或 :render"
         end
+      end
+
+      def defined_scopes(stage:, **kwargs)
+        staged(stage).defined_scopes(stage: stage, **kwargs)
       end
 
       def self.build_from_options(options, build_schema = ->(opts) { BaseSchema.new(opts) })
@@ -48,9 +50,8 @@ module Meta
         else
           StagingSchema.new(
             param_schema: param_opts ? ScopingSchema.build_from_options(param_opts, build_schema) : UnsupportedSchema.new(:stage, :param),
-            render_schema: render_opts ? ScopingSchema.build_from_options(render_opts, build_schema) : UnsupportedSchema.new(:stage, :render),
-            default_schema: ScopingSchema.build_from_options(common_opts, build_schema),
-            )
+            render_schema: render_opts ? ScopingSchema.build_from_options(render_opts, build_schema) : UnsupportedSchema.new(:stage, :render)
+          )
         end
       end
     end

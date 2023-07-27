@@ -73,9 +73,9 @@ describe 'schema#to_schema_doc' do
           property :baz, ref: baz_entity
         end
         schemas = {}
-        schema.to_schema_doc(scope: ['foo', 'bar', 'baz'], schemas: schemas, stage: :render)
+        schema.to_schema_doc(scope: ['foo', 'bar', 'baz'], schema_docs_mapping: schemas, stage: :render)
 
-        expect(schemas.keys).to eq(['FooEntity_foo_bar_baz', 'BarEntity_foo_bar_baz', 'BazEntity_foo_bar_baz'])
+        expect(schemas.keys).to eq(['FooEntity__foo', 'BarEntity__bar', 'BazEntity__foo__bar'])
       end
 
       context 'ref: 引用自身' do
@@ -102,7 +102,7 @@ describe 'schema#to_schema_doc' do
         end
 
         it '正确生成 schema 文档不报错' do
-          entity.to_schema.to_schema_doc(schemas: {}, stage: :render)
+          entity.to_schema.to_schema_doc(schema_docs_mapping: {}, stage: :render)
         end
       end
     end
@@ -130,7 +130,7 @@ describe 'schema#to_schema_doc' do
         describe '参数文档的效果' do
           before {
             @schemas = {}
-            @doc = schema.to_schema_doc(stage: :param, schemas: @schemas)
+            @doc = schema.to_schema_doc(stage: :param, schema_docs_mapping: @schemas)
           }
 
           it '参数文档返回引用的效果' do
@@ -158,7 +158,7 @@ describe 'schema#to_schema_doc' do
         describe '实体文档的效果' do
           before {
             @schemas = {}
-            @doc = schema.to_schema_doc(stage: :render, schemas: @schemas)
+            @doc = schema.to_schema_doc(stage: :render, schema_docs_mapping: @schemas)
           }
 
           it '渲染实体返回引用的效果' do
@@ -203,7 +203,7 @@ describe 'schema#to_schema_doc' do
 
           it '文档返回了参数的引用' do
             schemas = {}
-            doc = schema.to_schema_doc(stage: :render, schemas: schemas)
+            doc = schema.to_schema_doc(stage: :render, schema_docs_mapping: schemas)
 
             expect(doc).to eq(
               type: 'object',
@@ -233,7 +233,7 @@ describe 'schema#to_schema_doc' do
 
           it '文档仅返回 type: "object"' do
             schemas = {}
-            doc = schema.to_schema_doc(stage: :render, schemas: schemas)
+            doc = schema.to_schema_doc(stage: :render, schema_docs_mapping: schemas)
 
             expect(doc).to eq(
               type: 'object',

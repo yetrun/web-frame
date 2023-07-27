@@ -273,11 +273,11 @@ describe 'Meta::SwaggerDocUtil.generate' do
           type: 'object',
           properties: {
             user: {
-              '$ref': '#/components/schemas/UserParams_post'
+              '$ref': '#/components/schemas/UserParams'
             }
           }
         )
-        expect(components[:schemas]['UserParams_post']).to eq(
+        expect(components[:schemas]['UserParams']).to eq(
           type: 'object',
           properties: {
             name: { type: 'string' },

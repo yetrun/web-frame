@@ -21,7 +21,7 @@ module Meta
             description: '', # description 属性必须存在
             content: schema ? {
               'application/json' => {
-                schema: schema.to_schema_doc(stage: :render, scope: scope, schemas: schemas)
+                schema: schema.to_schema_doc(stage: :render, scope: scope, schema_docs_mapping: schemas)
               }
             } : nil
           }.compact

@@ -34,7 +34,7 @@ module Meta
           elsif apply_object_schema?(options, block)
             ObjectSchemaBuilder.new(options, &block).to_schema
           else
-            StagingSchema.build_from_options(options)
+            BaseSchema.new(options)
           end
         end
 

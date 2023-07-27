@@ -21,6 +21,22 @@ describe 'Schema Builders' do
   end
 
   describe 'ObjectSchemaBuilder' do
+    context '一个基本的 filter 动作' do
+      let(:builder) do
+        Meta::JsonSchema::ObjectSchemaBuilder.new do
+          property :xxx, param: false
+          property :yyy, render: false
+          property :zzz
+        end
+      end
+
+      it '必须要传递 stage 选项' do
+        schema = builder.to_schema
+        value = schema.filter({ 'xxx' => 'xxx', 'yyy' => 'yyy', 'zzz' => 'zzz' }, stage: :render)
+        expect(value).to eq({ xxx: 'xxx', zzz: 'zzz' })
+      end
+    end
+
     describe '#locked' do
       describe 'lock scope' do
         let(:builder) do

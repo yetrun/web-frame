@@ -72,7 +72,7 @@ module Meta
       end
 
       def locked(options)
-        Locked.new(self, options)
+        Locked.new(self, **options)
       end
       include LockedMethodAlias
 
@@ -89,9 +89,10 @@ module Meta
       class Locked
         attr_reader :object_schema_builder, :locked_options
 
-        def initialize(builder, locked_options)
+        # locked_options 是用户传递的参数，这个参数会被合并到 object_schema_builder 的 locked_options 中。
+        def initialize(builder, scope: nil, discard_missing: nil, exclude: nil)
           @object_schema_builder = builder
-          @locked_options = ObjectSchema::USER_OPTIONS_CHECKER.check(locked_options)
+          @locked_options = ObjectSchema::USER_OPTIONS_CHECKER.check({ scope: scope, discard_missing: discard_missing, exclude: exclude }.compact)
         end
 
         def to_schema
@@ -101,7 +102,7 @@ module Meta
         def locked(options)
           options = ObjectSchema::USER_OPTIONS_CHECKER.check(options)
           options = ObjectSchema.merge_user_options(locked_options, options)
-          Locked.new(self.object_schema_builder, options)
+          Locked.new(self.object_schema_builder, **options)
         end
         include LockedMethodAlias
       end
