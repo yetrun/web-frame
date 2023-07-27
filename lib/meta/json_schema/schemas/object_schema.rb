@@ -46,7 +46,8 @@ module Meta
         super
       end
 
-      # 合并其他的属性，并返回一个新的 ObjectSchema
+      # 合并其他的属性，并返回一个新的 ObjectSchema. 注意，这个方法会丢弃 ObjectSchema 原本的 options、locked_options 等，
+      # 只保留了合并后的 properties.
       def merge_other_properties(properties)
         ObjectSchema.new(properties: self.properties.merge(properties))
       end
