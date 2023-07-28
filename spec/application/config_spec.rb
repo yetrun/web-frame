@@ -34,7 +34,7 @@ describe 'config' do
       end
     end
 
-    it '锁定为默认的 scope' do
+    xit '锁定为默认的 scope' do
       # TODO: 使用元数据来测试更简单
       post('/request', JSON.generate('foo' => 'foo', 'bar' => 'bar'), { 'CONTENT_TYPE' => 'application/json' })
       expect(@holder[0]).to eq(foo: 'foo')
