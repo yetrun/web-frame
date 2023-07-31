@@ -17,7 +17,7 @@ $ git clone https://github.com/yetrun/web-frame-example.git
 在 Gemfile 中添加：
 
 ```ruby
-gem 'meta-api', '~> 0.0.9' # Meta 框架处于快速开发阶段，引入时应尽量固定版本
+gem 'meta-api', '~> 0.1.0'
 ```
 
 然后在 Ruby 代码中引用：
