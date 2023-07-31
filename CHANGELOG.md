@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.0.10（2023 年 7 月 31 日）
+
+1. 删除 `on:` 选项。
+2. `type_conversion` 为 `false` 时不影响对象和数组类型的转化。
+3. 修复 `ref:` 嵌套造成的文档问题。
+4. 将 HTTP Method 的 scope 添加 `$` 符号前缀，如 `$get`、`$post` 等。
+5. `Meta.config` 去掉了 `default_locked_scope` 的配置项。
+
 ## 0.0.9（2023 年 7 月 22 日）
 
 1. JsonSchema 添加 before:、after: 选项，用于在过滤前后执行一些操作。
