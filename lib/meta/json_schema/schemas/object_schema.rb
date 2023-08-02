@@ -56,16 +56,17 @@ module Meta
         properties.is_a?(NamedProperties)
       end
 
-      def resolve_name(stage, user_scope)
+      def resolve_name(stage, user_scopes, defined_scopes)
         raise ArgumentError, 'stage 不能为 nil' if stage.nil?
 
         # 先合成外面传进来的 scope
         locked_scopes = (locked_options || {})[:scope] || []
-        scope = user_scope + locked_scopes
+        user_scopes = (user_scopes + locked_scopes).uniq
+        scopes = user_scopes & defined_scopes
 
         # 再根据 stage 和 scope 生成为当前的 Schema 生成一个合适的名称，要求保证唯一性
         schema_name = properties.schema_name(stage)
-        schema_name += "__#{scope.join('__')}" unless scope.empty? # TODO: 用双下划线
+        schema_name += "__#{scopes.join('__')}" unless scopes.empty?
         schema_name
       end
 

@@ -25,7 +25,7 @@ module Meta
         # 首先，要求出 defined_scopes
         defined_scopes = self.defined_scopes(stage: user_options[:stage], defined_scopes_mapping: user_options[:defined_scopes_mapping])
         # 然后，求出 schema_name
-        schema_name = object_schema.resolve_name(user_options[:stage], user_options[:scope] & defined_scopes)
+        schema_name = object_schema.resolve_name(user_options[:stage], user_options[:scope], defined_scopes)
         # 接着将 Schema 写进 schemas 选项中去
         schema_components = user_options[:schema_docs_mapping] || {}
         unless schema_components.key?(schema_name)
