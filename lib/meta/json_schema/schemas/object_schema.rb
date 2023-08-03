@@ -11,7 +11,7 @@ module Meta
       # scope:、discard_missing:、exclude: 等
       attr_reader :locked_options
 
-      # TODO: 将 filter 和 to_schema_doc 的 user_options 和 locked_options 区分
+      # stage 和 scope 选项在两个 CHECKER 下都用到了
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         key :stage
         key :scope, normalizer: ->(value) {
@@ -21,6 +21,14 @@ module Meta
         }
         key :discard_missing, :exclude, :extra_properties, :type_conversion, :validation
         key :execution, :user_data, :object_value
+      end
+      TO_SCHEMA_DOC_CHECKER = Utils::KeywordArgs::Builder.build do
+        key :stage
+        key :scope, normalizer: ->(value) {
+          raise ArgumentError, 'scope 选项不可传递 nil' if value.nil?
+          value = [value] unless value.is_a?(Array)
+          value
+        }
         key :schema_docs_mapping, :defined_scopes_mapping
       end
 
@@ -71,7 +79,7 @@ module Meta
       end
 
       def to_schema_doc(user_options = {})
-        user_options = USER_OPTIONS_CHECKER.check(user_options)
+        user_options = TO_SCHEMA_DOC_CHECKER.check(user_options)
         user_options = self.class.merge_user_options(user_options, locked_options) if locked_options
 
         schema = { type: 'object' }
