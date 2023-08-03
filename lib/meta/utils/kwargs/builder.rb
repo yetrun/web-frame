@@ -58,20 +58,20 @@ module Meta
         def initialize(name:, normalizer: DEFAULT_TRANSFORMER, validator: nil, default: nil, alias_names: [])
           @key_name = name
           @consumer_names = [name] + alias_names
-          # TODO: 当且仅当 value 是 nil 时，才使用 default
-          @normalizer = default ? ->(value) { normalizer.call(value || default) } : normalizer
+          @default_value = default
+          @normalizer = normalizer
           @validator = validator
         end
 
         def consume(final_args, args)
           @consumer_names.each do |name|
-            return true if consume_name(final_args, args, name)
+            return if consume_name(final_args, args, name)
           end
-          return false
+
+          final_args[@key_name] = @default_value unless @default_value.nil?
         end
 
         def consume_name(final_args, args, consumer_name)
-          # TODO: default 未起作用
           if args.key?(consumer_name)
             value = @normalizer.call(args.delete(consumer_name))
             @validator.call(value) if @validator

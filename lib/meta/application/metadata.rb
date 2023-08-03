@@ -8,7 +8,8 @@ module Meta
     module ExecutionMethods
       def parse_parameters(execution)
         parameters.filter(execution.request)
-        # TODO: 未捕获 JsonSchema::ValidationErrors 异常
+      rescue JsonSchema::ValidationErrors => e
+        raise Errors::ParameterInvalid.new(e.errors)
       end
 
       def parse_request_body(execution, discard_missing: false)
