@@ -148,6 +148,24 @@ describe 'Schema Builders' do
         expect(value).to eq({ foo: 'foo' })
       end
     end
+
+    describe 'WithCommonOptions' do
+      let(:builder) do
+        builder = Meta::JsonSchema::ObjectSchemaBuilder.new do
+          with_common_options(type: 'number') do
+            property :a
+            property :b
+          end
+        end
+        builder
+      end
+
+      it '必须要传递 stage 选项' do
+        schema = builder.to_schema
+        value = schema.filter({ 'a' => '1', 'b' => '2' }, stage: :render)
+        expect(value).to eq({ a: 1, b: 2 })
+      end
+    end
   end
 
   describe 'options' do

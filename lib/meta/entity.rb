@@ -18,14 +18,8 @@ module Meta
         end
       end
 
-      def_delegators :schema_builder, :property, :param, :expose, :use, :lock, :locked, :schema_name, :to_schema
-
-      def method_missing(method, *args)
-        if method =~ /^lock_(\w+)$/
-          schema_builder.send(method, *args)
-        else
-          super
-        end
+      def method_missing(method, *args, **kwargs, &)
+        schema_builder.send(method, *args, **kwargs, &)
       end
 
       private

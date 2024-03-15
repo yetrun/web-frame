@@ -29,6 +29,43 @@ module Meta
         end
       end
 
+      class Locked
+        attr_reader :object_schema_builder, :locked_options
+
+        # locked_options 是用户传递的参数，这个参数会被合并到 object_schema_builder 的 locked_options 中。
+        def initialize(builder, scope: nil, discard_missing: nil, exclude: nil)
+          @object_schema_builder = builder
+          @locked_options = ObjectSchema::USER_OPTIONS_CHECKER.check({ scope: scope, discard_missing: discard_missing, exclude: exclude }.compact)
+        end
+
+        def to_schema
+          object_schema_builder.to_schema(locked_options)
+        end
+
+        def locked(options)
+          options = ObjectSchema::USER_OPTIONS_CHECKER.check(options)
+          options = ObjectSchema.merge_user_options(locked_options, options)
+          Locked.new(self.object_schema_builder, **options)
+        end
+        include LockedMethodAlias
+      end
+
+      class WithCommonOptions
+        attr_reader :object_schema_builder, :common_options
+
+        def initialize(builder, common_options, &)
+          @object_schema_builder = builder
+          @common_options = common_options
+
+          instance_exec(&) if block_given?
+        end
+
+        def property(name, options = {}, &block)
+          options = common_options.merge(options)
+          object_schema_builder.property(name, options, &block)
+        end
+      end
+
       def initialize(options = {}, &)
         raise 'type 选项必须是 object' if !options[:type].nil? && options[:type] != 'object'
 
@@ -66,6 +103,22 @@ module Meta
         instance_exec(&proc)
       end
 
+      def with_common_options(common_options, &block)
+        WithCommonOptions.new(self, common_options, &block)
+      end
+
+      def scope(scope, options = {}, &)
+        with_common_options(**options, scope: scope, &)
+      end
+
+      def params(options = {}, &block)
+        with_common_options(**options, render: false, &block)
+      end
+
+      def render(options = {}, &block)
+        with_common_options(**options, params: false, &block)
+      end
+
       def to_schema(locked_options = nil)
         properties = @schema_name ? NamedProperties.new(@properties, @schema_name) : Properties.new(@properties)
         ObjectSchema.new(properties: properties, options: @options, locked_options: locked_options)
@@ -84,27 +137,6 @@ module Meta
 
       def apply_object_scope?(options, block)
         (options[:type] == 'object' || block) && (options[:properties] || block)
-      end
-
-      class Locked
-        attr_reader :object_schema_builder, :locked_options
-
-        # locked_options 是用户传递的参数，这个参数会被合并到 object_schema_builder 的 locked_options 中。
-        def initialize(builder, scope: nil, discard_missing: nil, exclude: nil)
-          @object_schema_builder = builder
-          @locked_options = ObjectSchema::USER_OPTIONS_CHECKER.check({ scope: scope, discard_missing: discard_missing, exclude: exclude }.compact)
-        end
-
-        def to_schema
-          object_schema_builder.to_schema(locked_options)
-        end
-
-        def locked(options)
-          options = ObjectSchema::USER_OPTIONS_CHECKER.check(options)
-          options = ObjectSchema.merge_user_options(locked_options, options)
-          Locked.new(self.object_schema_builder, **options)
-        end
-        include LockedMethodAlias
       end
     end
   end
