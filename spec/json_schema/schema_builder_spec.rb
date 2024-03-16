@@ -168,6 +168,54 @@ describe 'Schema Builders' do
     end
   end
 
+  describe 'fragments' do
+    describe 'Meta::JsonSchema::Fragments' do
+      let(:fragments) do
+        Meta::JsonSchema::Fragments.new do
+          fragment :a do
+            property :a
+          end
+          fragment :b do
+            property :b
+          end
+        end
+      end
+
+      specify do
+        schema = fragments[:a, :b]
+        value = schema.filter({ 'a' => 'a', 'b' => 'b' }, stage: :render)
+        expect(value).to eq({ a: 'a', b: 'b' })
+      end
+
+      context '引用了一个错误的 fragment 名' do
+        it '会抛出异常' do
+          expect {
+            fragments[:c]
+          }.to raise_error(ArgumentError)
+        end
+      end
+    end
+
+    describe 'fragments merged into ObjectSchemaBuilder' do
+      let(:builder) do
+        Meta::JsonSchema::ObjectSchemaBuilder.new do
+          fragment :a do
+            property :a
+          end
+          fragment :b do
+            property :b
+          end
+        end
+      end
+
+      specify do
+        schema = builder.fragments(:a, :b)
+        value = schema.filter({ 'a' => 'a', 'b' => 'b' }, stage: :render)
+        expect(value).to eq({ a: 'a', b: 'b' })
+      end
+    end
+  end
+
   describe 'options' do
     describe 'default:' do
       it 'boolean 类型的默认值设置工作正常' do

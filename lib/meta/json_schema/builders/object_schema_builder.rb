@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 require_relative '../schemas/properties'
+require_relative 'fragments'
 
 module Meta
   module JsonSchema
     class ObjectSchemaBuilder
+      extend Forwardable
+
       module LockedMethodAlias
         # 我在这里说明一下 lock_scope 的逻辑。
         # 1. lock_scope 实际上是将 scope 传递到当前的 ObjectSchema 和它的子 Schema 中。
@@ -69,6 +72,8 @@ module Meta
       def initialize(options = {}, &)
         raise 'type 选项必须是 object' if !options[:type].nil? && options[:type] != 'object'
 
+        @_fragments = Fragments.new(self)
+
         @properties = {}
         @required = []
         @validations = {}
@@ -84,10 +89,13 @@ module Meta
         instance_exec(&) if block_given?
       end
 
-      def schema_name(schema_base_name)
-        raise TypeError, "schema_base_name 必须是一个 String，当前是：#{schema_base_name.class}" unless schema_base_name.is_a?(String)
-
-        @schema_name = schema_base_name
+      def schema_name(schema_base_name = nil)
+        if schema_base_name
+          raise TypeError, "schema_base_name 必须是一个 String，当前是：#{schema_base_name.class}" unless schema_base_name.is_a?(String)
+          @schema_name = schema_base_name
+        else
+          @schema_name
+        end
       end
 
       def property(name, options = {}, &block)
@@ -101,6 +109,11 @@ module Meta
       def use(proc)
         proc = proc.to_proc if proc.respond_to?(:to_proc)
         instance_exec(&proc)
+      end
+
+      def_delegators :@_fragments, :fragment, :[]
+      def fragments(*names)
+        @_fragments[*names]
       end
 
       def with_common_options(common_options, &block)
