@@ -102,6 +102,49 @@ describe 'Meta Builder' do
           expect(JSON.parse(last_response.body)).to eq({ 'foo' => 'foo', 'bar' => 'bar' })
         end
       end
+
+      context '实体引用' do
+        let(:entity_class) {
+          Class.new(Meta::Entity) do
+            property :foo, scope: 'foo'
+            property :bar, scope: 'bar'
+          end
+        }
+
+        def app
+          the_entity = entity
+          Class.new(Meta::Application) do
+            post '/request' do
+              scope 'foo'
+
+              params do
+                param :nesting, ref: the_entity
+              end
+              action do
+                response.body = [JSON.generate(params)]
+              end
+            end
+          end
+        end
+
+        context '只引用 entity_class' do
+          let(:entity) { entity_class }
+
+          it '路由中的 scope 与 namespace 的合并' do
+            post '/request', JSON.generate(nesting: { foo: 'foo', bar: 'bar' }), { 'CONTENT_TYPE' => 'application/json' }
+            expect(JSON.parse(last_response.body)['nesting']).to eq({ 'foo' => 'foo' })
+          end
+        end
+
+        context '引用的 entity_class 调用 lock_scope' do
+          let(:entity) { entity_class.lock_scope('bar') }
+
+          it '路由中的 scope 与 namespace 的合并' do
+            post '/request', JSON.generate(nesting: { foo: 'foo', bar: 'bar' }), { 'CONTENT_TYPE' => 'application/json' }
+            expect(JSON.parse(last_response.body)['nesting']).to eq({ 'foo' => 'foo', 'bar' => 'bar' })
+          end
+        end
+      end
     end
 
     context 'HTTP 方法自动定义 scope' do

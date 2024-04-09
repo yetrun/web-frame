@@ -38,6 +38,39 @@ describe 'Schema Builders' do
     end
 
     describe '#locked' do
+      describe 'lock_scope' do
+        it '一个最简单的测试，只过滤指定 scope 的属性' do
+          schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :foo, scope: 'foo'
+            property :bar, scope: 'bar'
+          end.locked(scope: 'foo').to_schema
+
+          value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' })
+          expect(value).to eq({ foo: 'foo' })
+        end
+
+        it '属性未设定 scope 时，始终返回该属性' do
+          schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :foo
+            property :bar, scope: 'bar'
+          end.locked(scope: 'foo').to_schema
+
+          value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' })
+          expect(value).to eq({ foo: 'foo' })
+        end
+
+        it '只要两个 scope 设定相交，即返回该属性' do
+          schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :foo, scope: %w[foo xxx]
+            property :bar, scope: 'bar'
+          end.locked(scope: %w[foo yyy]).to_schema
+
+          value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' })
+          expect(value).to eq({ foo: 'foo' })
+        end
+      end
+
+      # 旧的测试，测试 filter 方法时传递 scope 选项的效果，以后可能不会这样动态传递 scope，这些测试可能会被废弃
       describe 'lock scope' do
         let(:builder) do
           Meta::JsonSchema::ObjectSchemaBuilder.new do
@@ -160,7 +193,7 @@ describe 'Schema Builders' do
         builder
       end
 
-      it '必须要传递 stage 选项' do
+      it '属性都应用 type: "number"' do
         schema = builder.to_schema
         value = schema.filter({ 'a' => '1', 'b' => '2' }, stage: :render)
         expect(value).to eq({ a: 1, b: 2 })

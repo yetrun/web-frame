@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Meta::Entity do
-  describe 'with_common_options' do
+  describe 'scope' do
     let(:entity) do
       Class.new(Meta::Entity) do
         scope :foo do
