@@ -69,12 +69,14 @@ module Meta
         end
       end
 
+      attr_reader :properties
+
       def initialize(options = {}, &)
         raise 'type 选项必须是 object' if !options[:type].nil? && options[:type] != 'object'
 
         @_fragments = Fragments.new(self)
 
-        @properties = {}
+        @properties = {} # 所有的属性已经生成
         @required = []
         @validations = {}
 
@@ -130,6 +132,12 @@ module Meta
 
       def render(options = {}, &block)
         with_common_options(**options, params: false, &block)
+      end
+
+      def merge(schema_builder)
+        schema_builder = schema_builder.schema_builder if schema_builder.respond_to?(:schema_builder)
+
+        @properties.merge!(schema_builder.properties)
       end
 
       def to_schema(locked_options = nil)

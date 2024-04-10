@@ -22,4 +22,21 @@ describe Meta::Entity do
       expect(value).to eq({})
     end
   end
+
+  describe 'merge' do
+    let(:entity) do
+      foo = Class.new(Meta::Entity) do
+        property :foo
+      end
+      Class.new(Meta::Entity) do
+        merge foo
+      end
+    end
+
+    it '过滤 foo 属性' do
+      schema = entity.to_schema
+      value = schema.filter({ 'foo' => 1 })
+      expect(value).to eq(foo: 1)
+    end
+  end
 end
