@@ -30,7 +30,7 @@ module Meta
           next false if exclude && exclude.include?(name)
 
           # 通过 if 选项过滤
-          next false unless property_schema.if?(user_options)
+          next false unless property_schema.if?(object_value, user_options[:execution])
 
           # 默认返回 true
           next true

@@ -108,14 +108,16 @@ module Meta
       end
 
       # 执行 if: 选项，返回 true 或 false
-      def if?(user_options)
-        return true if options[:if].nil?
+      def if?(object_value, execution = nil)
+        if_block = options[:if]
+        return true if if_block.nil?
 
-        execution = user_options[:execution]
+        args_length = if_block.lambda? ? if_block.arity : 1
+        args = args_length > 0 ? [object_value] : []
         if execution
-          execution.instance_exec(&options[:if])
+          execution.instance_exec(*args, &options[:if])
         else
-          options[:if]&.call
+          options[:if]&.call(*args)
         end
       end
 
