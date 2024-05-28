@@ -115,7 +115,7 @@ describe 'Meta::SwaggerDocUtil.generate' do
       Class.new(Meta::Application) do
         get '/user' do
           status(200) do
-            expose :user, using: user_entity.lock_scope(['foo', 'bar'])
+            expose :user, using: user_entity.lock_scope(['bar'])
           end
         end
       end

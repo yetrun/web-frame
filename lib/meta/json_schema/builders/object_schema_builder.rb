@@ -146,6 +146,22 @@ module Meta
       end
 
       def locked(options)
+        defined_scopes_mapping = {}
+        # TODO: 将 properties 搞成 Properties 可以吗？
+        defined_scopes = properties.map do |key, property|
+          property.defined_scopes(stage: :param, defined_scopes_mapping: defined_scopes_mapping)
+        end.flatten.uniq
+
+        user_scopes = options[:scope] || []
+        user_scopes = [user_scopes] unless user_scopes.is_a?(Array)
+
+        # 判断 user_scopes 中提供的局部 scope 是否在 defined_scopes 中
+        local_user_scopes = user_scopes.reject { |scope| scope.start_with?('$') }
+        if (local_user_scopes - defined_scopes).any?
+          extra_scopes = local_user_scopes - defined_scopes
+          raise ArgumentError, "scope #{extra_scopes.join(',')} 未在实体中定义"
+        end
+
         Locked.new(self, **options)
       end
       include LockedMethodAlias

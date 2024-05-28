@@ -43,7 +43,16 @@ module Meta
         codes.each { |code| @meta[:responses][code] = entity_schema }
       end
 
-      [:tags, :title, :description, :scope].each do |method_name|
+      def scope(scope)
+        scope = [scope] unless scope.is_a?(Array)
+        unless scope.all? { |s| s.start_with?('$') }
+          raise ArgumentError, 'namespace 和 route 中声明的 scope 必须是全局 scope（以 $ 开头）'
+        end
+
+        @meta[:scope] = scope
+      end
+
+      [:tags, :title, :description].each do |method_name|
         define_method(method_name) do |value|
           @meta[method_name] = value
         end

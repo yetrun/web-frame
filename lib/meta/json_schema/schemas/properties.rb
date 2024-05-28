@@ -44,6 +44,12 @@ module Meta
           value = resolve_property_value(object_value, name, property_schema)
 
           begin
+            # 如果 property_schema 是 RefSchema，则局部的 scope 不会传递下去
+            if property_schema.is_a?(RefSchema)
+              # 只接受全局的 scope，其以 $ 符合开头
+              new_scopes = user_options[:scope].find_all { |scope| scope.start_with?('$') }
+              user_options = user_options.merge(scope: new_scopes)
+            end
             object[name] = property_schema.filter(value, **user_options, object_value: object_value)
           rescue JsonSchema::ValidationErrors => e
             cause = e.cause || e if cause.nil? # 将第一次出现的错误作为 cause
@@ -66,6 +72,12 @@ module Meta
           end
         else
           raise JsonSchema::ValidationErrors.new(errors)
+        end
+      end
+
+      def defined_scopes(stage:, defined_scopes_mapping:)
+        @properties.each_with_object([]) do |(name, property), defined_scopes|
+          defined_scopes.concat(property.defined_scopes(stage: stage, defined_scopes_mapping: defined_scopes_mapping))
         end
       end
 

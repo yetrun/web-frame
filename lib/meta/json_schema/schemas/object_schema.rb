@@ -64,6 +64,10 @@ module Meta
         properties.is_a?(NamedProperties)
       end
 
+      def defined_scopes(stage:, defined_scopes_mapping:)
+        properties.defined_scopes(stage: stage, defined_scopes_mapping: defined_scopes_mapping)
+      end
+
       def resolve_name(stage, user_scopes, defined_scopes)
         raise ArgumentError, 'stage 不能为 nil' if stage.nil?
 

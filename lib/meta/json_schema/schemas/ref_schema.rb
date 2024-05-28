@@ -40,8 +40,11 @@ module Meta
       def defined_scopes(stage:, defined_scopes_mapping:)
         defined_scopes_mapping ||= {}
 
-        schema_name = object_schema.properties.schema_name(stage)
-        return defined_scopes_mapping[schema_name] if defined_scopes_mapping.key?(schema_name)
+        if object_schema.properties.respond_to?(:schema_name)
+          # 只有命名实体才会被缓存
+          schema_name = object_schema.properties.schema_name(stage)
+          return defined_scopes_mapping[schema_name] if defined_scopes_mapping.key?(schema_name)
+        end
 
         defined_scopes_mapping[schema_name] = []
         defined_scopes = object_schema.properties.each.map do |name, property|

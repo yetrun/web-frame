@@ -303,9 +303,9 @@ describe 'Meta::SwaggerDocUtil.generate' do
       def app
         Class.new(Meta::Application) do
           post '/request' do
-            scope 'foo'
+            scope '$foo'
             params do
-              param :foo, scope: 'foo'
+              param :foo, scope: '$foo'
               param :bar, scope: '$post'
             end
           end

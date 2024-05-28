@@ -89,7 +89,7 @@ module Meta
       end
 
       # 返回能够处理 scope 和 stage 的 schema（可以是 self），否则应返回 UnsupportedStageSchema 或 nil.
-      def find_schema(scope:, stage:)
+      def find_schema(stage:, scope:)
         staged(stage)&.scoped(scope)
       end
 
@@ -103,6 +103,7 @@ module Meta
         self
       end
 
+      # defined_scopes_mapping 是一个 Hash，用于缓存已经计算出的 scopes，用于避免重复计算。其主要针对的是具有命名系统的 Schema，如 Meta::Entity
       def defined_scopes(stage:, defined_scopes_mapping:)
         []
       end

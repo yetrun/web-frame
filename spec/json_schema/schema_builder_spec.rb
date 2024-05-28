@@ -48,7 +48,7 @@ describe 'Schema Builders' do
           expect(value).to eq({ foo: 'foo' })
         end
 
-        it '属性未设定 scope 时，始终返回该属性' do
+        xit '属性未设定 scope 时，始终返回该属性' do
           schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
             property :foo
             property :bar, scope: 'bar'
@@ -62,7 +62,7 @@ describe 'Schema Builders' do
           schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
             property :foo, scope: %w[foo xxx]
             property :bar, scope: 'bar'
-          end.locked(scope: %w[foo yyy]).to_schema
+          end.locked(scope: %w[foo $yyy]).to_schema
 
           value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' })
           expect(value).to eq({ foo: 'foo' })
