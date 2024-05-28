@@ -42,17 +42,6 @@ module Meta
         @locked_options = USER_OPTIONS_CHECKER.check(locked_options || {})
       end
 
-      # 复制一个新的 ObjectSchema，只有 options 不同
-      def dup(options)
-        raise UnsupportedError, 'dup 不应该再执行了'
-
-        self.class.new(
-          properties: properties,
-          options: options,
-          locked_options: locked_options,
-        )
-      end
-
       def filter(object_value, user_options = {})
         # 合并 user_options
         user_options = USER_OPTIONS_CHECKER.check(user_options)

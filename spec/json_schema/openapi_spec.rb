@@ -346,34 +346,5 @@ describe 'schema#to_schema_doc' do
         end
       end
     end
-
-    describe 'fragments' do
-      it '过滤掉 scope 不匹配的字段' do
-        builder = Meta::JsonSchema::ObjectSchemaBuilder.new do
-          schema_name 'XXX'
-
-          fragment :foo do
-            property :foo
-          end
-
-          fragment :bar do
-            property :bar
-          end
-        end
-
-        schema = Class.new(Meta::Entity) do
-          property :nesting, ref: builder[:foo]
-        end.to_schema
-
-        expect(schema.to_schema_doc(stage: :render)).to eq(
-                                                          type: 'object',
-                                                          properties: {
-                                                            nesting: {
-                                                              '$ref': '#/components/schemas/XXX__fooEntity'
-                                                            }
-                                                          }
-                                                        )
-      end
-    end
   end
 end

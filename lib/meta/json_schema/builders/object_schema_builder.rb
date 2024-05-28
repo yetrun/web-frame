@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../schemas/properties'
-require_relative 'fragments'
 
 module Meta
   module JsonSchema
@@ -74,8 +73,6 @@ module Meta
       def initialize(options = {}, &)
         raise 'type 选项必须是 object' if !options[:type].nil? && options[:type] != 'object'
 
-        @_fragments = Fragments.new(self)
-
         @properties = {} # 所有的属性已经生成
         @required = []
         @validations = {}
@@ -111,11 +108,6 @@ module Meta
       def use(proc)
         proc = proc.to_proc if proc.respond_to?(:to_proc)
         instance_exec(&proc)
-      end
-
-      def_delegators :@_fragments, :fragment, :[]
-      def fragments(*names)
-        @_fragments[*names]
       end
 
       def with_common_options(common_options, &block)
