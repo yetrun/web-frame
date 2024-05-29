@@ -16,35 +16,69 @@ describe 'Scope 的场景测试' do
         value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' })
         expect(value).to eq({ foo: 'foo' })
       end
+    end
 
-      it 'Locked scope 不会递归到深层级' do
-        entity_class = Class.new(Meta::Entity) do
-          property :foo, scope: 'foo'
-          property :nesting do
+    context '深层定义' do
+      context '生层级定义相同的 scope' do
+        it '作用到深层级' do
+          entity_class = Class.new(Meta::Entity) do
+            property :foo, scope: 'foo'
+            property :nesting do
+              property :foo2, scope: 'foo'
+            end
+          end
+          schema = entity_class.locked(scope: 'foo').to_schema
+
+          value = schema.filter({ 'foo' => 'foo', 'nesting' => { 'foo2' => 'foo2' } })
+          expect(value).to eq({ foo: 'foo', nesting: { foo2: 'foo2' } })
+        end
+
+        it '不会作用给 ref' do
+          inner_entity_class = Class.new(Meta::Entity) do
             property :foo2, scope: 'foo'
           end
-        end
-        schema = entity_class.locked(scope: 'foo').to_schema
+          entity_class = Class.new(Meta::Entity) do
+            property :foo, scope: 'foo'
+            property :nesting, ref: inner_entity_class
+          end
+          schema = entity_class.locked(scope: 'foo').to_schema
 
-        value = schema.filter({ 'foo' => 'foo', 'nesting' => { 'foo2' => 'foo2' } })
-        expect(value).to eq({ foo: 'foo', nesting: { foo2: 'foo2' } })
+          value = schema.filter({ 'foo' => 'foo', 'nesting' => { 'foo2' => 'foo2' } })
+          expect(value).to eq({ foo: 'foo', nesting: {} })
+        end
       end
 
-      it 'Locked scope 不会递归给 ref' do
-        inner_entity_class = Class.new(Meta::Entity) do
-          property :foo2, scope: 'foo'
+      context '深层级定义不同的 scope' do
+        let(:user_entity) do
+          Class.new(Meta::Entity) do
+            property :profile, scope: 'admin' do
+              property :age
+              property :brief, scope: 'detail'
+            end
+          end
         end
-        entity_class = Class.new(Meta::Entity) do
-          property :foo, scope: 'foo'
-          property :nesting, ref: inner_entity_class
-        end
-        schema = entity_class.locked(scope: 'foo').to_schema
 
-        value = schema.filter({ 'foo' => 'foo', 'nesting' => { 'foo2' => 'foo2' } })
-        expect(value).to eq({ foo: 'foo', nesting: {} })
+        let(:value) do
+          { 'profile' => { 'age' => 18, 'brief' => 'brief' } }
+        end
+
+        it '传递两个 scope 时返回所有字段' do
+          schema = user_entity.locked(scope: ['admin', 'detail']).to_schema
+          expect( schema.filter(value)[:profile] ).to eq({ age: 18, brief: 'brief' })
+        end
+
+        it '仅传递外层 scope 时返回部分内层字段' do
+          schema = user_entity.locked(scope: ['admin']).to_schema
+          expect( schema.filter(value)[:profile] ).to eq({ age: 18 })
+        end
+
+        it '仅传递内层 scope 时不返回所有字段' do
+          schema = user_entity.locked(scope: ['detail']).to_schema
+          expect( schema.filter(value)[:profile] ).to eq(nil)
+        end
       end
 
-      it 'Locked scope 会检查传递进来的参数，如果未在实体中定义，则会报错' do
+      it '调用 lock_scope 时检查传递进来的 scope 参数' do
         entity_class = Class.new(Meta::Entity) do
           property :foo, scope: 'foo'
           property :nesting do
@@ -57,52 +91,62 @@ describe 'Scope 的场景测试' do
       end
     end
 
-    describe 'Scope 的组合锁定' do
-      shared_examples '分组合测试 UserEntity' do
-        it '分组合测试 UserEntity' do
-          schemas_with_different_scopes = {
-            'user_list' => user_entity.to_schema,
-            'user_detail' => user_entity.locked(scope: 'detail').to_schema,
-            'admin_list' => user_entity.locked(scope: 'admin').to_schema,
-            'admin_detail' => user_entity.locked(scope: ['detail', 'admin']).to_schema
-          }
-
-          value = { 'id' => 1, 'name' => 'Jim', 'profile' => 'profile', 'password' => 'passwd' }
-          expect( schemas_with_different_scopes['user_list'].filter(value) ).to eq({ id: 1, name: 'Jim' })
-          expect( schemas_with_different_scopes['user_detail'].filter(value) ).to eq({ id: 1, name: 'Jim', profile: 'profile' })
-          expect( schemas_with_different_scopes['admin_list'].filter(value) ).to eq({ id: 1, name: 'Jim', password: 'passwd' })
-          expect( schemas_with_different_scopes['admin_detail'].filter(value) ).to eq({ id: 1, name: 'Jim', profile: 'profile', password: 'passwd' })
+    context '定义多个 scope 和传递多个 scope' do
+      let(:user_entity) do
+        Class.new(Meta::Entity) do
+          property :age, scope: 'admin'
+          property :brief, scope: ['admin', 'detail']
         end
       end
 
-      context '使用 scope 选项' do
-        let(:user_entity) do
-          Class.new(Meta::Entity) do
-            property :id
-            property :name
-            property :profile, scope: 'detail'
-            property :password, scope: 'admin'
-          end
-        end
-
-        include_examples '分组合测试 UserEntity'
+      let(:value) do
+        { 'age' => 18, 'brief' => 'brief' }
       end
 
-      context '使用 with_common_options' do
-        let(:user_entity) do
-          Class.new(Meta::Entity) do
-            property :id
-            property :name
-            with_common_options scope: 'detail' do
-              property :profile
-            end
-            scope 'admin' do
-              property :password
-            end
+      it '调用 lock_scope 时提供两个 scope 能成功返回全部字段' do
+        schema = user_entity.locked(scope: ['admin', 'detail']).to_schema
+        expect( schema.filter(value).keys ).to eq([:age, :brief])
+      end
+
+      it '调用 lock_scope 时提供公共的 scope 能成功返回全部字段' do
+        schema = user_entity.locked(scope: ['admin']).to_schema
+        expect( schema.filter(value).keys ).to eq([:age, :brief])
+      end
+
+      it '调用 lock_scope 时提供非公共的 scope 只会返回部分字段' do
+        schema = user_entity.locked(scope: ['detail']).to_schema
+        expect( schema.filter(value).keys ).to eq([:brief])
+      end
+    end
+
+    # `with_common_options scope:` 应当有特殊的效果，这里的测试暂时通不过
+    context 'with_common_options' do
+      let(:user_entity) do
+        Class.new(Meta::Entity) do
+          scope 'admin' do
+            property :age
+            property :brief, scope: 'detail'
           end
         end
+      end
 
-        include_examples '分组合测试 UserEntity'
+      let(:value) do
+        { 'age' => 18, 'brief' => 'brief' }
+      end
+
+      it '调用 lock_scope 时提供两层 scope 能成功返回全部字段' do
+        schema = user_entity.locked(scope: ['admin', 'detail']).to_schema
+        expect( schema.filter(value).keys ).to eq([:age, :brief])
+      end
+
+      it '调用 lock_scope 时仅提供外层的 scope 只会返回部分字段' do
+        schema = user_entity.locked(scope: ['admin']).to_schema
+        expect( schema.filter(value).keys ).to eq([:age])
+      end
+
+      it '调用 lock_scope 时仅提供内层的 scope 不会返回字段' do
+        schema = user_entity.locked(scope: ['detail']).to_schema
+        expect( schema.filter(value).keys ).to eq([])
       end
     end
 

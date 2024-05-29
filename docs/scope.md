@@ -1,8 +1,22 @@
-# scope
+# scope 用法全揭秘
 
-据知情人士透漏，框架的 scope 很难用。为打破这种难用的印象，我需要做一个完整的教程。
+## 引言
 
-## 传统的做法：使用类的组合和继承
+### 解疑答惑：什么是场景化的字段
+
+在实际开发中，我们经常会遇到这样的需求：在不同的场景下，返回不同的字段。以下是举例说明之的：
+
+1. 在列表类的接口返回基本字段，而在详情类的接口返回更多的字段。
+2. 在 `/admin` 下返回更多的字段，而在 `/user` 下返回更少的字段。
+3. 用户有权限时返回更多的字段，而没有权限时返回更少的字段。而权限判断的过程是动态的。
+
+Meta API 的 scope 功能就是为了解决这样的问题而设计的。
+
+### 基本思想：将实体的所有字段写到同一个类中
+
+这可以说是最基本的思想了，与传统的类的组合和继承的方式不同，我们将所有的字段都写到同一个类中。这样做的好处是，我们可以在一个地方看到所有的字段，而不必在多个类中查找。
+
+### 传统的做法：使用类的组合和继承
 
 如果我们有一个 `UserEntity` 类，它有若干字段。但考虑要用在不同的场景，我们需要定义不同的类。
 
@@ -12,7 +26,6 @@
 class UserParams < Grape::Entity
   expose :name
   expose :email
-  expose :age
   expose :password
 end
 
@@ -20,7 +33,6 @@ class UserEntity < Grape::Entity
   expose :id
   expose :name
   expose :email
-  expose :age
 end
 ```
 
@@ -30,7 +42,6 @@ end
 class UserFields < Grape::Entity
   expose :name
   expose :email
-  expose :age
 end
 
 class UserParams < UserFields
@@ -44,9 +55,7 @@ end
 
 这样，为实现参数和返回的字段分离，我们需要定义三个类。这样的做法不仅繁琐，而且不易维护。
 
-### 这还没完
-
-当涉及到不同的场景时，我们需要定义更多的类。例如，我们需要在 `/admin` 下返回更多的字段，那么我们需要定义 `AdminUserEntity` 类。这样，我们的类会越来越多，不易维护。
+这还没完，当涉及到不同的场景时，我们需要定义更多的类。例如，我们需要在 `/admin` 下返回更多的字段，那么我们需要继续定义 `AdminUserEntity` 类。这样，我们的类会越来越多，不易维护。
 
 ```ruby
 class AdminUserParams < UserParams
@@ -58,203 +67,273 @@ class AdminUserEntity < UserEntity
 end
 ```
 
-## 更好的做法：使用 scope
+> 示例中用的是 Grape::Entity，Meta API 不支持这样的继承方式，因为内部的实现并不是如同 Grape::Entity 那样基于类的方式。
 
-为了解决上述问题，我们可以使用 scope。我们可以定义一个 `UserEntity` 类，然后使用 lock_scope 来限定使用的字段。
+## 分场景使用 scope 举例
+
+### 示例实体类
+
+我们先定义一个实体类：
 
 ```ruby
 class UserEntity < Meta::Entity
-  property :id, param: false # 使用 param: false 来禁止作为参数
+  property :id
   property :name
   property :email
-  property :age
-  property :password, render: false # 使用 render: false 来禁止渲染
-  
-  property :field1, scope: 'admin' # 特权字段使用 scope 来限定
-  property :field2, scope: 'admin'
+  property :profile
+  property :password
 end
 ```
 
-`param: false` 和 `render: false` 为我们解决了参数和返回字段的区分问题。而 `scope` 则为我们解决了不同场景下的字段问题。
+> 一般来讲，示例中用到的模型越简单越好，为了举例好几种不同场景下的 scope 用法，我们的模型定义也不能太过简单，比如只定义一个 `id` 字段。
 
-在引用实体时，我们可以使用 `lock_scope` 来限定使用的字段，例如 `UserEntity.lock_scope('admin')`。这样引用的实体才会包含 `field1` 和 `field2` 字段。我们再一次来梳理一下：
+### 区分参数和返回字段
+
+如果字段仅用于返回值渲染，而不用于参数，我们可以用 `param: false` 定义；类似地，如果字段仅用于参数，而不用于返回值渲染，我们可以用 `render: false` 定义。
 
 ```ruby
 class UserEntity < Meta::Entity
-  # 仅用于返回
   property :id, param: false
-  
-  # 以下字段总是会使用
-  property :name
-  property :email
-  property :age
-
-  # 仅用于参数
   property :password, render: false
-  
-  # 仅在引用时传递了 'admin' scope 时才会使用，例如 UserEntity.lock_scope('admin')
-  property :field1, scope: 'admin'
-  property :field2, scope: 'admin'
 end
 ```
 
-### 自由组合的乐趣
+### 场景示例：列表接口和详情接口
 
-scope 的组合是非常的灵活的。我们现在抽象一点，在场景 A 下，我们希望返回 `x`、`y` 字段，而在场景 B 下，我们希望返回 `y`、`z` 字段。我们可以这样定义：
+属性可以定义 scope 选项，这相当于为属性声明可适用的场景，然后在引用实体时，使用 `lock_scope` 来限定声明可使用的场景。
+
+假设列表类接口返回 `id`、`name` 这两个摘要性质的字段，而详情类接口返回 `profile` 这个更详细的字段，我们可以这样定义：
 
 ```ruby
 class UserEntity < Meta::Entity
-  property :x, scope: 'A'
-  property :y, scope: ['A', 'B']
-  property :z, scope: 'B'
+  property :id
+  property :name
+  property :profile, scope: 'detail'
 end
 ```
 
-我们只需要引用为 `UserEntity.lock_scope('A')` 或 `UserEntity.lock_scope('B')` 即可。 属性的 `scope` 选项可以理解为支持的场景列表。当 `lock_scope` 的参数和属性的 `scope` 选项有交集时，该属性就会被使用。
-
-如果换成类的组合或继承，我们需要定义两个类：
+在引用 `UserEntity` 时，默认只会返回 `id`、`name` 字段，而在引用 `UserEntity.lock_scope('detail')` 时，会返回 `id`、`name`、`profile` 字段。
 
 ```ruby
-class A < Grape::Entity
-  expose :x
-  expose :y
+get '/users' do
+  title '用户列表'
+  status 200 do
+    expose :users, type: 'array', ref: UserEntity
+  end
 end
 
-class B < Grape::Entity
-  expose :y
-  expose :z
-end
-```
-
-哦天呐，字段 `y` 重复了，我们还需要定义一个公共类：
-
-```ruby
-class Both_A_and_B < Grape::Entity
-  expose :y
-end
-
-class A < Both_A_and_B
-  expose :x
-end
-
-class B < Both_A_and_B
-  expose :z
+get '/users/:id' do
+  title '用户详情'
+  status 200 do
+    expose :user, ref: UserEntity.lock_scope('detail')
+  end
 end
 ```
 
-最终我们需要三个类来达到效果，这还只是我构想的最为简单的场景了。
+### 场景示例：不同的接口锚点
 
-### 自由组合的另一个乐趣
-
-对于下面的实体定义：
+在规划接口时，我们针对不同的平台可能设置不同的锚点。例如，针对管理端我们用 `/admin`，而针对用户端我们用 `/user`。我们同样可以只定义一个实体类，然后在引用时使用 `lock_scope` 来声明使用的场景。
 
 ```ruby
 class UserEntity < Meta::Entity
-  property :x, scope: 'A'
-  property :y, scope: 'B'
-  property :z, scope: 'C'
+  property :id
+  property :name
+  property :profile, scope: 'detail'
+  property :email, scope: 'admin'
 end
 ```
 
-我们可以使用 `UserEntity.lock_scope(['A', 'B'])` 来引用 `x` 和 `y` 字段。排除掉无意义的空组合，实际上有七种组合方式：
-
-- `UserEntity.lock_scope('A')`
-- `UserEntity.lock_scope('B')`
-- `UserEntity.lock_scope('C')`
-- `UserEntity.lock_scope(['A', 'B'])`
-- `UserEntity.lock_scope(['A', 'C'])`
-- `UserEntity.lock_scope(['B', 'C'])`
-- `UserEntity.lock_scope(['A', 'B', 'C'])`
-
-我们只用写在一个类里，然后就可以实现出组合七种的引用模式了。这在单纯使用类的方式下是极其繁琐的。
-
-## 在更高层次上中声明 scope
-
-如果频繁地去写 `lock_scope`，也是有点繁琐的。现在我们可以在 namespace 和 route 中定义 scope，定义的 scope 会自动传递到下面的层次中，这样就可以不必写 `lock_scope` 了，这样可以在一定程度上减轻工作。
+之前的接口我们可以认为是 `/user` 下的接口，而现在我们来定义 `/admin` 下的接口：
 
 ```ruby
+namespace '/admin' do
+  get '/users' do
+    title '用户列表'
+    status 200 do
+      expose :users, type: 'array', ref: UserEntity.lock_scope('admin')
+    end
+  end
+
+  get '/users/:id' do
+    title '用户详情'
+    status 200 do
+      expose :user, ref: UserEntity.lock_scope(['detail', 'admin'])
+    end
+  end
+end
+```
+
+上述定义中，`UserEntity.lock_scope('admin')` 会返回 `id`、`name`、`email` 字段，而 `UserEntity.lock_scope(['detail', 'admin'])` 会返回 `id`、`name`、`profile`、`email` 字段。
+
+#### 在 `namespace` 层声明 scope
+
+注意到上述两个接口都使用了 `UserEntity.lock_scope('admin')`。本着不接受重复的原则，我们可以将 `admin` scope 的声明放到 `namespace` 层：
+
+```ruby
+class UserEntity < Meta::Entity
+  property :id
+  property :name
+  property :profile, scope: 'detail'
+  property :email, scope: '$admin'
+end
+
 namespace '/admin' do
   meta do
-    scope 'admin'
+    # 在整个 namespace 下都使用 '$admin' scope
+    scope '$admin'
   end
   
-  get '/user' do
-    status 200, UserEntity
+  get '/users' do
+    title '用户列表'
+    status 200 do
+      expose :users, type: 'array', ref: UserEntity
+    end
+  end
+
+  get '/users/:id' do
+    title '用户详情'
+    status 200 do
+      expose :user, ref: UserEntity.lock_scope('detail')
+    end
   end
 end
 ```
 
-这样，`UserEntity` 就会自动继承 `admin` scope，不必再写 `UserEntity.lock_scope('admin')` 了。实际上，它等价于
+#### 全局 scope 和局部 scope
+
+注意，`$admin` 需要添加 `$` 前缀，以区分普通的 scope.
+
+默认情况下，`lock_scope` 是不会传递到下层的，例如下面的定义：
 
 ```ruby
-namespace '/admin' do
-  get '/user' do
-    status 200, UserEntity.lock_scope('admin')
-  end
+class ProfileEntity < Meta::Entity
+  property :id
+  property :name
+  property :brief, scope: 'detail'
+end
+
+class UserEntity < Meta::Entity
+  property :id
+  property :profile, scope: 'detail', ref: ProfileEntity
 end
 ```
 
-试想下，如果使用类的组合或继承的模式，将会多么繁琐。
+`UserEntity.lock_scope('detail')` 只会影响到 `UserEntity`，而不会影响到 `ProfileEntity`。它返回的是如下的结构：
 
-## `with_common_optins`：有节奏的组合方式
+```json
+{
+  "id": 1,
+  "profile": {
+    "id": 1,
+    "name": "name"
+  }
+}
+```
 
-在每个属性后面添加 `scope` 可能是让人不能接受的方式。例如下面这种：
+正确的做法是，在引用 `ProfileEntity` 时也使用 `lock_scope`：
 
 ```ruby
 class UserEntity < Meta::Entity
-  # 以下定义基础字段
   property :id
-  property :name
-  property :email
-  property :age
-  
-  # 以下定义特权字段
-  property :field1, scope: 'admin'
-  property :field2, scope: 'admin'
+  property :profile, scope: 'detail', ref: ProfileEntity.lock_scope('detail')
 end
 ```
 
-在有节奏的字段组织里，`scope` 相同的字段可能会被放在一起。我们可以使用 `with_common_options` 来简化这个过程：
+## `with_common_options`：更有效的组织字段方式
+
+在定义实体字段时，我们会依赖 scope 来组织字段。比如，相同的 scope 的字段会写在一起。使用 `with_common_options` 会减少我们的重复代码，不失为一种更有效的组织方式。
 
 ```ruby
 class UserEntity < Meta::Entity
-  # 以下定义基础字段
   property :id
   property :name
-  property :email
-  property :age
-
-  # 以下定义特权字段
+  
+  with_common_options scope: 'detail' do
+    property :profile
+  end
+  
   with_common_options scope: 'admin' do
-    property :field1
-    property :field2
+    property :email
   end
 end
 ```
 
-或者更进一步：
+由于我们更常见的是用 scope 来组织字段， 下面的写法更简洁（也更直观）：
 
 ```ruby
 class UserEntity < Meta::Entity
-  # 以下定义基础字段
   property :id
   property :name
-  property :email
-  property :age
-
-  # 以下定义特权字段
+  
+  scope 'detail' do
+    property :profile
+  end
+  
   scope 'admin' do
-    property :field1
-    property :field2
+    property :email
   end
 end
 ```
 
-这样简洁的表达方式可能更直观些。
+### `params` 和 `render` 也有同样的方式
 
-## 最后再来谈谈为什么会有类的组合和继承这种方式
+参数和返回字段的组织方式也可以用 `with_common_options` 来实现。
 
-因为对于一般开发者而言更熟悉，毕竟这是已经掌握了数年的技术。而 scope 这种方式是相对新的，需要一定的学习成本。但是，一旦掌握了 scope 的使用，会发现它的强大之处。
+```ruby
+class UserEntity < Meta::Entity
+  # 仅用于返回值渲染
+  with_common_options param: false do
+    property :id
+  end
+
+  # 仅用于参数
+  with_common_options render: false do
+    property :password
+  end
+
+  # 基本字段，任何情况下都会返回
+  property :name
+  
+  # 详细字段，仅在详情类接口下才会返回
+  with_common_options scope: 'detail' do
+    property :profile
+  end
+  
+  # 管理员字段，仅在管理员类接口下才会返回
+  with_common_options scope: 'admin' do
+    property :email
+  end
+end
+```
+
+或者，更简洁的写法：
+
+```ruby
+class UserEntity < Meta::Entity
+  # 仅用于返回值渲染
+  params do
+    property :id
+  end
+
+  # 仅用于参数
+  render do
+    property :password
+  end
+
+  # 基本字段，任何情况下都会返回
+  property :name
+  
+  # 详细字段，仅在详情类接口下才会返回
+  scope 'detail' do
+    property :profile
+  end
+  
+  # 管理员字段，仅在管理员类接口下才会返回
+  scope 'admin' do
+    property :email
+  end
+end
+```
 
 ## TODO
 

@@ -17,7 +17,9 @@ module Meta
       end
 
       def defined_scopes(**kwargs)
-        scope_matcher.defined_scopes
+        current = scope_matcher.defined_scopes
+        deep = schema.defined_scopes(**kwargs)
+        (current + deep).uniq
       end
 
       private
