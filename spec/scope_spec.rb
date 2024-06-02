@@ -91,31 +91,45 @@ describe 'Scope 的场景测试' do
       end
     end
 
-    context '定义多个 scope 和传递多个 scope' do
+    context '定义和提供多个 scope' do
       let(:user_entity) do
         Class.new(Meta::Entity) do
-          property :age, scope: 'admin'
-          property :brief, scope: ['admin', 'detail']
+          property :xxx, scope: %w[foo bar]
         end
       end
 
       let(:value) do
-        { 'age' => 18, 'brief' => 'brief' }
+        { 'xxx' => 'xxx' }
       end
 
-      it '调用 lock_scope 时提供两个 scope 能成功返回全部字段' do
-        schema = user_entity.locked(scope: ['admin', 'detail']).to_schema
-        expect( schema.filter(value).keys ).to eq([:age, :brief])
+      describe 'lock_scope' do
+        it '调用 lock_scope 时提供两个 scope 能成功返回字段' do
+          schema = user_entity.locked(scope: %w[foo bar]).to_schema
+          expect( schema.filter(value).keys ).to be_any
+        end
+
+        it '调用 lock_scope 时仅提供一个 scope 不足以返回字段' do
+          schema = user_entity.locked(scope: ['foo']).to_schema
+          expect( schema.filter(value).keys ).to be_empty
+        end
       end
 
-      it '调用 lock_scope 时提供公共的 scope 能成功返回全部字段' do
-        schema = user_entity.locked(scope: ['admin']).to_schema
-        expect( schema.filter(value).keys ).to eq([:age, :brief])
-      end
+      describe '提供 scope' do
+        it '调用 filter 时提供两个 scope 能成功返回字段' do
+          schema = user_entity.to_schema(scope: %w[foo bar])
+          expect( schema.filter(value).keys ).to be_any
 
-      it '调用 lock_scope 时提供非公共的 scope 只会返回部分字段' do
-        schema = user_entity.locked(scope: ['detail']).to_schema
-        expect( schema.filter(value).keys ).to eq([:brief])
+          schema = user_entity.to_schema(scope: %w[foo bar far])
+          expect( schema.filter(value).keys ).to be_any
+        end
+
+        it '调用 filter 时仅提供一个 scope 不足以返回字段' do
+          schema = user_entity.to_schema(scope: ['foo'])
+          expect( schema.filter(value).keys ).to be_empty
+
+          schema = user_entity.to_schema(scope: %w[foo far])
+          expect( schema.filter(value).keys ).to be_empty
+        end
       end
     end
 
