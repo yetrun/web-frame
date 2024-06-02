@@ -137,6 +137,7 @@ describe 'Scope 的场景测试' do
     context 'with_common_options' do
       let(:user_entity) do
         Class.new(Meta::Entity) do
+          # 关于 param、render 内部选项的合并问题暂不考虑
           scope 'admin' do
             property :age
             property :brief, scope: 'detail'

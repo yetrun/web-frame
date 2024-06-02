@@ -63,8 +63,23 @@ module Meta
         end
 
         def property(name, options = {}, &block)
-          options = common_options.merge(options)
+          options = merge_options(options)
           object_schema_builder.property(name, options, &block)
+        end
+
+        def merge_options(options)
+          self.class.merge_options(common_options, options)
+        end
+
+        def self.merge_options(common_options, options)
+          common_options.merge(options) do |key, oldVal, newVal|
+            if key == :scope
+              [oldVal, newVal].flatten
+            else
+              # 关于 param、render 内部选项的合并问题暂不考虑
+              newVal
+            end
+          end
         end
       end
 
