@@ -45,9 +45,6 @@ module Meta
 
       def scope(scope)
         scope = [scope] unless scope.is_a?(Array)
-        unless scope.all? { |s| s.start_with?('$') }
-          raise ArgumentError, 'namespace 和 route 中声明的 scope 必须是全局 scope（以 $ 开头）'
-        end
 
         @meta[:scope] = scope
       end

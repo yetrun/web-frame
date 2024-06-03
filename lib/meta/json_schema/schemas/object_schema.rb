@@ -49,6 +49,18 @@ module Meta
         super
       end
 
+      def to_schema_doc(user_options = {})
+        user_options = TO_SCHEMA_DOC_CHECKER.check(user_options)
+        user_options = self.class.merge_user_options(user_options, locked_options) if locked_options
+
+        schema = { type: 'object' }
+        schema[:description] = options[:description] if options[:description]
+        properties, required_keys = @properties.to_swagger_doc(**user_options)
+        schema[:properties] = properties unless properties.empty?
+        schema[:required] = required_keys unless required_keys.empty?
+        schema
+      end
+
       def naming?
         properties.is_a?(NamedProperties)
       end
@@ -57,31 +69,24 @@ module Meta
         properties.defined_scopes(stage: stage, defined_scopes_mapping: defined_scopes_mapping)
       end
 
+      # 解析当前 Schema 的名称
+      #
+      # 名称解析的规则是：
+      # 1. 结合基础的 schema_name，如果它是参数，就加上 Params 后缀；如果它是返回值，就加上 Entity 后缀
+      # 2. 而后跟上 locked_scope. 这里，会把多余的 scope 去掉。比如，一个实体内部只处理 Admin 的 scope，但是外部传进来了
+      #    Admin 和 Detail，那么名称只会包括 Admin
       def resolve_name(stage, user_scopes, defined_scopes)
         raise ArgumentError, 'stage 不能为 nil' if stage.nil?
 
         # 先合成外面传进来的 scope
         locked_scopes = (locked_options || {})[:scope] || []
         user_scopes = (user_scopes + locked_scopes).uniq
-        scopes = user_scopes & defined_scopes
 
         # 再根据 stage 和 scope 生成为当前的 Schema 生成一个合适的名称，要求保证唯一性
-        schema_name = properties.schema_name(stage)
-        schema_name += "__#{scopes.join('__')}" unless scopes.empty?
-        schema_name
-      end
+        base_schema_name = properties.schema_name(stage)
 
-      def to_schema_doc(user_options = {})
-        user_options = TO_SCHEMA_DOC_CHECKER.check(user_options)
-        user_options = self.class.merge_user_options(user_options, locked_options) if locked_options
-
-        schema = { type: 'object' }
-        schema[:description] = options[:description] if options[:description]
-
-        properties, required_keys = @properties.to_swagger_doc(**user_options)
-        schema[:properties] = properties unless properties.empty?
-        schema[:required] = required_keys unless required_keys.empty?
-        schema
+        # 将调用转移到 Scopes 模块下
+        Scopes::Utils.resolve_name(base_schema_name, user_scopes, defined_scopes)
       end
 
       def locked_scope

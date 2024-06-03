@@ -47,9 +47,10 @@ module Meta
         end
 
         defined_scopes_mapping[schema_name] = []
+        # 求解 defined_scopes，最终结果去重 + 排序
         defined_scopes = object_schema.properties.each.map do |name, property|
           property.defined_scopes(stage: stage, defined_scopes_mapping: defined_scopes_mapping)
-        end.flatten.uniq.sort
+        end.flatten.uniq.sort_by(&:name)
         defined_scopes_mapping[schema_name] = defined_scopes
         defined_scopes
       end

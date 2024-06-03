@@ -44,12 +44,6 @@ module Meta
           value = resolve_property_value(object_value, name, property_schema)
 
           begin
-            # 如果 property_schema 是 RefSchema，则局部的 scope 不会传递下去
-            if property_schema.is_a?(RefSchema)
-              # 只接受全局的 scope，其以 $ 符合开头
-              new_scopes = user_options[:scope].find_all { |scope| scope.start_with?('$') }
-              user_options = user_options.merge(scope: new_scopes)
-            end
             object[name] = property_schema.filter(value, **user_options, object_value: object_value)
           rescue JsonSchema::ValidationErrors => e
             cause = e.cause || e if cause.nil? # 将第一次出现的错误作为 cause
@@ -75,16 +69,9 @@ module Meta
         end
       end
 
-      def defined_scopes(stage:, defined_scopes_mapping:)
-        @properties.each_with_object([]) do |(name, property), defined_scopes|
-          defined_scopes.concat(property.defined_scopes(stage: stage, defined_scopes_mapping: defined_scopes_mapping))
-        end
-      end
-
       # user_options 包括 stage, scope, schema_docs_mapping, defined_scopes_mapping
       def to_swagger_doc(scope: [], stage: nil, **user_options)
-        locked_scopes = scope
-        properties = filter_by(stage: stage, user_scope: locked_scopes)
+        properties = filter_by(stage: stage, user_scope: scope)
         required_keys = properties.filter do |key, property_schema|
           property_schema.options[:required]
         end.keys
@@ -92,6 +79,12 @@ module Meta
           property_schema.to_schema_doc(stage: stage, scope: scope, **user_options)
         end
         [properties, required_keys]
+      end
+
+      def defined_scopes(stage:, defined_scopes_mapping:)
+        @properties.each_with_object([]) do |(name, property), defined_scopes|
+          defined_scopes.concat(property.defined_scopes(stage: stage, defined_scopes_mapping: defined_scopes_mapping))
+        end
       end
 
       # 程序中有些地方用到了这三个方法
@@ -107,13 +100,15 @@ module Meta
 
       private
 
-      def filter_by(stage:, user_scope: false)
-        @properties.transform_values do |property|
-          property.find_schema(stage: stage, scope: user_scope)
-        end.filter do |name, schema|
-          schema.filter?
+        # 根据所示的关键字参数，过滤出符合条件的属性
+        # 注意，这里会结合自身的 locked_scope 考量
+        def filter_by(stage:, user_scope: false)
+          @properties.transform_values do |property|
+            property.find_schema(stage: stage, scope: user_scope)
+          end.filter do |name, schema|
+            schema.filter?
+          end
         end
-      end
 
       def resolve_property_value(object_value, name, property_schema)
         if property_schema.value?

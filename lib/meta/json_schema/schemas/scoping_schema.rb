@@ -7,8 +7,10 @@ module Meta
     class ScopingSchema < BaseSchema
       attr_reader :scope_matcher, :schema
 
-      def initialize(scope_matcher_options: , schema:)
-        @scope_matcher = ScopeMatcher.new(scope_matcher_options)
+      def initialize(scope_matcher:, schema:)
+        raise ArgumentError, 'scope_matcher 不能是一个数组' if scope_matcher.is_a?(Array)
+
+        @scope_matcher = scope_matcher
         @schema = schema
       end
 
@@ -32,7 +34,7 @@ module Meta
         options = options.dup
         scope_matcher_options = options.delete(:scope)
         schema = build_schema.call(options)
-        schema = ScopingSchema.new(scope_matcher_options: scope_matcher_options, schema: schema) if scope_matcher_options
+        schema = ScopingSchema.new(scope_matcher: scope_matcher_options, schema: schema) if scope_matcher_options
         schema
       end
     end
