@@ -2,19 +2,6 @@
 
 require 'spec_helper'
 
-describe '讨论与无关的场景' do
-  it 'Scope 可以继承其他 Scope' do
-    user_scope = Meta::Scope.new('user')
-    broker_scope = Meta::Scope.extends(user_scope, name: 'broker')
-    admin_scope = Meta::Scope.extends(broker_scope, name: 'admin')
-
-    expect(admin_scope.defined_scopes).to eq([user_scope, broker_scope, admin_scope])
-    expect(admin_scope.match?([user_scope])).to be true
-    expect(admin_scope.match?([broker_scope])).to be true
-    expect(admin_scope.match?([admin_scope])).to be true
-  end
-end
-
 # Scope 的场景测试比较重要，统一放在这里
 describe 'Scope 的场景测试' do
   context 'Locked scope in JsonSchema' do

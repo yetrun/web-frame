@@ -7,13 +7,11 @@ describe 'JsonSchema::Scopes' do
   # 定义若干 Scope 常量
   before(:context) do
     module Test
-      module Scopes
-        Foo = Meta::Scope.new('foo')
-        Bar = Meta::Scope.new('bar')
-
-        Admin = Meta::Scope.new('admin')
-        Detail = Meta::Scope.new('detail')
-      end
+      Scopes = Module.new
+      Scopes::Foo = Class.new(Meta::Scope)
+      Scopes::Bar = Class.new(Meta::Scope)
+      Scopes::Admin = Class.new(Meta::Scope)
+      Scopes::Detail = Class.new(Meta::Scope)
     end
   end
 

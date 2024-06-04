@@ -5,15 +5,15 @@ require 'spec_helper'
 describe 'Scope In API' do
   before(:context) do
     module Test
-      module Scopes
-        Foo = Meta::Scope.new('foo')
-        Bar = Meta::Scope.new('bar')
-        Baz = Meta::Scope.new('baz')
+      Scopes = Module.new
 
-        User = Meta::Scope.new('user')
-        Broker = Meta::Scope.extends(User, name: 'broker')
-        Admin = Meta::Scope.extends(Broker, name: 'admin')
-      end
+      Scopes::Foo = Class.new(Meta::Scope)
+      Scopes::Bar = Class.new(Meta::Scope)
+      Scopes::Baz = Class.new(Meta::Scope)
+
+      Scopes::User = Class.new(Meta::Scope)
+      Scopes::Broker = Class.new(User)
+      Scopes::Admin = Class.new(Broker)
     end
   end
 
@@ -77,9 +77,9 @@ describe 'Scope In API' do
     it '考虑递归、lock_scope 传递多余的 scope' do
       doc = app.to_swagger_doc
       name, schema = doc[:components][:schemas].first
-      expect(name).to include('bar')
-      expect(name).not_to include('foo')
-      expect(name).not_to include('baz')
+      expect(name).to include('Bar')
+      expect(name).not_to include('Foo')
+      expect(name).not_to include('Baz')
     end
   end
 
@@ -110,10 +110,10 @@ describe 'Scope In API' do
       it '生成的 schema name 中只包含本身的 scope 名称' do
         doc = app.to_swagger_doc
         name, schema = doc[:components][:schemas].first
-        expect(name).not_to include('foo')
-        expect(name).not_to include('user')
-        expect(name).not_to include('broker')
-        expect(name).to include('admin')
+        expect(name).not_to include('Foo')
+        expect(name).not_to include('User')
+        expect(name).not_to include('Broker')
+        expect(name).to include('Admin')
       end
 
       it '接口运行正常' do
@@ -140,10 +140,10 @@ describe 'Scope In API' do
       it '生成的 schema name 中只包含本身的 scope 名称' do
         doc = app.to_swagger_doc
         name, schema = doc[:components][:schemas].first
-        expect(name).not_to include('foo')
-        expect(name).not_to include('user')
-        expect(name).not_to include('broker')
-        expect(name).to include('admin')
+        expect(name).not_to include('Foo')
+        expect(name).not_to include('User')
+        expect(name).not_to include('Broker')
+        expect(name).to include('Admin')
       end
 
       it '接口运行正常' do

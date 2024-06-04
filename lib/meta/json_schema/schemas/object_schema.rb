@@ -86,7 +86,22 @@ module Meta
         base_schema_name = properties.schema_name(stage)
 
         # 将调用转移到 Scopes 模块下
-        Scopes::Utils.resolve_name(base_schema_name, user_scopes, defined_scopes)
+        resolve_name_helper(base_schema_name, user_scopes, defined_scopes)
+      end
+
+      # 帮助实体解析名称，这里主要是考虑 scope 的作用
+      #
+      # base_schema_name: 具有 Params 或 Entity 后缀的基础名称
+      # user_scopes: 用户传进来的 scope 数组
+      # candidate_scopes: 从实体中找出的能够参与命名的备选的 scope 数组
+      def resolve_name_helper(base_schema_name, user_scopes, candidate_scopes)
+        # 从备选的 scope 中获取到被利用到的
+        scopes = candidate_scopes.filter { |candidate_scope| candidate_scope.match?(user_scopes) }
+        scope_names = scopes.map(&:name)
+
+        # 合成新的名字
+        schema_name_parts = [base_schema_name] + scope_names
+        schema_name_parts.join('__')
       end
 
       def locked_scope
