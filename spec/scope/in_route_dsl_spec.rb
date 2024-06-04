@@ -12,8 +12,8 @@ describe 'Scope In API' do
       Scopes::Baz = Class.new(Meta::Scope)
 
       Scopes::User = Class.new(Meta::Scope)
-      Scopes::Broker = Class.new(User)
-      Scopes::Admin = Class.new(Broker)
+      Scopes::Broker = Class.new(Scopes::User)
+      Scopes::Admin = Class.new(Scopes::Broker)
     end
   end
 

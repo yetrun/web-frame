@@ -126,8 +126,8 @@ describe 'Scope 的场景测试' do
         Class.new(Meta::Entity) do
           schema_name 'SomeEntity'
 
-          property :foo, scope: '$foo'
-          property :bar, scope: '$bar'
+          property :foo, scope: 'foo'
+          property :bar, scope: 'bar'
         end
       end
 
@@ -135,11 +135,11 @@ describe 'Scope 的场景测试' do
         the_entity_class = entity_class
         application = Class.new(Meta::Application) do
           meta do
-            scope '$foo'
+            scope 'foo'
           end
 
           post '/request' do
-            scope '$bar'
+            scope 'bar'
             params do
               param :nesting, required: true, ref: the_entity_class
             end
@@ -148,8 +148,8 @@ describe 'Scope 的场景测试' do
 
         doc = application.to_swagger_doc
         schema_name, schema_doc = doc[:components][:schemas].first
-        expect(schema_name).to include('$foo')
-        expect(schema_name).to include('$bar')
+        expect(schema_name).to include('foo')
+        expect(schema_name).to include('bar')
         expect(schema_doc[:properties].keys).to eq([:foo, :bar])
       end
 
@@ -158,8 +158,8 @@ describe 'Scope 的场景测试' do
           Class.new(Meta::Entity) do
             schema_name 'Some'
 
-            property :foo, scope: '$foo'
-            property :bar, scope: '$bar'
+            property :foo, scope: 'foo'
+            property :bar, scope: 'bar'
           end
         end
 
@@ -167,20 +167,20 @@ describe 'Scope 的场景测试' do
           the_entity_class = entity_class
           application = Class.new(Meta::Application) do
             meta do
-              scope '$foo'
+              scope 'foo'
             end
 
             post '/request' do
               params do
-                param :nesting, required: true, ref: the_entity_class.locked(scope: ['$bar'])
+                param :nesting, required: true, ref: the_entity_class.locked(scope: ['bar'])
               end
             end
           end
 
           doc = application.to_swagger_doc
           schema_name, schema_doc = doc[:components][:schemas].first
-          expect(schema_name).to include('$foo')
-          expect(schema_name).to include('$bar')
+          expect(schema_name).to include('foo')
+          expect(schema_name).to include('bar')
           expect(schema_doc[:properties].keys).to eq([:foo, :bar])
         end
 
@@ -198,20 +198,20 @@ describe 'Scope 的场景测试' do
             the_entity_class = entity_class
             application = Class.new(Meta::Application) do
               meta do
-                scope '$foo'
+                scope 'foo'
               end
 
               post '/request' do
                 params do
-                  param :nesting, required: true, ref: the_entity_class.locked(scope: ['$bar'])
+                  param :nesting, required: true, ref: the_entity_class.locked(scope: ['bar'])
                 end
               end
             end
 
             doc = application.to_swagger_doc
             schema_name, schema_doc = doc[:components][:schemas].first
-            expect(schema_name).not_to include('$foo')
-            expect(schema_name).not_to include('$bar')
+            expect(schema_name).not_to include('foo')
+            expect(schema_name).not_to include('bar')
           end
         end
       end

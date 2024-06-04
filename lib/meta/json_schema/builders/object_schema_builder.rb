@@ -75,8 +75,7 @@ module Meta
           common_options.merge(options) do |key, oldVal, newVal|
             if key == :scope
               # 合并 common_options 和 options 中的 scope 选项
-              oldVal.and(newVal)
-              # Scopes::AndMatcher.new([oldVal, newVal].flatten)
+              Scope::Utils.and(oldVal, newVal)
             else
               # 关于 param、render 内部选项的合并问题暂不考虑
               newVal

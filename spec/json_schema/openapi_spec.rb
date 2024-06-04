@@ -75,7 +75,7 @@ describe 'schema#to_schema_doc' do
         schemas = {}
         schema.to_schema_doc(scope: ['foo', 'bar', 'baz'], schema_docs_mapping: schemas, stage: :render)
 
-        expect(schemas.keys).to eq(['FooEntity__foo', 'BarEntity__bar', 'BazEntity__foo__bar'])
+        expect(schemas.keys).to eq(['FooEntity__foo', 'BarEntity__bar', 'BazEntity__bar__foo'])
       end
 
       context 'ref: 引用自身' do

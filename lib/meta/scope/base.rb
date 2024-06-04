@@ -7,7 +7,7 @@ module Meta
     end
 
     # 基本的 Scope 方法，引入该模块即可获取系列方法
-    module ScopeMethods
+    module Base
       def match?(scopes)
         scopes = [scopes] unless scopes.is_a?(Array)
 
@@ -23,11 +23,11 @@ module Meta
         scope_name = @scope_name || self.name
         raise Errors::NameNotSet, '未设置 scope 名称' if scope_name.nil?
 
-        scope_name
+        scope_name.split('::').last
       end
 
       def scope_name=(name)
-        @scope_name = name
+        @scope_name = name.to_s
       end
 
       def include_scope(*scopes)
@@ -41,6 +41,7 @@ module Meta
       end
       alias_method :&, :and
 
+      # 既可以是类方法，也可以是实例方法
       def or(*scopes)
         scopes = [self, *scopes] if self != Meta::Scope
         Or.new(*scopes)
@@ -50,7 +51,11 @@ module Meta
 
     # 将 Scope 类的子类作为 Scope 实例
     class << self
-      include ScopeMethods
+      include Base
+
+      def new(*args)
+        raise NoMethodError, 'Meta::Scope 类不能实例化'
+      end
 
       def inherited(subclass)
         subclass.instance_variable_set(:@included_scopes, [])
@@ -70,17 +75,25 @@ module Meta
 
     # 另一种 Scope 实例，用于表示多个 Scope 的逻辑 And 操作
     class And
-      include ScopeMethods
+      include Base
+
+      def self.new(scope, *scopes)
+        return scope if scopes.empty?
+
+        super(scope, *scopes)
+      end
 
       def initialize(*scopes)
-        @scopes = scopes.freeze
+        @scopes = scopes.map do |scope|
+          scope.is_a?(self.class) ? scope.defined_scopes : scope
+        end.flatten.freeze
       end
 
       def match?(scopes)
         scopes = [scopes] unless scopes.is_a?(Array)
 
         # scopes 需要包含所有的 @scopes
-        @scopes.all? { |scope| scopes.include?(scope) }
+        @scopes.all? { |scope| scope.match?(scopes) }
       end
 
       def defined_scopes
@@ -94,17 +107,25 @@ module Meta
 
     # 另一种 Scope 实例，用于表示多个 Scope 的逻辑 Or 操作
     class Or
-      include ScopeMethods
+      include Base
+
+      def self.new(scope, *scopes)
+        return scope if scopes.empty?
+
+        super(scope, *scopes)
+      end
 
       def initialize(*scopes)
-        @scopes = scopes.freeze
+        @scopes = scopes.map do |scope|
+          scope.is_a?(self.class) ? scope.defined_scopes : scope
+        end.flatten.freeze
       end
 
       def match?(scopes)
         scopes = [scopes] unless scopes.is_a?(Array)
 
         # scopes 只需要包含一个 @scopes
-        @scopes.any? { |scope| scopes.include?(scope) }
+        @scopes.any? { |scope| scope.match?(scopes) }
       end
 
       def defined_scopes

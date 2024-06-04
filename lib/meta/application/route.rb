@@ -39,7 +39,8 @@ module Meta
     end
 
     def generate_operation_doc(schemas)
-      meta.generate_operation_doc(schemas, scope: ["$#{method}"])
+      # 不再自动添加 $post 等 scope
+      meta.generate_operation_doc(schemas, scope: [])
     end
   end
 end

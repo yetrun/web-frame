@@ -57,6 +57,13 @@ describe '只测试与当初 Scope 有关的测试' do
 
       expect(and_scope.scope_name).to eq('and_scope')
     end
+
+    it 'And 如果只接受一个参数，应当返回该参数' do
+      scope_one = Class.new(Meta::Scope)
+      and_scope = Meta::Scope::And.new(scope_one)
+
+      expect(and_scope).to eq(scope_one)
+    end
   end
 
   describe 'Meta::Scope.or' do
@@ -70,6 +77,7 @@ describe '只测试与当初 Scope 有关的测试' do
         expect(or_scope).to be_match([scope_two, scope_three, scope_one])
         expect(or_scope).to be_match([scope_one, scope_three])
         expect(or_scope).to be_match([scope_three, scope_two])
+        expect(or_scope).to be_match([scope_one])
         expect(or_scope).not_to be_match([scope_three])
       end
     end
@@ -77,6 +85,17 @@ describe '只测试与当初 Scope 有关的测试' do
     include_examples '测试 Or', ->(scope_one, scope_two) { scope_one.or(scope_two) }
     include_examples '测试 Or', ->(scope_one, scope_two) { scope_one | scope_two }
     include_examples '测试 Or', ->(scope_one, scope_two) { Meta::Scope.or(scope_one, scope_two) }
+  end
+
+  it 'And、Or 联合测试' do
+    scope_one = Class.new(Meta::Scope)
+    scope_two = Class.new(Meta::Scope)
+    scope = Meta::Scope.and(
+      Meta::Scope.or(scope_one),
+      Meta::Scope.or(scope_two)
+    )
+
+    expect(scope).to be_match([scope_one, scope_two])
   end
 
   describe 'Meta::Scope.include_scope' do

@@ -11,24 +11,29 @@ module Meta
       # scope:、discard_missing:、exclude: 等
       attr_reader :locked_options
 
+      normalize_scope = ->(value) {
+        raise ArgumentError, 'scope 选项不可传递 nil' if value.nil?
+        value = [value] unless value.is_a?(Array)
+        value = value.map do |v|
+          next v if v.is_a?(Class) && v < Meta::Scope
+          next v if v.is_a?(Meta::Scope::Base)
+          next nil unless Object.const_defined?('Scopes')
+
+          # 将 v 类名化
+          scope_name = v.to_s.split('_').map(&:capitalize).join
+          ::Scopes.const_defined?(scope_name) ? ::Scopes.const_get(scope_name) : nil
+        end.compact
+      }
       # stage 和 scope 选项在两个 CHECKER 下都用到了
       USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         key :stage
-        key :scope, normalizer: ->(value) {
-          raise ArgumentError, 'scope 选项不可传递 nil' if value.nil?
-          value = [value] unless value.is_a?(Array)
-          value
-        }
+        key :scope, normalizer: normalize_scope
         key :discard_missing, :exclude, :extra_properties, :type_conversion, :validation
         key :execution, :user_data, :object_value
       end
       TO_SCHEMA_DOC_CHECKER = Utils::KeywordArgs::Builder.build do
         key :stage
-        key :scope, normalizer: ->(value) {
-          raise ArgumentError, 'scope 选项不可传递 nil' if value.nil?
-          value = [value] unless value.is_a?(Array)
-          value
-        }
+        key :scope, normalizer: normalize_scope
         key :schema_docs_mapping, :defined_scopes_mapping
       end
 
@@ -97,7 +102,7 @@ module Meta
       def resolve_name_helper(base_schema_name, user_scopes, candidate_scopes)
         # 从备选的 scope 中获取到被利用到的
         scopes = candidate_scopes.filter { |candidate_scope| candidate_scope.match?(user_scopes) }
-        scope_names = scopes.map(&:name)
+        scope_names = scopes.map(&:scope_name)
 
         # 合成新的名字
         schema_name_parts = [base_schema_name] + scope_names

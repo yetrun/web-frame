@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../support/scope_matcher'
+require_relative '../../scope/utils'
 
 module Meta
   module JsonSchema
@@ -8,9 +9,9 @@ module Meta
       attr_reader :scope_matcher, :schema
 
       def initialize(scope_matcher:, schema:)
-        raise ArgumentError, 'scope_matcher 不能是一个数组' if scope_matcher.is_a?(Array)
+        # raise ArgumentError, 'scope_matcher 不能是一个数组' if scope_matcher.is_a?(Array)
 
-        @scope_matcher = scope_matcher
+        @scope_matcher = Scope::Utils.parse(scope_matcher)
         @schema = schema
       end
 
