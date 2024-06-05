@@ -13,25 +13,21 @@ module Meta
       end
 
       def parse_request_body(execution, discard_missing: false)
-        method = execution.request.request_method.downcase.to_sym
         request_body.filter(
           execution.params(:raw),
           **Meta.config.json_schema_user_options,
           **Meta.config.json_schema_param_stage_user_options,
           **{ execution: execution, stage: :param, scope: @scope, discard_missing: discard_missing }.compact
-          # 不再自动添加 $post 等 scope
-          # **{ execution: execution, stage: :param, scope: @scope.concat(["$#{method}"]), discard_missing: discard_missing }.compact
         )
       rescue JsonSchema::ValidationErrors => e
         raise Errors::ParameterInvalid.new(e.errors)
       end
 
       def render_entity(execution, entity_schema, value, user_options)
-        method = execution.request.request_method.downcase.to_sym
         entity_schema.filter(value,
           **Meta.config.json_schema_user_options,
           **Meta.config.json_schema_render_stage_user_options,
-          **{ execution: execution, stage: :render, scope: @scope.concat([method]) }.compact,
+          **{ execution: execution, stage: :render, scope: @scope }.compact,
           **user_options,
         )
       end
