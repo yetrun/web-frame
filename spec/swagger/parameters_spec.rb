@@ -14,6 +14,22 @@ describe 'Meta::SwaggerDocUtil.generate' do
   describe '生成 parameters 文档' do
     subject { app.to_swagger_doc }
 
+    context 'in: 选项填错' do
+      def app
+        Class.new(Meta::Application) do
+          get '/request' do
+            parameters do
+              param :name, type: 'string', in: 'xxx', description: 'the name'
+            end
+          end
+        end
+      end
+
+      it '抛出异常' do
+        expect { subject }.to raise_error(ArgumentError, 'in 选项只能是 path, query, header, body')
+      end
+    end
+
     context '无参数' do
       def app
         Class.new(Meta::Application) do

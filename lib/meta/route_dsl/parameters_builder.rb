@@ -24,6 +24,7 @@ module Meta
         end
 
         in_op = options.delete(:in)
+        raise ArgumentError, "in 选项只能是 path, query, header, body" unless %w[path query header body].include?(in_op)
         @parameter_options[name] = { in: in_op, schema: JsonSchema::BaseSchema.new(options) }
       end
 
