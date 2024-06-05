@@ -35,6 +35,9 @@ module Meta
         key :stage
         key :scope, normalizer: normalize_scope
         key :schema_docs_mapping, :defined_scopes_mapping
+
+        # 以下是 filter 用到的选项，讲道理这些选项应该是不需要的，放置这些是为了防止报错
+        key :discard_missing
       end
 
       def initialize(properties:, options: {}, locked_options: {})

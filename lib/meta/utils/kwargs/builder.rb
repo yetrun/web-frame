@@ -45,7 +45,7 @@ module Meta
             final_args.merge!(args)
           else
             extras = args.keys
-            raise "不接受额外的关键字参数：#{extras.join(', ')}" unless extras.empty?
+            raise ArgumentError, "不接受额外的关键字参数：#{extras.join(', ')}" unless extras.empty?
           end
         end
 

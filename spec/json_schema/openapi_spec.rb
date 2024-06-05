@@ -302,6 +302,47 @@ describe 'schema#to_schema_doc' do
     end
   end
 
+  describe 'Meta::Entity' do
+    describe 'locked' do
+      describe 'discard_missing: 选项' do
+        def app
+          address_entity = Class.new(Meta::Entity) do
+            schema_name 'AddressEntity'
+
+            # property :province
+            # property :city
+            # property :district
+          end
+          user_entity = Class.new(Meta::Entity) do
+            schema_name 'UserEntity'
+
+            # property :name
+            # property :age
+            property :address, ref: address_entity
+          end
+
+          # 定义一个基本的应用
+          Class.new(Meta::Application) do
+            post '/request' do
+              title '修改当前用户信息'
+              params do
+                param :user, ref: user_entity.locked(discard_missing: true, scope: 'full')
+              end
+            end
+          end
+        end
+
+        it 'locked(discard_missing: true) 时生成文档不至于报错' do
+          expect { app.to_swagger_doc }.not_to raise_error
+        end
+
+        it 'to_swagger_doc 不接受 discard_missing: true 属性' do
+          expect { app.to_swagger_doc(discard_missing: true) }.to raise_error(ArgumentError)
+        end
+      end
+    end
+  end
+
   describe 'ObjectSchemaBuilder methods' do
     describe 'add_scope' do
       it '过滤掉 scope 不匹配的字段' do
