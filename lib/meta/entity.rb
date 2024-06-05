@@ -14,7 +14,12 @@ module Meta
       def inherited(base)
         base.instance_eval do
           @schema_builder = JsonSchema::ObjectSchemaBuilder.new
-          @schema_builder.schema_name(self.name) if self.name
+          if self.name
+            mod_names = self.name.split("::")
+            mod_names.shift if mod_names.first == "Entities"
+            schema_name = mod_names.join('_')
+            @schema_builder.schema_name(schema_name)
+          end
         end
       end
 

@@ -26,6 +26,44 @@ describe 'schema#to_schema_doc' do
     )
   end
 
+  describe '实体名称' do
+    it '生成实体名称带命名空间前缀' do
+      Test = Module.new
+      class Test::User < Meta::Entity; end
+
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
+        param :user, ref: Test::User
+      end.to_schema
+
+      expect( schema.to_schema_doc(stage: :render)).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            '$ref': '#/components/schemas/Test_UserEntity'
+          }
+        }
+      )
+    end
+
+    it '如果最初的前缀是 Entities，则该前缀部分不包括' do
+      Entities = Module.new
+      class Entities::User < Meta::Entity; end
+
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
+        param :user, ref: Entities::User
+      end.to_schema
+
+      expect(schema.to_schema_doc(stage: :render)).to eq(
+        type: 'object',
+        properties: {
+          user: {
+            '$ref': '#/components/schemas/UserEntity'
+          }
+        }
+      )
+    end
+  end
+
   describe 'user options' do
     describe 'scope: 选项' do
       it 'scope 过滤掉不匹配的字段' do
