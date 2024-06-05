@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.1.2（2024 年 6 月 5 日）
+
+1. 实现新的基于常量的 Scope 场景化模式。
+2. 属性的 `scope:` 选项如果传递的是字符串数组，则恢复为 `或` 模式。
+3. 取消 HTTP method 自动生成对应的 Scope常量。
+4. 修复 `locked(discard_missing: true)` 时生成文档报错。
+5. 属性新增 `enum:` 选项，`allowable:` 作为其别名存在。
+
 ## 0.1.1（2024 年 6 月 1 日）
 
 1. 添加 `Meta::Entity.with_common_options` 方法，用于更有效地组织字段。
