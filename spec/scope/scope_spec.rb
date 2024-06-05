@@ -35,14 +35,33 @@ describe '只测试与当初 Scope 有关的测试' do
     shared_examples '测试 And' do |and_method|
       it '测试 And' do
         scope_one = Class.new(Meta::Scope)
+        scope_one.scope_name = 'scope_one'
         scope_two = Class.new(Meta::Scope)
+        scope_two.scope_name = 'scope_two'
         scope_three = Class.new(Meta::Scope)
+        scope_three.scope_name = 'scope_three'
         and_scope = and_method.call(scope_one, scope_two)
+        and_scope.scope_name = 'and_scope'
 
         expect(and_scope).to be_match([scope_two, scope_three, scope_one])
         expect(and_scope).not_to be_match([scope_one, scope_three])
         expect(and_scope).not_to be_match([scope_three, scope_two])
       end
+    end
+
+    it '测试 And 2' do
+      scope_one = Class.new(Meta::Scope)
+      scope_one.scope_name = 'scope_one'
+      scope_two = Class.new(Meta::Scope)
+      scope_two.scope_name = 'scope_two'
+      scope_three = Class.new(Meta::Scope)
+      scope_three.scope_name = 'scope_three'
+      and_scope = scope_one.and(scope_two)
+      and_scope.scope_name = 'and_scope'
+
+      expect(and_scope).to be_match([scope_two, scope_three, scope_one])
+      expect(and_scope).not_to be_match([scope_one, scope_three])
+      expect(and_scope).not_to be_match([scope_three, scope_two])
     end
 
     include_examples '测试 And', ->(scope_one, scope_two) { scope_one.and(scope_two) }

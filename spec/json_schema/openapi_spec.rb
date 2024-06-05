@@ -313,6 +313,10 @@ describe 'schema#to_schema_doc' do
     end
 
     describe 'enum' do
+      it 'enum 就是 allowable 别名' do
+        raise '未能实现'
+      end
+
       it 'allowable 选项可以生成 enum 部分' do
         schema = Meta::JsonSchema::SchemaBuilderTool.build do
           param :user, description: '用户' do

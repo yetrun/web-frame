@@ -5,6 +5,7 @@ require_relative '../../scope/utils'
 
 module Meta
   module JsonSchema
+    # TODO: 作为模块引入
     class ScopingSchema < BaseSchema
       attr_reader :scope_matcher, :schema
 
