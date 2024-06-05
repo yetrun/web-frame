@@ -22,7 +22,9 @@ module Meta
     class BaseSchema
       OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
         key :type, :items, :description, :presenter, :value, :default, :properties, :convert
-        key :validate, :required, :format, :allowable
+        key :validate, :required, :format
+        key :enum, alias_names: [:allowable]
+        key :dynamic_ref, alias_names: [:dynamic_using], normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
         key :before, :after
         key :if
       end
@@ -139,7 +141,7 @@ module Meta
         schema = {}
         schema[:type] = options[:type] if options[:type]
         schema[:description] = options[:description] if options[:description]
-        schema[:enum] = options[:allowable] if options[:allowable]
+        schema[:enum] = options[:enum] if options[:enum]
 
         schema
       end

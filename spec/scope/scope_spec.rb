@@ -4,10 +4,6 @@ require 'spec_helper'
 
 describe '只测试与当初 Scope 有关的测试' do
   describe 'Meta::Scope' do
-    # it '调用 new 方法应当抛出异常' do
-    #   expect { Meta::Scope.new }.to raise_error(NoMethodError)
-    # end
-
     it '创建 Scope 就是继承 Meta::Scope 类' do
       scope = Class.new(Meta::Scope)
       expect(scope).to be_match(scope)

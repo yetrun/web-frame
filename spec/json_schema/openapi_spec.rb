@@ -313,33 +313,39 @@ describe 'schema#to_schema_doc' do
     end
 
     describe 'enum' do
-      it 'enum 就是 allowable 别名' do
-        raise '未能实现'
-      end
+      shared_examples '生成文档的 enum 部分' do |option_name = :enum|
+        it 'enum 选项可以生成 enum 部分' do
+          schema = Meta::JsonSchema::SchemaBuilderTool.build do
+            param :user, description: '用户' do
+              param :name, option_name => %w[Jim Jack James]
+              param :age
+            end
+          end.to_schema
 
-      it 'allowable 选项可以生成 enum 部分' do
-        schema = Meta::JsonSchema::SchemaBuilderTool.build do
-          param :user, description: '用户' do
-            param :name, allowable: %w[Jim Jack James]
-            param :age
-          end
-        end.to_schema
-
-        expect(schema.to_schema_doc(stage: :param)).to eq(
-          type: 'object',
-          properties: {
-            user: {
-              type: 'object',
-              description: '用户',
-              properties: {
-                name: {
-                  enum: %w[Jim Jack James]
-                },
-                age: {}
+          expect(schema.to_schema_doc(stage: :param)).to eq(
+            type: 'object',
+            properties: {
+              user: {
+                type: 'object',
+                description: '用户',
+                properties: {
+                  name: {
+                    enum: %w[Jim Jack James]
+                  },
+                  age: {}
+                }
               }
             }
-          }
-        )
+          )
+        end
+      end
+
+      describe 'enum:' do
+        include_examples '生成文档的 enum 部分'
+      end
+
+      describe 'allowable: 是 enum: 别名' do
+        include_examples '生成文档的 enum 部分', :allowable
       end
     end
   end

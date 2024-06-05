@@ -26,9 +26,9 @@ module Meta
           next if value.nil?
           raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.format') unless value =~ format
         },
-        allowable: proc { |value, allowable_values|
+        enum: proc { |value, allowable_values|
           next if value.nil?
-          raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.allowable', allowable_values: allowable_values) unless allowable_values.include?(value)
+          raise JsonSchema::ValidationError, I18n.t(:'json_schema.errors.enum', allowable_values: allowable_values) unless allowable_values.include?(value)
         }
       }
 
