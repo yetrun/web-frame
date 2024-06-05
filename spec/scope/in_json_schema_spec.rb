@@ -15,10 +15,6 @@ describe 'JsonSchema::Scopes' do
     end
   end
 
-  it 'lock_scope 检查 scope 是否正确' do
-    raise '未能实现'
-  end
-
   context '定义一个简单实体' do
     let(:entity) do
       Class.new(Meta::Entity) do

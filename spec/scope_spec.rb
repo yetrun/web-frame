@@ -119,7 +119,7 @@ describe 'Scope 的场景测试' do
           schema = user_entity.to_schema(scope: %w[foo bar])
           expect( schema.filter(value).keys ).to be_any
 
-          schema = user_entity.to_schema(scope: %w[foo bar far])
+          schema = user_entity.to_schema(scope: %w[foo bar])
           expect( schema.filter(value).keys ).to be_any
         end
 
@@ -127,7 +127,7 @@ describe 'Scope 的场景测试' do
           schema = user_entity.to_schema(scope: ['foo'])
           expect( schema.filter(value).keys ).to be_any
 
-          schema = user_entity.to_schema(scope: %w[foo far])
+          schema = user_entity.to_schema(scope: %w[foo])
           expect( schema.filter(value).keys ).to be_any
         end
       end

@@ -14,14 +14,18 @@ module Meta
       normalize_scope = ->(value) {
         raise ArgumentError, 'scope 选项不可传递 nil' if value.nil?
         value = [value] unless value.is_a?(Array)
-        value = value.map do |v|
-          next v if v.is_a?(Class) && v < Meta::Scope
+        value.map do |v|
+          # 只要加入了 Meta::Scope::Base 模块，就有与 Meta::Scope 一样的行为
           next v if v.is_a?(Meta::Scope::Base)
-          next nil unless Object.const_defined?('Scopes')
 
           # 将 v 类名化
           scope_name = v.to_s.split('_').map(&:capitalize).join
-          ::Scopes.const_defined?(scope_name) ? ::Scopes.const_get(scope_name) : nil
+          # 如果符号对应的类名不存在，就报错
+          if !defined?(::Scopes) || !::Scopes.const_defined?(scope_name)
+            raise NameError, "未找到常量 Scopes::#{scope_name}。如果你用的是命名 Scope（字符串或符号），则检查一下是不是拼写错误"
+          end
+          # 返回对应的常量
+          ::Scopes.const_get(scope_name)
         end.compact
       }
       # stage 和 scope 选项在两个 CHECKER 下都用到了
