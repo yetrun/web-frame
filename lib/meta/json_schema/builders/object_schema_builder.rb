@@ -139,7 +139,7 @@ module Meta
       end
 
       def render(options = {}, &block)
-        with_common_options(**options, params: false, &block)
+        with_common_options(**options, param: false, &block)
       end
 
       def merge(schema_builder)
