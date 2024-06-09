@@ -3,10 +3,6 @@
 require 'spec_helper'
 
 describe 'schema' do
-  it '将 ScopeSchema 和 StageSchema 的逻辑内嵌到 BaseSchema 中，作为模块引入' do
-    raise '未实现'
-  end
-
   # 这个测试合集主要测试 schema 的 filter 方法。
   # 有关 SchemaBuilder 的构建选项，如 value:, default: 等，参见 schema_builder_spec.rb
   describe '.filter' do

@@ -3,14 +3,6 @@
 require 'spec_helper'
 
 describe 'Meta::SwaggerDocUtil.generate' do
-  it 'Get 请求的参数实现 type: object' do
-    raise "未实现"
-  end
-
-  it 'type 多元化，例如转化为 type: Article, 支持 ActiveRecord' do
-    raise "未实现"
-  end
-
   describe '生成 parameters 文档' do
     subject { app.to_swagger_doc }
 
