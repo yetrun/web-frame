@@ -34,21 +34,21 @@ module Meta
 
         private
 
-        def apply_array_schema?(options, block)
-          options[:type] == 'array'
-        end
+          def apply_array_schema?(options, block)
+            options[:type] == 'array'
+          end
 
-        def apply_object_schema?(options, block)
-          (options[:type] == 'object' || options[:type].nil?) && (options[:properties] || block)
-        end
+          def apply_object_schema?(options, block)
+            options[:properties] || block
+          end
 
-        def apply_ref_schema?(options, block)
-          options[:ref] != nil
-        end
+          def apply_ref_schema?(options, block)
+            options[:ref] != nil
+          end
 
-        def apply_dynamic_schema?(options, block)
-          options[:dynamic_ref] != nil
-        end
+          def apply_dynamic_schema?(options, block)
+            options[:dynamic_ref] != nil
+          end
       end
     end
   end
