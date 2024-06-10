@@ -39,4 +39,30 @@ describe Meta::Entity do
       expect(value).to eq(foo: 1)
     end
   end
+
+  describe 'within properties' do
+    let(:entity) do
+      Class.new(Meta::Entity) do
+        property :foo
+        property :bar
+      end
+    end
+
+    it '提取若干个字段' do
+      schema = entity[:foo]
+
+      value = schema.filter({ 'foo' => 'foo', 'bar' => 'bar' })
+      expect(value).to eq({ foo: 'foo' })
+    end
+
+    it '被引用在他处' do
+      entity = self.entity
+      schema = Meta::JsonSchema::SchemaBuilderTool.build do
+        property :nesting, type: 'object', properties: entity[:foo]
+      end
+
+      value = schema.filter('nesting' => { 'foo' => 'foo', 'bar' => 'bar' })
+      expect(value[:nesting]).to eq({ foo: 'foo' })
+    end
+  end
 end

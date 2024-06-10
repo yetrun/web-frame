@@ -98,7 +98,13 @@ module Meta
         @options = options
 
         properties&.each do |name, property_options|
-          property name, property_options
+          if property_options.is_a?(Hash)
+            property name, property_options
+          elsif property_options.is_a?(BaseSchema)
+            @properties[name.to_sym] = property_options
+          else
+            raise ArgumentError, "属性 #{name} 的类型不正确"
+          end
         end
 
         instance_exec(&) if block_given?
@@ -148,6 +154,11 @@ module Meta
 
         @properties.merge!(schema_builder.properties)
       end
+
+      def within(*properties)
+        to_schema.properties.within(*properties)
+      end
+      alias_method :[], :within
 
       def to_schema(locked_options = nil)
         properties = @schema_name ? NamedProperties.new(@properties, @schema_name) : Properties.new(@properties)

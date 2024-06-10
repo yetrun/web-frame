@@ -94,6 +94,10 @@ module Meta
         self.class.new(@properties.merge(properties.instance_eval { @properties }))
       end
 
+      def within(*properties)
+        self.class.new(@properties.slice(*properties))
+      end
+
       def self.build_property(*args)
         StagingSchema.build_from_options(*args)
       end
