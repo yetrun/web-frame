@@ -43,6 +43,10 @@ module Meta
         staged(stage).defined_scopes(stage: stage, **kwargs)
       end
 
+      def to_schema_doc(stage:, **kwargs)
+        staged(stage).to_schema_doc(stage: stage, **kwargs)
+      end
+
       def self.build_from_options(options, build_schema = ->(opts) { BaseSchema.new(opts) })
         param_opts, render_opts, common_opts = SchemaOptions.divide_to_param_and_render(options)
         if param_opts == common_opts && render_opts == common_opts

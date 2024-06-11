@@ -120,7 +120,6 @@ module Meta
       end
 
       def property(name, options = {}, &block)
-        options = fix_type_option(options)
         @properties[name.to_sym] = Properties.build_property(options, ->(options) { SchemaBuilderTool.build(options, &block) })
       end
 
@@ -166,77 +165,11 @@ module Meta
       end
 
       def locked(options)
-        # defined_scopes_mapping = {}
-        # # TODO: 将 properties 搞成 Properties 可以吗？
-        # defined_scopes = properties.map do |key, property|
-        #   property.defined_scopes(stage: :param, defined_scopes_mapping: defined_scopes_mapping)
-        # end.flatten.uniq
-        #
-        # user_scopes = options[:scope] || []
-        # user_scopes = [user_scopes] unless user_scopes.is_a?(Array)
-        #
-        # # 判断 user_scopes 中提供的局部 scope 是否在 defined_scopes 中
-        # local_user_scopes = user_scopes.reject { |scope| scope.start_with?('$') }
-        # if (local_user_scopes - defined_scopes).any?
-        #   extra_scopes = local_user_scopes - defined_scopes
-        #   raise ArgumentError, "scope #{extra_scopes.join(',')} 未在实体中定义"
-        # end
-
         Locked.new(self, **options)
       end
       include LockedMethodAlias
 
       private
-
-        # 目前代码很乱，只有 property 下的才能支持 type: Class 选项
-        def fix_type_option(options)
-          if options[:type].is_a?(Class)
-            # 修复 type 为自定义类的情形
-            options = options.dup
-            the_class = options[:type]
-
-            # 修复 param 选项
-            if options[:param]
-              options[:param] = options[:param].dup
-            else
-              options[:param] = {}
-            end
-            if options[:param][:after].nil?
-              options[:param][:after] = ->(value) { the_class.new(value) }
-            else
-              # 如果用户自定义了 after，那么我们需要在 after 之后再包一层
-              original_after_block = options[:param][:after]
-              options[:param][:after] = ->(value) do
-                value = instance_exec(value, &original_after_block)
-                the_class.new(value)
-              end
-            end
-
-            # 修复 render 选项
-            if options[:render]
-              options[:render] = options[:render].dup
-            else
-              options[:render] = {}
-            end
-            render_before_block = ->(value) do
-              raise ValidationError, "value 必须是 #{the_class} 类型" unless value.is_a?(the_class)
-              value
-            end
-            if options[:render][:before].nil?
-              options[:render][:before] = render_before_block
-            else
-              # 如果用户自定义了 before，那么我们需要在 before 之前再包一层
-              original_before_block = options[:render][:before]
-              options[:render][:before] = ->(value) do
-                value = render_before_block.call(value)
-                instance_exec(value, &original_before_block)
-              end
-            end
-            options = options.merge(type: 'object')
-          end
-
-          options
-        end
 
         def apply_array_scope?(options, block)
           options[:type] == 'array' && (options[:items] || block)
