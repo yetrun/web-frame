@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'json'
-require_relative '../entity' # TODO: 放在这里不太合适
 require_relative '../application/route'
 require_relative 'chain_builder'
 require_relative 'action_builder'

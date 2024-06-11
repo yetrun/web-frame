@@ -16,11 +16,11 @@ module Meta
       def param(name, options = {}, &block)
         options = (options || {}).dup
           if path_param_names.include?(name)
-            options = Utils::KeywordArgs::Checker.fix!(options, in: 'path', required: true)
+            options = Utils::Kwargs::Helpers.fix!(options, in: 'path', required: true)
           elsif @route_method == :get
-            options = Utils::KeywordArgs::Checker.merge_defaults!(options, in: 'query')
+            options = Utils::Kwargs::Helpers.merge_defaults!(options, in: 'query')
           else
-            options = Utils::KeywordArgs::Checker.merge_defaults!(options, in: 'body')
+            options = Utils::Kwargs::Helpers.merge_defaults!(options, in: 'body')
           end
 
         if options[:in] == 'body'

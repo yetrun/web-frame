@@ -114,6 +114,45 @@ describe 'Schema Builders' do
         expect(value).to eq({ a: 1, b: 2 })
       end
     end
+
+    describe 'property 宏' do
+      describe 'build staging schema' do
+        it '内部属性提供 stage 选项' do
+          schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :foo, param: { type: 'string' }, render: { type: 'integer' }
+          end.to_schema
+
+          expect(schema.filter({ foo: 34 }, stage: :param)).to eq({ foo: '34' })
+          expect(schema.filter({ foo: '34' }, stage: :render)).to eq({ foo: 34 })
+        end
+      end
+
+      describe 'build scoping schema' do
+        let(:scope) do
+          Class.new(Meta::Scope)
+        end
+
+        it '内部属性提供 scope 选项' do
+          scope = self.scope
+          schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :foo, scope: scope
+          end.to_schema
+
+          expect(schema.filter({ foo: 34 }).keys).to be_empty
+          expect(schema.filter({ foo: 34 }, scope: scope).keys).to eq([:foo])
+        end
+
+        it '内部属性提供 scope 选项的同时结合 stage 选项' do
+          scope = self.scope
+          schema = Meta::JsonSchema::ObjectSchemaBuilder.new do
+            property :foo, param: { scope: scope }
+          end.to_schema
+
+          expect(schema.filter({ foo: 34 }, stage: :param)).to be_empty
+          expect(schema.filter({ foo: 34 }, stage: :param, scope: scope)).not_to be_empty
+        end
+      end
+    end
   end
 
   describe 'options' do

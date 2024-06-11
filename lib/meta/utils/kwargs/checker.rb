@@ -2,33 +2,34 @@
 
 module Meta
   module Utils
-    class KeywordArgs
-      module Checker
-        class << self
-          # 将 options 内的值修正为固定值，该方法会原地修改 options 选项。
-          # 如果 options 中的缺失相应的值，则使用 fixed_values 中的值补充；如果 options 中的值不等于 fixed_values 中对应的值，则抛出异常。
-          # 示例：
-          # （1）fix!({}, { a: 1, b: 2 }) # => { a: 1, b: 2 }
-          # （2）fix!({ a: 1 }, { a: 2 }) # raise error
-          def fix!(options, fixed_values)
-            fixed_values.each do |key, value|
-              if options.include?(key)
-                if options[key] != value
-                  raise ArgumentError, "关键字参数 #{key} 的值不正确，必须为 #{value}"
-                end
-              else
-                options[key] = value
-              end
-            end
-            options
-          end
+    class Kwargs
+      class Checker
+        attr_reader :arguments_consumer
 
-          def merge_defaults!(options, defaults)
-            defaults.each do |key, value|
-              options[key] = value unless options[key]
-            end
-            options
-          end
+        def initialize(arguments_consumer:, extras_consumer: nil, after_handler: nil)
+          @arguments_consumer = arguments_consumer
+          @extras_consumer = extras_consumer || ExtrasConsumers::RaiseError
+          @after_handler = after_handler
+        end
+
+        def check(args, extras_handler: nil)
+          # 准备工作
+          args = args.dup
+          final_args = {}
+
+          # 逐个消费参数
+          @arguments_consumer.consume(final_args, args)
+
+          # 处理额外参数
+          extras_consumer = ExtrasConsumers.resolve_handle_extras(extras_handler)
+          extras_consumer ||= @extras_consumer
+          extras_consumer&.consume(final_args, args)
+
+          # 后置处理器
+          @after_handler&.call(final_args)
+
+          # 返回最终参数
+          final_args
         end
       end
     end

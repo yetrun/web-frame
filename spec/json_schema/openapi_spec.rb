@@ -374,7 +374,7 @@ describe 'schema#to_schema_doc' do
             post '/request' do
               title '修改当前用户信息'
               params do
-                param :user, ref: user_entity.locked(discard_missing: true, scope: 'full')
+                param :user, ref: user_entity.locked(discard_missing: true)
               end
             end
           end

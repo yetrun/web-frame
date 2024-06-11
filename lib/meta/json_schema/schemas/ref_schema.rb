@@ -54,13 +54,6 @@ module Meta
         defined_scopes_mapping[schema_name] = defined_scopes
         defined_scopes
       end
-
-      private
-
-      # # TODO: 这种带有组合方式的 Schema，让我联想到，每次 BaseSchema 新增一个方法都要在子 Schema 中加一遍，很烦！
-      # def defined_scopes
-      #   schema.defined_scopes
-      # end
     end
   end
 end

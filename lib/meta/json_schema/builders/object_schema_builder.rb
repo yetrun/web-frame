@@ -37,7 +37,7 @@ module Meta
         # locked_options 是用户传递的参数，这个参数会被合并到 object_schema_builder 的 locked_options 中。
         def initialize(builder, scope: nil, discard_missing: nil, exclude: nil)
           @object_schema_builder = builder
-          @locked_options = ObjectSchema::USER_OPTIONS_CHECKER.check({ scope: scope, discard_missing: discard_missing, exclude: exclude }.compact)
+          @locked_options = SchemaOptions::UserOptions::Filter.check({ scope: scope, discard_missing: discard_missing, exclude: exclude }.compact)
         end
 
         def to_schema
@@ -45,7 +45,7 @@ module Meta
         end
 
         def locked(options)
-          options = ObjectSchema::USER_OPTIONS_CHECKER.check(options)
+          options = SchemaOptions::UserOptions::Filter.check(options)
           options = ObjectSchema.merge_user_options(locked_options, options)
           Locked.new(self.object_schema_builder, **options)
         end
@@ -121,6 +121,7 @@ module Meta
 
       def property(name, options = {}, &block)
         @properties[name.to_sym] = Properties.build_property(options, ->(options) { SchemaBuilderTool.build(options, &block) })
+        # @properties[name.to_sym] = SchemaBuilderTool.build(options, &block)
       end
 
       alias expose property

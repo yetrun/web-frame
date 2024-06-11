@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative '../../utils/kwargs/check'
 require_relative '../support/schema_options'
 require_relative 'scoping_schema'
 require_relative 'unsupported_schema'

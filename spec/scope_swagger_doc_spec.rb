@@ -14,7 +14,7 @@ describe 'Scope 的场景测试' do
         schema = entity_class.locked(scope: 'foo').to_schema
         expect(schema.to_schema_doc[:properties].keys).to eq([:foo])
 
-        # TODO: 没有提示也没有报错
+        # TODO: 没有提示也没有报错，使用 sorbet 后是否会有报错提示了？
         # schema.to_swagger_doc
       end
 

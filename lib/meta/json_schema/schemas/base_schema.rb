@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative '../../utils/kwargs/check'
 require_relative '../support/schema_options'
 
 module Meta
@@ -20,24 +19,6 @@ module Meta
     # 的地方都会抛出异常（NoMethodError: undefined method `[]' for nil:NilClass）。这种模式
     # 的案例很多，包括 StagingSchema、RefSchema 等。
     class BaseSchema
-      OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
-        key :type, :items, :description, :presenter, :value, :default, :properties, :convert
-        key :validate, :required, :format
-        key :enum, alias_names: [:allowable]
-        key :dynamic_ref, alias_names: [:dynamic_using], normalizer: ->(value) { value.is_a?(Proc) ? { resolve: value } : value }
-        key :before, :after
-        key :if
-      end
-
-      USER_OPTIONS_CHECKER = Utils::KeywordArgs::Builder.build do
-        key :execution, :object_value, :type_conversion, :validation, :user_data
-        key :stage, validator: ->(value) { raise ArgumentError, "stage 只能取值为 :param 或 :render" unless [:param, :render].include?(value) }
-
-        # 以下是 ObjectSchema 需要的选项
-        # extra_properties 只能取值为 :ignore、:raise_error
-        key :discard_missing, :extra_properties, :exclude, :scope
-      end
-
       # `options` 包含了转换器、验证器、文档、选项。
       #
       # 由于本对象可继承，基于不同的继承可分别表示基本类型、对象和数组，所以该属
@@ -49,8 +30,7 @@ module Meta
 
       def initialize(options = {})
         raise ArgumentError, 'options 必须是 Hash 类型' unless options.is_a?(Hash)
-        options = OPTIONS_CHECKER.check(options)
-        @options = SchemaOptions.normalize(options).freeze
+        @options = SchemaOptions::BaseBuildOptions.check(options)
       end
 
       def filter?
@@ -58,7 +38,7 @@ module Meta
       end
 
       def filter(value, user_options = {})
-        user_options = USER_OPTIONS_CHECKER.check(user_options)
+        user_options = SchemaOptions::UserOptions::Filter.check(user_options)
 
         value = value_callback(user_options) if options[:value]
         value = before_callback(value, user_options) if options[:before]

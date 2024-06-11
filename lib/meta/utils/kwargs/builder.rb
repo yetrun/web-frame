@@ -17,101 +17,44 @@
 #       key :a, :b, :c
 #       key :d, normalizer: ->(value) { normalize_to_array(value) }
 #     end
-#
+
+require_relative 'consumers'
+require_relative 'extras_consumers'
+require_relative 'checker'
 
 module Meta
   module Utils
-    class KeywordArgs
-      def initialize(arguments, permit_extras = false, final_consumer = nil)
-        @arguments = arguments
-        @permit_extras = permit_extras
-        @final_consumer = final_consumer
-      end
-
-      def check(args)
-        args = args.dup
-        final_args = {}
-
-        @arguments.each do |argument|
-          argument.consume(final_args, args)
-        end
-
-        # 做最终的修饰
-        @final_consumer.call(final_args, args) if @final_consumer
-
-        # 处理剩余字段
-        unless args.keys.empty?
-          if @permit_extras
-            final_args.merge!(args)
-          else
-            extras = args.keys
-            raise ArgumentError, "不接受额外的关键字参数：#{extras.join(', ')}" unless extras.empty?
-          end
-        end
-
-        final_args
-      end
-
-      class Argument
-        DEFAULT_TRANSFORMER = ->(value) { value }
-
-        def initialize(name:, normalizer: DEFAULT_TRANSFORMER, validator: nil, default: nil, alias_names: [])
-          @key_name = name
-          @consumer_names = [name] + alias_names
-          @default_value = default
-          @normalizer = normalizer
-          @validator = validator
-        end
-
-        def consume(final_args, args)
-          @consumer_names.each do |name|
-            return if consume_name(final_args, args, name)
-          end
-
-          final_args[@key_name] = @default_value unless @default_value.nil?
-        end
-
-        def consume_name(final_args, args, consumer_name)
-          if args.key?(consumer_name)
-            value = @normalizer.call(args.delete(consumer_name))
-            @validator.call(value) if @validator
-            final_args[@key_name] = value
-            true
-          else
-            false
-          end
-        end
-      end
-
+    class Kwargs
       class Builder
         def initialize
           @arguments = []
-          @permit_extras = false
-          @final_consumer = nil
+          @handle_extras = ExtrasConsumers::RaiseError
         end
 
         def key(*names, **options)
           names.each do |name|
-            @arguments << Argument.new(name: name, **options)
+            @arguments << ArgumentConsumer.new(name: name, **options)
           end
         end
 
-        def permit_extras(value)
-          @permit_extras = value
+        def handle_extras(sym)
+          @handle_extras = ExtrasConsumers.resolve_handle_extras(sym)
         end
 
-        def final_consumer(&block)
-          @final_consumer = block
+        def after_handler(&blk)
+          @after_handler = blk
         end
 
-        def build
-          KeywordArgs.new(@arguments, @permit_extras, @final_consumer)
+        def build(base_consumer = nil)
+          consumers = [base_consumer, *@arguments].compact
+          consumers = CompositeConsumer.new(*consumers)
+          Checker.new(arguments_consumer: consumers, extras_consumer: @handle_extras, after_handler: @after_handler)
         end
 
-        def self.build(&block)
+        def self.build(base_checker = nil, &block)
           builder = Builder.new
           builder.instance_exec &block
-          builder.build
+          builder.build(base_checker&.arguments_consumer)
         end
       end
     end

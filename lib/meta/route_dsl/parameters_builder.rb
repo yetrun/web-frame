@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../application/parameters'
-require_relative '../utils/kwargs/checker'
+require_relative '../utils/kwargs/helpers'
 
 module Meta
   module RouteDSL
@@ -18,9 +18,9 @@ module Meta
         # 修正 path 参数的选项
         options = options.dup
         if path_param_names.include?(name) # path 参数
-          options = Utils::KeywordArgs::Checker.fix!(options, in: 'path', required: true)
+          options = Utils::Kwargs::Helpers.fix!(options, in: 'path', required: true)
         else
-          options = Utils::KeywordArgs::Checker.merge_defaults!(options, in: 'query')
+          options = Utils::Kwargs::Helpers.merge_defaults!(options, in: 'query')
         end
 
         in_op = options.delete(:in)
