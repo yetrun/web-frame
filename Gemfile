@@ -11,6 +11,7 @@ group :test do
   gem 'rspec'
   gem 'rack-test'
   gem 'grape-entity'
+  gem 'json_schemer'
 end
 
 group :test, :development do

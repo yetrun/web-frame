@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe 'Meta::SwaggerDocUtil.generate' do
   describe '生成 parameters 文档' do
-    subject { app.to_swagger_doc }
+    subject { generate_openapi_doc(app) }
 
     context 'in: 选项填错' do
       def app
