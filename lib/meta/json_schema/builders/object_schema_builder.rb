@@ -7,37 +7,38 @@ module Meta
     class ObjectSchemaBuilder
       extend Forwardable
 
-      module LockedMethodAlias
-        # 我在这里说明一下 lock_scope 的逻辑。
-        # 1. lock_scope 实际上是将 scope 传递到当前的 ObjectSchema 和它的子 Schema 中。
-        # 2. lock_scope 会叠加，也就是如果子 schema 也有 lock_scope，那么子 Schema 会将两个 Schema 合并起来。
-        # 3. 调用 filter(scope:) 和 to_schema_doc(scope:) 时，可以传递 scope 参数，这个 scope 遇到 lock_scope 时会合并。
-        # 4. 这也就是说，在路由级别定义的 scope 宏会传递到下面的 Schema 中去。
-        def add_scope(scope)
-          lock_scope(scope)
-        end
+      class Locked
+        # 定义一些 locked 的别名方法
+        module LockedMethodAlias
+          # 我在这里说明一下 lock_scope 的逻辑。
+          # 1. lock_scope 实际上是将 scope 传递到当前的 ObjectSchema 和它的子 Schema 中。
+          # 2. lock_scope 会叠加，也就是如果子 schema 也有 lock_scope，那么子 Schema 会将两个 Schema 合并起来。
+          # 3. 调用 filter(scope:) 和 to_schema_doc(scope:) 时，可以传递 scope 参数，这个 scope 遇到 lock_scope 时会合并。
+          # 4. 这也就是说，在路由级别定义的 scope 宏会传递到下面的 Schema 中去。
+          def add_scope(scope)
+            lock_scope(scope)
+          end
 
-        def lock(key, value)
-          locked(key => value)
-        end
+          def lock(key, value)
+            locked(key => value)
+          end
 
-        def method_missing(method, *args)
-          if method =~ /^lock_(\w+)$/
-            key = Regexp.last_match(1)
-            lock(key.to_sym, *args)
-          else
-            super
+          def method_missing(method, *args)
+            if method =~ /^lock_(\w+)$/
+              key = Regexp.last_match(1)
+              lock(key.to_sym, *args)
+            else
+              super
+            end
           end
         end
-      end
 
-      class Locked
         attr_reader :object_schema_builder, :locked_options
 
         # locked_options 是用户传递的参数，这个参数会被合并到 object_schema_builder 的 locked_options 中。
-        def initialize(builder, scope: nil, discard_missing: nil, exclude: nil)
+        def initialize(builder, **locked_options)
           @object_schema_builder = builder
-          @locked_options = SchemaOptions::UserOptions::Filter.check({ scope: scope, discard_missing: discard_missing, exclude: exclude }.compact)
+          @locked_options = SchemaOptions::UserOptions::Filter.check(locked_options.compact)
         end
 
         def to_schema
@@ -88,6 +89,8 @@ module Meta
 
       def initialize(options = {}, &)
         raise 'type 选项必须是 object' if !options[:type].nil? && options[:type] != 'object'
+
+        @schema_cache = {} # 用于缓存已经生成的 schema，重复利用
 
         @properties = {} # 所有的属性已经生成
         @required = []
@@ -160,15 +163,18 @@ module Meta
       end
       alias_method :[], :within
 
-      def to_schema(locked_options = nil)
+      def to_schema(locked_options = {})
+        locked_options = SchemaOptions::UserOptions::Filter.check(locked_options.compact)
+        return @schema_cache[locked_options] if @schema_cache[locked_options]
+
         properties = @schema_name ? NamedProperties.new(@properties, @schema_name) : Properties.new(@properties)
-        ObjectSchema.new(properties: properties, options: @options, locked_options: locked_options)
+        @schema_cache[locked_options] = ObjectSchema.new(properties: properties, options: @options, locked_options: locked_options)
       end
 
       def locked(options)
         Locked.new(self, **options)
       end
-      include LockedMethodAlias
+      include Locked::LockedMethodAlias
 
       private
 
