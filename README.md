@@ -17,7 +17,7 @@ $ git clone https://github.com/yetrun/web-frame-example.git
 在 Gemfile 中添加：
 
 ```ruby
-gem 'meta-api', '~> 0.1.0'
+gem 'meta-api', '~> 0.2.0'
 ```
 
 然后在 Ruby 代码中引用：

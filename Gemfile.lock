@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    meta-api (0.1.2)
+    meta-api (0.2.0)
       hash_to_struct (~> 1.0.0)
 
 GEM

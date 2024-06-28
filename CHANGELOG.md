@@ -1,5 +1,12 @@
 # 更新日志
 
+## 0.2.0（2024 年 6 月 28 日）
+
+1. 自定义参数类型：可以在 ObjectSchemaBuilder 内使用自定义类作为参数类型。
+2. 添加 `within` 语法，它返回一个只包含指定字段的实体，类似于 `include`.
+3. query 参数支持 `type: 'array'` 类型，它使用的是我们熟悉的 formData 格式。
+4. 修复 `with_common_options` 方法中使用 `render` 简写格式的 bug。
+
 ## 0.1.2（2024 年 6 月 5 日）
 
 1. 实现新的基于常量的 Scope 场景化模式。
